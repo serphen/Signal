@@ -2065,6 +2065,11 @@ body.dark-theme *:not(.font-symbols) {
   background: var(--midnight-text-normal) !important;
 }
 
+/* Fun picker items — remove borders around individual emoji/sticker cells */
+.dark-theme .FunItem__Button {
+  border: none !important;
+}
+
 /* NavTabs profile avatar — 32px instead of 28px */
 .dark-theme .NavTabs__ItemContent .module-Avatar,
 .dark-theme .NavTabs__ItemContent .module-Avatar__contents {
