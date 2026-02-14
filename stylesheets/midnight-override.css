@@ -1049,7 +1049,7 @@ body.dark-theme *:not(.font-symbols) {
 
 /* Container: minimal height, positioned at very bottom of timeline */
 .dark-theme .module-timeline__typing-bubble-container {
-  height: auto !important;
+  height: 24px !important;
   min-height: 0 !important;
 }
 
@@ -1057,11 +1057,14 @@ body.dark-theme *:not(.font-symbols) {
   background: transparent !important;
 }
 
-/* The typing message row: compact, minimal spacing */
+/* The typing message row: 24px height, aligned with message content area (right of gutter) */
 .dark-theme .module-message--typing-bubble {
+  height: 24px !important;
+  min-height: 0 !important;
   margin-top: 0 !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
 }
 
 .dark-theme .module-message--typing-bubble .module-message__container--incoming {
@@ -1069,7 +1072,7 @@ body.dark-theme *:not(.font-symbols) {
   padding: 0 !important;
 }
 
-/* Hide group avatars in typing bubble for cleaner look */
+/* Hide group avatars in typing bubble — dots appear in message content area */
 .dark-theme .module-message--typing-bubble .module-message__author-avatar-container--typing {
   display: none !important;
 }
@@ -1081,10 +1084,13 @@ body.dark-theme *:not(.font-symbols) {
   height: 6px !important;
 }
 
-/* Typing animation container: Midnight-style compact */
+/* Typing animation container: compact, vertically centered in 24px row */
 .dark-theme .module-message__typing-animation-container {
-  padding: 4px 8px !important;
+  padding: 0 8px !important;
   min-height: auto !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* ==========================================================================
