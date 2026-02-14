@@ -1752,6 +1752,42 @@ body.dark-theme *:not(.font-symbols) {
   border-radius: 3px !important;
 }
 
+/* highlight.js token colors — Midnight Midnight (GitHub Dark Dimmed palette) */
+.dark-theme pre.codeblock .hljs-keyword,
+.dark-theme pre.codeblock .hljs-selector-tag { color: #f47067; }
+.dark-theme pre.codeblock .hljs-string,
+.dark-theme pre.codeblock .hljs-regexp { color: #96d0ff; }
+.dark-theme pre.codeblock .hljs-comment,
+.dark-theme pre.codeblock .hljs-doctag { color: #768390; font-style: italic; }
+.dark-theme pre.codeblock .hljs-function,
+.dark-theme pre.codeblock .hljs-title { color: #dcbdfb; }
+.dark-theme pre.codeblock .hljs-number { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-built_in { color: #f69d50; }
+.dark-theme pre.codeblock .hljs-type,
+.dark-theme pre.codeblock .hljs-title.class_ { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-params { color: #adbac7; }
+.dark-theme pre.codeblock .hljs-literal { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-attr,
+.dark-theme pre.codeblock .hljs-attribute { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-variable,
+.dark-theme pre.codeblock .hljs-template-variable { color: #f69d50; }
+.dark-theme pre.codeblock .hljs-symbol { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-meta { color: #768390; }
+.dark-theme pre.codeblock .hljs-selector-class,
+.dark-theme pre.codeblock .hljs-selector-id { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-addition { color: #57ab5a; background-color: rgba(70, 149, 74, 0.15); }
+.dark-theme pre.codeblock .hljs-deletion { color: #e5534b; background-color: rgba(229, 83, 75, 0.15); }
+.dark-theme pre.codeblock .hljs-name { color: #8ddb8c; }
+.dark-theme pre.codeblock .hljs-tag { color: #8ddb8c; }
+.dark-theme pre.codeblock .hljs-section { color: #dcbdfb; font-weight: 600; }
+.dark-theme pre.codeblock .hljs-emphasis { font-style: italic; }
+.dark-theme pre.codeblock .hljs-strong { font-weight: 700; }
+.dark-theme pre.codeblock .hljs-link { color: #96d0ff; text-decoration: underline; }
+.dark-theme pre.codeblock .hljs-operator { color: #f47067; }
+.dark-theme pre.codeblock .hljs-property { color: #6cb6ff; }
+.dark-theme pre.codeblock .hljs-punctuation { color: #adbac7; }
+.dark-theme pre.codeblock .hljs-subst { color: #adbac7; }
+
 /* Inline monospace: Midnight style — no column limit, natural width */
 .dark-theme .MessageTextRenderer__formatting--monospace {
   background-color: #2b2d31 !important;
@@ -1936,4 +1972,20 @@ body.dark-theme *:not(.font-symbols) {
   color: var(--midnight-text-muted, #949ba4) !important;
   font-family: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
   white-space: pre-line !important;
+}
+
+/* ==========================================================================
+   Preferences — Midnight Midnight overrides
+   ========================================================================== */
+.dark-theme .Preferences__page-selector {
+  background: transparent !important;
+}
+
+.dark-theme .Preferences__profile-chip--selected {
+  background-color: #1b1b1b !important;
+}
+
+.dark-theme .module-sticker-manager__text.module-sticker-manager__text--heading {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
 }

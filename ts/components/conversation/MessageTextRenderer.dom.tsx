@@ -7,6 +7,124 @@ import classNames from 'classnames';
 import emojiRegex from 'emoji-regex';
 import lodash from 'lodash';
 
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import python from 'highlight.js/lib/languages/python';
+import typescript from 'highlight.js/lib/languages/typescript';
+import java from 'highlight.js/lib/languages/java';
+import c from 'highlight.js/lib/languages/c';
+import cpp from 'highlight.js/lib/languages/cpp';
+import csharp from 'highlight.js/lib/languages/csharp';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import ruby from 'highlight.js/lib/languages/ruby';
+import php from 'highlight.js/lib/languages/php';
+import swift from 'highlight.js/lib/languages/swift';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import scala from 'highlight.js/lib/languages/scala';
+import css from 'highlight.js/lib/languages/css';
+import scss from 'highlight.js/lib/languages/scss';
+import json from 'highlight.js/lib/languages/json';
+import xml from 'highlight.js/lib/languages/xml';
+import yaml from 'highlight.js/lib/languages/yaml';
+import sql from 'highlight.js/lib/languages/sql';
+import bash from 'highlight.js/lib/languages/bash';
+import shell from 'highlight.js/lib/languages/shell';
+import dockerfile from 'highlight.js/lib/languages/dockerfile';
+import makefile from 'highlight.js/lib/languages/makefile';
+import lua from 'highlight.js/lib/languages/lua';
+import perl from 'highlight.js/lib/languages/perl';
+import r from 'highlight.js/lib/languages/r';
+import haskell from 'highlight.js/lib/languages/haskell';
+import clojure from 'highlight.js/lib/languages/clojure';
+import lisp from 'highlight.js/lib/languages/lisp';
+import scheme from 'highlight.js/lib/languages/scheme';
+import ocaml from 'highlight.js/lib/languages/ocaml';
+import fsharp from 'highlight.js/lib/languages/fsharp';
+import dart from 'highlight.js/lib/languages/dart';
+import diff from 'highlight.js/lib/languages/diff';
+import ini from 'highlight.js/lib/languages/ini';
+import nginx from 'highlight.js/lib/languages/nginx';
+import markdown from 'highlight.js/lib/languages/markdown';
+import latex from 'highlight.js/lib/languages/latex';
+import graphql from 'highlight.js/lib/languages/graphql';
+import protobuf from 'highlight.js/lib/languages/protobuf';
+import elixir from 'highlight.js/lib/languages/elixir';
+import erlang from 'highlight.js/lib/languages/erlang';
+
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('js', javascript);
+hljs.registerLanguage('jsx', javascript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('py', python);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('ts', typescript);
+hljs.registerLanguage('tsx', typescript);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('c', c);
+hljs.registerLanguage('cpp', cpp);
+hljs.registerLanguage('c++', cpp);
+hljs.registerLanguage('csharp', csharp);
+hljs.registerLanguage('c#', csharp);
+hljs.registerLanguage('cs', csharp);
+hljs.registerLanguage('go', go);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('rs', rust);
+hljs.registerLanguage('ruby', ruby);
+hljs.registerLanguage('rb', ruby);
+hljs.registerLanguage('php', php);
+hljs.registerLanguage('swift', swift);
+hljs.registerLanguage('kotlin', kotlin);
+hljs.registerLanguage('scala', scala);
+hljs.registerLanguage('html', xml);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('scss', scss);
+hljs.registerLanguage('sass', scss);
+hljs.registerLanguage('less', scss);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('yml', yaml);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('sh', bash);
+hljs.registerLanguage('shell', shell);
+hljs.registerLanguage('zsh', bash);
+hljs.registerLanguage('dockerfile', dockerfile);
+hljs.registerLanguage('docker', dockerfile);
+hljs.registerLanguage('makefile', makefile);
+hljs.registerLanguage('lua', lua);
+hljs.registerLanguage('perl', perl);
+hljs.registerLanguage('r', r);
+hljs.registerLanguage('haskell', haskell);
+hljs.registerLanguage('hs', haskell);
+hljs.registerLanguage('clojure', clojure);
+hljs.registerLanguage('clj', clojure);
+hljs.registerLanguage('lisp', lisp);
+hljs.registerLanguage('scheme', scheme);
+hljs.registerLanguage('ocaml', ocaml);
+hljs.registerLanguage('ml', ocaml);
+hljs.registerLanguage('fsharp', fsharp);
+hljs.registerLanguage('f#', fsharp);
+hljs.registerLanguage('dart', dart);
+hljs.registerLanguage('diff', diff);
+hljs.registerLanguage('patch', diff);
+hljs.registerLanguage('ini', ini);
+hljs.registerLanguage('conf', ini);
+hljs.registerLanguage('toml', ini);
+hljs.registerLanguage('nginx', nginx);
+hljs.registerLanguage('markdown', markdown);
+hljs.registerLanguage('md', markdown);
+hljs.registerLanguage('latex', latex);
+hljs.registerLanguage('tex', latex);
+hljs.registerLanguage('graphql', graphql);
+hljs.registerLanguage('gql', graphql);
+hljs.registerLanguage('protobuf', protobuf);
+hljs.registerLanguage('proto', protobuf);
+hljs.registerLanguage('elixir', elixir);
+hljs.registerLanguage('ex', elixir);
+hljs.registerLanguage('erlang', erlang);
+
 import { linkify, SUPPORTED_PROTOCOLS } from './Linkify.dom.js';
 import type {
   BodyRangesForDisplayType,
@@ -30,6 +148,13 @@ import type { FunJumboEmojiSize } from '../fun/FunEmoji.dom.js';
 const { sortBy } = lodash;
 
 const EMOJI_REGEXP = emojiRegex();
+
+function highlightCode(code: string, lang: string | null): string {
+  if (lang && hljs.getLanguage(lang)) {
+    return hljs.highlight(code, { language: lang }).value;
+  }
+  return hljs.highlightAuto(code).value;
+}
 
 const KNOWN_LANGUAGES = [
   'javascript', 'js', 'typescript', 'ts', 'python', 'py', 'java', 'c',
@@ -301,7 +426,8 @@ function renderNode({
         )}
       >
         {lang && <div className="codeblock__lang">{lang}</div>}
-        <code>{codeText}</code>
+        {/* eslint-disable-next-line react/no-danger -- highlight.js HTML-escapes all input before wrapping tokens in <span> elements */}
+        <code dangerouslySetInnerHTML={{ __html: highlightCode(codeText, lang) }} />
       </pre>
     );
   }
