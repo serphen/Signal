@@ -602,15 +602,17 @@ body.dark-theme *:not(.font-symbols) {
 /* --- Scroller: match Midnight's textArea ---
    Midnight: textArea has height: 56px, text 16px/22px.
    Inner padding = (56-22)/2 = 17px top & bottom → pill = 56px.
-   Clamped to 44px min via min-height: 0 (content dictates). */
+   Clamped to 44px min via min-height: 0 (content dictates).
+   Midnight allows expand to ~12 lines on shift-enter (12 * 22px = 264px). */
 .dark-theme .module-composition-input__input__scroller {
   min-height: 0 !important;
+  max-height: 264px !important; /* 12 lines × 22px line-height */
   padding: 12px 0 !important;
 }
 
 /* --- Quill wrapper: Midnight uses ~16px horizontal padding inside textArea --- */
 .dark-theme .module-composition-input__quill {
-  padding-inline: 12px !important;
+  padding-inline: 16px !important;
 }
 
 /* --- Quill container font: Signal defaults to font-body-1 (14px/20px),
@@ -1085,56 +1087,79 @@ body.dark-theme *:not(.font-symbols) {
 
 /* ==========================================================================
    Conversation list (left sidebar) — Midnight Midnight DM list
-   Midnight: bg #131416, items 48-56px tall, 8px rounded, hover overlay,
-   selected item has lighter bg, contact name 16px medium, message
-   preview 14px normal muted, timestamp 12px muted.
+   Computed from Midnight Midnight visual-refresh:
+     channel: height 40px, padding 1px 0, borderRadius 8px, margin 0 0 0 8px
+     link: padding 8px 16px 8px 8px, gap 8px, display flex, alignItems center
+     interactiveSelected bg: rgba(148, 149, 157, 0.24)
+     name: 16px/20px weight 500, color ~#81828b (channels-default)
+     subText: 16px, weight 400, color muted
+     avatar: 32px, margin-right 12px
    ========================================================================== */
 .dark-theme .module-conversation-list {
   background-color: var(--midnight-bg-secondary) !important;
-  padding: 8px !important;
+  padding: 0 0 0 8px !important; /* Midnight: margin-left 8px on channel items */
 }
 
-/* Conversation list item */
+/* Conversation list item — Midnight: .channel__972a0 height 42px, .link__972a0 */
 .dark-theme .module-conversation-list__item--contact-or-conversation {
   border-radius: 8px !important;
-  padding-block: 8px !important;
-  padding-inline: 10px !important;
+  padding: 8px 16px 8px 8px !important; /* Midnight: link padding */
   margin-block: 1px !important;
   background: transparent !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: 42px !important; /* Midnight: channel height ~42px */
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
 }
 
 .dark-theme .module-conversation-list__item--contact-or-conversation:hover {
-  background-color: var(--midnight-bg-hover) !important;
-}
-
-.dark-theme .module-conversation-list__item--contact-or-conversation.module-conversation-list__item--selected,
-.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] {
   background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Contact name */
-.dark-theme .module-conversation-list__item__content__header__name {
-  color: var(--midnight-text-normal) !important;
+/* Selected item — Midnight: interactiveSelected bg rgba(148,149,157,0.24) */
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected,
+.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] {
+  background-color: rgba(148, 149, 157, 0.24) !important;
+}
+
+/* Selected + hover slightly brighter */
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected:hover,
+.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"]:hover {
+  background-color: rgba(148, 149, 157, 0.32) !important;
+}
+
+/* Contact name — Midnight: .name__20a53 16px/20px weight 500 */
+.dark-theme .module-conversation-list__item--contact-or-conversation__content__header__name {
+  color: var(--midnight-channels-default) !important; /* #7a7b83 — non-selected */
   font-weight: 500 !important;
-  font-size: 1rem !important;
+  font-size: 1rem !important; /* 16px */
+  line-height: 20px !important;
 }
 
-/* Timestamp */
-.dark-theme .module-conversation-list__item__content__header__date {
-  color: var(--midnight-text-muted) !important;
-  font-size: 0.75rem !important;
+/* Selected item name → brighter */
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected .module-conversation-list__item--contact-or-conversation__content__header__name,
+.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] .module-conversation-list__item--contact-or-conversation__content__header__name {
+  color: var(--midnight-text-strong) !important; /* #e4e4e6 */
 }
 
-/* Message preview */
-.dark-theme .module-conversation-list__item__content__message__text {
-  color: var(--midnight-channels-default) !important; /* #7a7b83 — muted preview */
-  font-size: 0.875rem !important; /* 14px */
+/* Hide timestamp — Midnight DM list doesn't show timestamps */
+.dark-theme .module-conversation-list__item--contact-or-conversation__content__header__date {
+  display: none !important;
+}
+
+/* Message preview / subtext — Midnight: muted, smaller */
+.dark-theme .module-conversation-list__item--contact-or-conversation__content__message__text {
+  color: var(--midnight-text-muted) !important; /* #888991 */
+  font-size: 13px !important;
   font-weight: 400 !important;
+  line-height: 16px !important;
 }
 
-/* Unread count badge — Midnight: text-only or small dot */
-.dark-theme .module-conversation-list__item__unread-indicator {
-  background-color: #f23f42 !important; /* Midnight uses red notification badges */
+/* Unread count badge — Midnight: red notification badge */
+.dark-theme .module-conversation-list__item--contact-or-conversation__unread-indicator {
+  background-color: #f23f42 !important;
   border: none !important;
   border-radius: 8px !important;
   font-size: 0.6875rem !important;
@@ -1143,9 +1168,23 @@ body.dark-theme *:not(.font-symbols) {
   height: 16px !important;
 }
 
-/* Avatar container */
-.dark-theme .module-conversation-list__item__avatar-container {
-  margin-inline-end: 10px !important;
+/* Avatar container — Midnight: 32px avatar, 12px gap to content */
+.dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container {
+  margin-inline-end: 12px !important; /* Midnight: avatar marginRight 12px */
+}
+
+/* Avatar size — Midnight DM list uses 32px avatars */
+.dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container .module-Avatar,
+.dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container .module-Avatar__contents {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+}
+
+/* Content area — Midnight: overflow hidden, min-width 0 */
+.dark-theme .module-conversation-list__item--contact-or-conversation__content {
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Archive button */
@@ -1155,7 +1194,7 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 .dark-theme .module-conversation-list__item--archive-button:hover {
-  background-color: var(--midnight-bg-hover) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Left pane header */
@@ -1170,7 +1209,7 @@ body.dark-theme *:not(.font-symbols) {
 
 /* Search input in left pane */
 .dark-theme .LeftPaneSearchInput__container {
-  background-color: var(--midnight-bg-surface-highest) !important; /* #1e1f22 — matches Midnight search bar */
+  background-color: var(--midnight-bg-surface-highest) !important; /* #1e1f22 */
   border: none !important;
   border-radius: 4px !important;
 }
@@ -1189,7 +1228,7 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 .dark-theme .NavSidebar__Item:hover {
-  background-color: var(--midnight-bg-hover) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .dark-theme .NavSidebar__ItemLabel {
@@ -1654,46 +1693,7 @@ body.dark-theme *:not(.font-symbols) {
   mask-position: center !important;
 }
 
-/* ==========================================================================
-   Conversation List Polish — Midnight DM list refinements
-   ========================================================================== */
-
-/* Hide timestamps in conversation list items for cleaner Midnight look */
-.dark-theme .module-conversation-list__item__content__header__date {
-  display: none !important;
-}
-
-/* Tighter avatar sizes — Midnight DM list uses 32px avatars */
-.dark-theme .module-conversation-list__item__avatar-container .module-Avatar,
-.dark-theme .module-conversation-list__item__avatar-container .module-Avatar__contents {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-}
-
-/* Selected conversation left-edge pill indicator (Midnight style) */
-.dark-theme .module-conversation-list__item--contact-or-conversation.module-conversation-list__item--selected::before,
-.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"]::before {
-  content: "" !important;
-  position: absolute !important;
-  left: -2px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 4px !important;
-  height: 40px !important;
-  border-radius: 0 4px 4px 0 !important;
-  background-color: #ffffff !important;
-}
-
-/* Ensure conversation list items have position:relative for the pill */
-.dark-theme .module-conversation-list__item--contact-or-conversation {
-  position: relative !important;
-}
-
-/* Tighter vertical padding for denser list */
-.dark-theme .module-conversation-list__item--contact-or-conversation {
-  padding-block: 6px !important;
-}
+/* (Conversation List Polish rules consolidated into main section above) */
 
 /* ==========================================================================
    Code Blocks — Midnight-style dark background, full-width, horizontal scroll
