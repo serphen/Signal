@@ -1595,8 +1595,16 @@ body.dark-theme *:not(.font-symbols) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.risibank-browser__card-meta::before {
-  content: "\1F5BC\FE0F ";
+.risibank-browser__card-count::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 3px;
+  vertical-align: -2px;
+  background-color: #8a8b93;
+  -webkit-mask: url('../images/icons/v3/grid/grid.svg') no-repeat center / contain;
+  mask: url('../images/icons/v3/grid/grid.svg') no-repeat center / contain;
 }
 
 /* -- Install button (shared between grid & detail) -- */

@@ -588,7 +588,13 @@ export const RisibankCollectionBrowser = React.memo(
                         <div className="risibank-browser__card-meta">
                           {collInstalled
                             ? 'Installed'
-                            : `${collection.user.username_custom} \u00b7 ${collection.media_count}`}
+                            : (
+                              <>
+                                {collection.user.username_custom}
+                                {' \u00b7 '}
+                                <span className="risibank-browser__card-count">{collection.media_count}</span>
+                              </>
+                            )}
                         </div>
                       </div>
                     </div>
