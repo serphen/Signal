@@ -557,7 +557,7 @@ body.dark-theme *:not(.font-symbols) {
 /* --- Outer container: #000 bg, 24px bottom breathing room --- */
 .dark-theme .CompositionArea {
   background-color: var(--midnight-bg-primary) !important;
-  padding: 0 16px 24px 16px !important;
+  padding: 0 8px 8px 8px !important;
   min-height: unset !important;
 }
 .dark-theme .ConversationView__composition-area {
@@ -571,14 +571,16 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* --- Main input row = the unified pill ---
-   Midnight: scrollableContainer with themedBackground, 8px radius.
-   Midnight visual-refresh: background-modifier-input = #383a40 (neutral-55). */
+   Midnight: .channelTextArea__74017 + .scrollableContainer__74017.themedBackground__74017
+   Midnight: background = var(--chat-background-default) = hsl(220 7.3% 8%) ≈ #131416
+             border = 1px solid var(--border-muted) = hsla(240 4% 61% / 0.16)
+             border-radius = var(--radius-sm) = 8px */
 .dark-theme .CompositionArea__row:not(.CompositionArea__row--column):not(.CompositionArea__row--control-row) {
-  background-color: #383a40 !important;
+  background-color: hsl(220 7.3% 8%) !important;
+  border: 1px solid hsla(240 4% 61% / 0.16) !important;
   border-radius: 8px !important;
   align-items: center !important;
   padding: 0 !important;
-  border: none !important;
 }
 
 /* --- Input element: transparent (row is the pill) --- */
