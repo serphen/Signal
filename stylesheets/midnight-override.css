@@ -889,8 +889,10 @@ body.dark-theme *:not(.font-symbols) {
   font-size: 0.875rem !important;  /* 14px */
 }
 
-.dark-theme .module-quote--incoming,
-.dark-theme .module-quote--outgoing {
+/* Override ALL quote color variants (incoming/outgoing/compose × every conversation color) */
+.dark-theme [class*="module-quote--incoming"],
+.dark-theme [class*="module-quote--outgoing"],
+.dark-theme [class*="module-quote--compose"] {
   background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
