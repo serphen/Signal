@@ -6,7 +6,7 @@
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
 cd Signal-Desktop
-cp config/production.json config/development.json
+
 nvm install
 nvm use
 
