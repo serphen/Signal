@@ -2073,6 +2073,15 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .FunSearch__Input {
   background: #111214 !important;
 }
+/* Scroller fade masks — match darkened picker background */
+.dark-theme .FunSubNav__ScrollerMask--Left,
+.dark-theme .FunSubNav__Scroller::before {
+  background: linear-gradient(to right, #1a1b1e 20%, transparent) !important;
+}
+.dark-theme .FunSubNav__ScrollerMask--Right,
+.dark-theme .FunSubNav__Scroller::after {
+  background: linear-gradient(to left, #1a1b1e 20%, transparent) !important;
+}
 .dark-theme .FunSubNav__Button:hover,
 .dark-theme .FunSubNav__ListBoxItemButton:hover {
   background: rgba(255, 255, 255, 0.08) !important;
