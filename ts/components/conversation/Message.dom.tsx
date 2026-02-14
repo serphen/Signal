@@ -135,7 +135,7 @@ const log = createLogger('Message');
 
 const EXPIRATION_CHECK_MINIMUM = 2000;
 const EXPIRED_DELAY = 600;
-const GROUP_AVATAR_SIZE = AvatarSize.TWENTY_EIGHT;
+const GROUP_AVATAR_SIZE = AvatarSize.FORTY;
 const STICKER_SIZE = 200;
 const GIF_SIZE = 300;
 // Note: this needs to match the animation time
@@ -1000,11 +1000,10 @@ export class Message extends React.PureComponent<Props, State> {
   }
 
   #shouldRenderAuthor(): boolean {
-    const { author, conversationType, direction, shouldCollapseAbove } =
+    const { author, shouldCollapseAbove } =
       this.props;
+    // Midnight-style: always show author name for group-start messages
     return Boolean(
-      direction === 'incoming' &&
-      conversationType === 'group' &&
       author.title &&
       !shouldCollapseAbove
     );
@@ -1158,7 +1157,7 @@ export class Message extends React.PureComponent<Props, State> {
         <ContactName
           contactNameColor={contactNameColor}
           contactLabel={contactLabel}
-          title={author.isMe ? i18n('icu:you') : author.title}
+          title={author.title}
           module={moduleName}
         />
       </div>
@@ -2298,19 +2297,15 @@ export class Message extends React.PureComponent<Props, State> {
     const {
       author,
       conversationId,
-      conversationType,
-      direction,
       getPreferredBadge,
       i18n,
-      shouldCollapseBelow,
+      shouldCollapseAbove,
       showContactModal,
       theme,
     } = this.props;
 
-    if (conversationType !== 'group' || direction !== 'incoming') {
-      return null;
-    }
-
+    // Midnight-style: show avatar on first message of a group (not collapsed above)
+    // Show spacer on continuation messages to keep text aligned
     return (
       <div
         className={classNames('module-message__author-avatar-container', {
@@ -2318,7 +2313,7 @@ export class Message extends React.PureComponent<Props, State> {
             this.#hasReactions(),
         })}
       >
-        {shouldCollapseBelow ? (
+        {shouldCollapseAbove ? (
           <AvatarSpacer size={GROUP_AVATAR_SIZE} />
         ) : (
           <Avatar
