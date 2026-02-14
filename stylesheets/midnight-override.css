@@ -270,24 +270,21 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Bottom metadata — overlay at bottom-right of message, visible on hover.
-   Midnight has no delivery status. We show it as a subtle floating overlay
-   at the bottom-right of the message content, like a tooltip.
+   Bottom metadata — flush right, aligned with last text line, hover-only.
+   No background, sits on the same row background. Positioned absolute
+   at the far right of the message row, vertically aligned to the bottom.
    ========================================================================== */
 .dark-theme .module-message__metadata {
   color: var(--midnight-text-muted) !important;
-  font-size: 0.6875rem !important;       /* 11px */
-  line-height: 1rem !important;
-  /* Float as overlay at bottom-right */
+  font-size: 0.75rem !important;          /* 12px — same as Midnight timestamp */
+  line-height: 1.375rem !important;       /* 22px — matches text line-height */
   position: absolute !important;
-  bottom: 2px !important;
-  right: var(--midnight-gutter) !important; /* 16px from right edge */
+  bottom: var(--midnight-msg-vertical-pad) !important;  /* 2px — aligns with text baseline */
+  right: var(--midnight-gutter) !important;              /* 16px — same as message padding */
   margin: 0 !important;
-  padding: 2px 6px !important;
-  background: rgba(0, 0, 0, 0.6) !important;
-  border-radius: 4px !important;
+  padding: 0 !important;
+  background: none !important;
   z-index: 2 !important;
-  /* Hidden by default */
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 0.1s ease-out !important;
@@ -295,7 +292,7 @@ body.dark-theme * {
   white-space: nowrap !important;
 }
 
-/* Show metadata overlay on message hover */
+/* Show on hover */
 .dark-theme .module-message:hover .module-message__metadata {
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -305,17 +302,15 @@ body.dark-theme * {
   color: var(--midnight-text-muted) !important;
 }
 
-/* --- Delivery status icons: muted even when visible --- */
 .dark-theme .module-message__metadata__status-icon {
   opacity: 0.6 !important;
 }
 
-/* Also style the "edited" label */
 .dark-theme .module-message__metadata__edited {
   color: var(--midnight-text-muted) !important;
 }
 
-/* Inline metadata — same overlay treatment */
+/* Inline metadata — same absolute positioning */
 .dark-theme .module-message__metadata--inline {
   margin-top: 0 !important;
   float: none !important;
