@@ -605,11 +605,13 @@ export const CompositionArea = memo(function CompositionArea({
   const handleFunPickerOpenChange = useCallback(
     (open: boolean) => {
       setFunPickerOpen(open);
-      if (!open) {
+      if (open) {
+        fun.onChangeTab(FunPickerTabKey.Emoji);
+      } else {
         setComposerFocus(conversationId);
       }
     },
-    [conversationId, setComposerFocus]
+    [conversationId, setComposerFocus, fun]
   );
 
   const handleFunPickerSelectEmoji = useCallback(
