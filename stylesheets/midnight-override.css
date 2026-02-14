@@ -571,9 +571,10 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* --- Main input row = the unified pill ---
-   Midnight: scrollableContainer with themedBackground (#1e1f22), 8px radius */
+   Midnight: scrollableContainer with themedBackground, 8px radius.
+   Midnight visual-refresh: background-modifier-input = #383a40 (neutral-55). */
 .dark-theme .CompositionArea__row:not(.CompositionArea__row--column):not(.CompositionArea__row--control-row) {
-  background-color: var(--midnight-input-bg) !important;
+  background-color: #383a40 !important;
   border-radius: 8px !important;
   align-items: center !important;
   padding: 0 !important;
@@ -597,12 +598,12 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* --- Scroller: match Midnight's textArea ---
-   Midnight: textArea has inline height: 56px (includes scrollable area).
-   The pill visual height for single line ≈ 44px from screenshots.
-   22px content + 11px*2 padding = 44px. */
+   Midnight: textArea has height: 56px, text 16px/22px.
+   Inner padding = (56-22)/2 = 17px top & bottom → pill = 56px.
+   Clamped to 44px min via min-height: 0 (content dictates). */
 .dark-theme .module-composition-input__input__scroller {
-  min-height: 22px !important;
-  padding: 11px 0 !important;
+  min-height: 0 !important;
+  padding: 12px 0 !important;
 }
 
 /* --- Quill wrapper: Midnight uses ~16px horizontal padding inside textArea --- */
