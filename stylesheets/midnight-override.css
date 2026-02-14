@@ -698,6 +698,10 @@ body.dark-theme *:not(.font-symbols) {
   color: var(--midnight-channels-default) !important;
   background: transparent !important;
   border: none !important;
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
 }
 .dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child button:hover,
 .dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child [role="button"]:hover {

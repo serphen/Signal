@@ -687,13 +687,13 @@ export const CompositionArea = memo(function CompositionArea({
 
   const handleOpenStickerPicker = useCallback(() => {
     fun.onChangeTab(FunPickerTabKey.Stickers);
-    handleFunPickerOpenChange(true);
-  }, [fun, handleFunPickerOpenChange]);
+    setFunPickerOpen(true);
+  }, [fun]);
 
   const handleOpenGifPicker = useCallback(() => {
     fun.onChangeTab(FunPickerTabKey.Gifs);
-    handleFunPickerOpenChange(true);
-  }, [fun, handleFunPickerOpenChange]);
+    setFunPickerOpen(true);
+  }, [fun]);
 
   const leftHandSideButtonsFragment = (
     <>
