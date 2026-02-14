@@ -891,7 +891,13 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .module-quote--incoming,
 .dark-theme .module-quote--outgoing {
-  background-color: rgba(255, 255, 255, 0.122) !important; /* --background-mod-subtle */
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Quote spine — Midnight uses a muted gray, not Signal's blurple */
+.dark-theme [class*="module-quote"] .module-quote__primary,
+.dark-theme [class*="module-quote"] .module-quote__reference-warning {
+  border-inline-start-color: var(--midnight-text-muted) !important;
 }
 
 /* ==========================================================================
