@@ -89,7 +89,7 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 .dark-theme .NavSidebar {
-  background-color: var(--midnight-bg-secondary) !important;
+  background-color: var(--midnight-bg-primary) !important;
 }
 
 .dark-theme .NavTabs {
@@ -1208,7 +1208,7 @@ body.dark-theme *:not(.font-symbols) {
      avatar: 32px, margin-right 12px
    ========================================================================== */
 .dark-theme .module-conversation-list {
-  background-color: var(--midnight-bg-secondary) !important;
+  background-color: var(--midnight-bg-primary) !important;
   padding: 0 8px 0 8px !important; /* Midnight: symmetric 8px left/right margin */
 }
 
@@ -1310,12 +1310,12 @@ body.dark-theme *:not(.font-symbols) {
 
 /* Left pane header */
 .dark-theme .module-left-pane__header {
-  background-color: var(--midnight-bg-secondary) !important;
+  background-color: var(--midnight-bg-primary) !important;
 }
 
 /* Left pane footer (gradient) */
 .dark-theme .module-left-pane__footer {
-  background: linear-gradient(transparent, var(--midnight-bg-secondary)) !important;
+  background: linear-gradient(transparent, var(--midnight-bg-primary)) !important;
 }
 
 /* Search input in left pane */

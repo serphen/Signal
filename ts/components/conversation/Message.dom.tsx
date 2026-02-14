@@ -2321,7 +2321,7 @@ export class Message extends React.PureComponent<Props, State> {
 
     // Midnight-style: show avatar on first message of a group (not collapsed above)
     // Show spacer on continuation messages to keep text aligned
-    // For continuation messages, add a hover timestamp in the gutter (Midnight style)
+    // For continuation messages, add a hover timestamp in the gutter
     return (
       <div
         className={classNames('module-message__author-avatar-container', {
