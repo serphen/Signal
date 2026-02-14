@@ -1529,21 +1529,23 @@ body.dark-theme *:not(.font-symbols) {
 .risibank-browser__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 16px;
+  padding: 4px;
 }
 
 .risibank-browser__card {
-  background-color: #1e1f22;
+  background-color: #1a1b1e;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .risibank-browser__card:hover {
   background-color: #2b2d31;
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .risibank-browser__card-previews {
