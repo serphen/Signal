@@ -299,6 +299,12 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message__text--incoming a,
 .dark-theme .module-message__text--outgoing a {
   color: var(--midnight-text-link) !important;
+  text-decoration: none !important;
+}
+.dark-theme .module-message__text a:hover,
+.dark-theme .module-message__text--incoming a:hover,
+.dark-theme .module-message__text--outgoing a:hover {
+  text-decoration: underline !important;
 }
 
 /* ==========================================================================
