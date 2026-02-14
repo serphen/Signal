@@ -2,8 +2,8 @@
  * Midnight Theme Override for Signal Desktop
  * ------------------------------------------
  * Transforms Signal's conversation view to resemble Midnight's midnight theme.
+ * All spacing values taken directly from Midnight's CSS (group-spacing-16, cozy mode).
  * Only CSS overrides + minimal TSX changes (avatar/author always visible).
- * Easy to maintain across Signal updates.
  */
 
 /* ==========================================================================
@@ -21,7 +21,7 @@
 }
 
 /* ==========================================================================
-   CSS Custom Properties (Midnight Midnight palette)
+   CSS Custom Properties — Midnight Midnight palette + exact layout tokens
    ========================================================================== */
 :root {
   --midnight-bg-primary: #111214;
@@ -33,16 +33,25 @@
   --midnight-text-link: #00a8fc;
   --midnight-header-primary: #f2f3f5;
   --midnight-font: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --midnight-avatar-size: 40px;
-  --midnight-message-indent: 72px; /* 16px gutter + 40px avatar + 16px gap */
-  --midnight-gutter: 16px;
+
+  /* Layout tokens — from Midnight CSS variables */
+  --midnight-avatar-size: 40px;                /* --custom-message-avatar-size */
+  --midnight-gutter: 16px;                     /* --custom-message-margin-horizontal */
+  --midnight-message-indent: 4.5rem;           /* 72px = avatar + 2*gutter */
+  --midnight-msg-vertical-pad: 0.125rem;       /* 2px */
+  --midnight-group-spacing: 1.0625rem;         /* 17px (group-spacing-16) */
+  --midnight-group-start-min-height: 2.75rem;  /* 44px */
+  --midnight-meta-space: 0.25rem;              /* 4px */
+
+  /* Misc */
   --midnight-input-bg: #383a40;
   --midnight-reaction-bg: #2b2d31;
   --midnight-divider: #3f4147;
+  --midnight-border-subtle: rgba(255, 255, 255, 0.06);
 }
 
 /* ==========================================================================
-   Global font override
+   Global font
    ========================================================================== */
 body.dark-theme,
 body.dark-theme * {
@@ -52,63 +61,70 @@ body.dark-theme * {
 /* ==========================================================================
    Background colors
    ========================================================================== */
-
-/* Chat area */
 .dark-theme .ConversationView__pane,
 .dark-theme .conversation {
   background-color: var(--midnight-bg-primary) !important;
 }
 
-/* Conversation header bar */
 .dark-theme .module-ConversationHeader {
   background-color: var(--midnight-bg-secondary) !important;
   border-bottom: 1px solid var(--midnight-bg-tertiary) !important;
   box-shadow: none !important;
 }
 
-/* Left sidebar */
 .dark-theme .NavSidebar {
   background-color: var(--midnight-bg-secondary) !important;
 }
 
-/* Tab bar (leftmost icons) */
 .dark-theme .NavTabs {
   background-color: var(--midnight-bg-tertiary) !important;
 }
 
+.dark-theme .ConversationView__composition-area {
+  background-color: var(--midnight-bg-primary) !important;
+}
+
 /* ==========================================================================
-   Message row — base layout
+   Message row — exact Midnight cozy layout
+   Midnight: padding 2px top/bottom, 72px left (content indent), 16px right.
+   Avatar is position:absolute at left:16px.
+   We use flex with avatar container instead, same visual result.
    ========================================================================== */
 .dark-theme .module-message {
   padding-inline: 0 !important;
-  padding-left: var(--midnight-gutter) !important;
-  padding-right: 48px !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
+  padding-left: var(--midnight-gutter) !important;    /* 16px */
+  padding-right: var(--midnight-gutter) !important;   /* 16px — Midnight uses 16px */
+  padding-top: var(--midnight-msg-vertical-pad) !important;    /* 2px */
+  padding-bottom: var(--midnight-msg-vertical-pad) !important; /* 2px */
   border-radius: 0 !important;
   align-items: flex-start !important;
+  position: relative !important;
 }
 
-/* Midnight: hover highlights the full row */
+/* Midnight: hover highlights entire message row */
 .dark-theme .module-message:hover {
   background-color: var(--midnight-bg-hover) !important;
 }
 
-/* Force outgoing messages to left-align (same as incoming) */
+/* Force outgoing messages to left-align */
 .dark-theme .module-message--outgoing {
   flex-direction: row !important;
 }
 
-/* Group-start messages (first of a group) get 1rem top margin like Midnight */
+/* Group-start messages: 1.0625rem (17px) top margin — exact Midnight value */
 .dark-theme .module-message:not(.module-message--collapsed-above) {
-  margin-top: 1.0625rem;
+  margin-top: var(--midnight-group-spacing) !important;
+  min-height: var(--midnight-group-start-min-height) !important; /* 44px min */
 }
+
+/* Continuation messages: no top margin */
 .dark-theme .module-message--collapsed-above {
-  margin-top: 0;
+  margin-top: 0 !important;
+  min-height: 1.375rem !important; /* 22px — Midnight min-height for non-group-start */
 }
 
 /* ==========================================================================
-   Message bubble — REMOVE IT
+   Message bubble — REMOVED (transparent, no padding/margin/radius)
    ========================================================================== */
 .dark-theme .module-message__container,
 .dark-theme .module-message__container--incoming,
@@ -125,50 +141,42 @@ body.dark-theme * {
   color: var(--midnight-text-normal) !important;
 }
 
-/* Collapsed corners — not needed without bubbles */
-.dark-theme .module-message__container {
-  border-radius: 0 !important;
-}
-
-/* Full-width messages (no max-width constraint like Midnight) */
 .dark-theme .module-message__container-outer {
   max-width: 100% !important;
   line-height: normal !important;
 }
 
 /* ==========================================================================
-   Avatar — Midnight-style (top-left, 40px, on first message of group)
+   Avatar — 40px, top-aligned, flex-based (mirrors Midnight absolute positioning)
+   Midnight: position:absolute, left:16px, margin-top:2px
+   We get equivalent via flex: [16px pad][40px avatar][16px gap][content]
    ========================================================================== */
 .dark-theme .module-message__author-avatar-container {
   min-width: var(--midnight-avatar-size) !important;
   width: var(--midnight-avatar-size) !important;
-  margin-inline-end: var(--midnight-gutter) !important;
+  margin-inline-end: var(--midnight-gutter) !important; /* 16px gap */
   padding-bottom: 0 !important;
+  padding-top: 2px !important;  /* Midnight: margin-top: calc(4px - 2px) = 2px */
   align-items: flex-start !important;
   flex-shrink: 0 !important;
 }
 
-.dark-theme .module-message__author-avatar-container .module-Avatar {
-  width: var(--midnight-avatar-size) !important;
-  height: var(--midnight-avatar-size) !important;
-  min-width: var(--midnight-avatar-size) !important;
-}
-
+.dark-theme .module-message__author-avatar-container .module-Avatar,
 .dark-theme .module-message__author-avatar-container .module-Avatar__contents {
   width: var(--midnight-avatar-size) !important;
   height: var(--midnight-avatar-size) !important;
+  min-width: var(--midnight-avatar-size) !important;
   border-radius: 50% !important;
 }
 
 /* ==========================================================================
-   Author name — Midnight-style (inline with timestamp)
+   Author name — Midnight: font-weight 600 (semibold), 16px, inline
    ========================================================================== */
 .dark-theme .module-message__author {
   color: var(--midnight-header-primary) !important;
-  font-family: var(--midnight-font) !important;
-  font-weight: 500 !important;
-  font-size: 1rem !important;
-  line-height: 1.375rem !important;
+  font-weight: 600 !important;  /* Midnight uses semibold (600) */
+  font-size: 1rem !important;   /* 16px */
+  line-height: 1.375rem !important; /* 22px */
   margin-bottom: 0 !important;
   display: inline !important;
   overflow: visible !important;
@@ -176,17 +184,16 @@ body.dark-theme * {
 
 .dark-theme .module-message__author_with_sticker {
   color: var(--midnight-header-primary) !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
 /* ==========================================================================
-   Text content
+   Text content — Midnight: 16px, line-height 22px
    ========================================================================== */
 .dark-theme .module-message__text,
 .dark-theme .module-message__text--incoming,
 .dark-theme .module-message__text--outgoing {
   color: var(--midnight-text-normal) !important;
-  font-family: var(--midnight-font) !important;
   font-size: 1rem !important;
   line-height: 1.375rem !important;
 }
@@ -198,13 +205,15 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Metadata (timestamp + status) — Midnight-style
+   Metadata (timestamp + delivery status)
+   Midnight has NO delivery status. We hide status icons by default,
+   show them only on hover for Signal-specific context.
+   Timestamp: 12px, muted, left-aligned.
    ========================================================================== */
 .dark-theme .module-message__metadata {
   color: var(--midnight-text-muted) !important;
-  font-family: var(--midnight-font) !important;
-  font-size: 0.75rem !important;
-  line-height: 1.375rem !important;
+  font-size: 0.75rem !important;          /* 12px */
+  line-height: 1.375rem !important;       /* 22px */
   margin-top: 0 !important;
   justify-content: flex-start !important;
 }
@@ -213,31 +222,105 @@ body.dark-theme * {
   color: var(--midnight-text-muted) !important;
 }
 
-/* When metadata is inline with text (common for short messages),
-   make it Midnight-style subtle */
-.dark-theme .module-message__metadata--inline {
-  margin-top: 0 !important;
+/* --- Delivery status icons: hidden by default, visible on hover --- */
+/* Midnight doesn't have delivery status, so hide it normally */
+.dark-theme .module-message__metadata__status-icon {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease-out !important;
+  width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 }
 
-/* Status icons — subtler */
-.dark-theme .module-message__metadata__status-icon {
-  opacity: 0.4 !important;
+/* Show on message hover */
+.dark-theme .module-message:hover .module-message__metadata__status-icon {
+  opacity: 0.5 !important;
+  width: 12px !important;
+  margin-inline: 6px !important;
+}
+
+/* Also hide the "edited" label by default, show on hover */
+.dark-theme .module-message__metadata__edited {
+  opacity: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  transition: opacity 0.15s ease-out !important;
+}
+
+.dark-theme .module-message:hover .module-message__metadata__edited {
+  opacity: 1 !important;
+  width: auto !important;
+}
+
+/* Inline metadata — Midnight doesn't float timestamps bottom-right */
+.dark-theme .module-message__metadata--inline {
+  margin-top: 0 !important;
+  float: none !important;
 }
 
 /* ==========================================================================
-   Emoji-only messages
+   Date header — Midnight-style horizontal line with centered label
+   Midnight: border-top thin solid, text centered on the line,
+   margin-top 1.5rem (24px), margin-bottom 0.5rem (8px) for group-spacing-16.
+   Font: 12px, semibold (600), muted color, border-radius 8px, padding 2px 4px.
    ========================================================================== */
-.dark-theme .module-message__container--emoji {
+.dark-theme .TimelineDateHeader {
+  color: var(--midnight-text-muted) !important;
+  font-size: 0.75rem !important;  /* 12px */
+  font-weight: 600 !important;    /* semibold */
+  line-height: 0.8125rem !important; /* 13px */
+}
+
+.dark-theme .TimelineDateHeader--inline {
+  padding: 0 !important;
+  margin-top: 1.5rem !important;   /* 24px — Midnight divider top margin */
+  margin-bottom: 0.5rem !important; /* 8px — Midnight divider bottom margin (group-spacing-16) */
+  margin-inline: 1rem 0.875rem !important; /* 16px / 14px — Midnight divider margins */
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+/* Horizontal line through the date header (Midnight-style) */
+.dark-theme .TimelineDateHeader--inline::before,
+.dark-theme .TimelineDateHeader--inline::after {
+  content: "" !important;
+  flex: 1 !important;
+  border-bottom: 1px solid var(--midnight-divider) !important;
+}
+
+.dark-theme .TimelineDateHeader--inline::before {
+  margin-right: 0.5rem !important;
+}
+
+.dark-theme .TimelineDateHeader--inline::after {
+  margin-left: 0.5rem !important;
+}
+
+/* Floating date header (sticky at top) */
+.dark-theme .TimelineDateHeader--floating {
+  background-color: var(--midnight-bg-primary) !important;
+  border: 1px solid var(--midnight-divider) !important;
+  border-radius: 8px !important;
+  padding: 2px 8px !important;
+}
+
+.dark-theme .TimelineFloatingHeader {
+  z-index: 3 !important;
+}
+
+/* ==========================================================================
+   Emoji-only & sticker messages
+   ========================================================================== */
+.dark-theme .module-message__container--emoji,
+.dark-theme .module-message__container--sticker-like {
   background: transparent !important;
   padding: 0 !important;
 }
 
-.dark-theme .module-message__container--sticker-like {
-  background: transparent !important;
-}
-
 /* ==========================================================================
-   Reactions — Midnight-style pills
+   Reactions — Midnight pills
    ========================================================================== */
 .dark-theme .module-message__reactions {
   padding-top: 4px !important;
@@ -260,7 +343,7 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Action buttons (reply, react, menu) — Midnight floating toolbar
+   Action buttons — Midnight floating toolbar
    ========================================================================== */
 .dark-theme .module-message__buttons {
   position: absolute !important;
@@ -269,7 +352,7 @@ body.dark-theme * {
   background: var(--midnight-bg-secondary) !important;
   border-radius: 4px !important;
   padding: 2px 4px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--midnight-border-subtle) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
   z-index: 2 !important;
 }
@@ -281,11 +364,11 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Composition area — Midnight input style
+   Composition area — Midnight input bar
    ========================================================================== */
 .dark-theme .CompositionArea {
   background-color: var(--midnight-bg-primary) !important;
-  padding-inline: 16px !important;
+  padding-inline: var(--midnight-gutter) !important;
 }
 
 .dark-theme .module-composition-input__input {
@@ -294,12 +377,10 @@ body.dark-theme * {
   color: var(--midnight-text-normal) !important;
 }
 
-/* Placeholder text */
 .dark-theme .module-composition-input__input .ql-blank::before {
   color: var(--midnight-text-muted) !important;
 }
 
-/* Composition buttons */
 .dark-theme .CompositionArea__button-cell {
   color: var(--midnight-text-muted) !important;
 }
@@ -313,20 +394,13 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Timeline date headers — Midnight-style divider
-   ========================================================================== */
-.dark-theme .module-timeline-date-header {
-  color: var(--midnight-text-muted) !important;
-  font-family: var(--midnight-font) !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-}
-
-/* ==========================================================================
-   Quotes / Replies
+   Quotes / Replies — Midnight-style
+   Midnight reply: 14px font, 18px line-height, 4px bottom margin,
+   2px spine width, 6px spine border-radius
    ========================================================================== */
 .dark-theme .module-quote {
   border-radius: 4px !important;
+  font-size: 0.875rem !important;  /* 14px */
 }
 
 .dark-theme .module-quote--incoming,
@@ -339,7 +413,7 @@ body.dark-theme * {
    ========================================================================== */
 .dark-theme .module-message__link-preview {
   background-color: #2b2d31 !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
 }
@@ -354,7 +428,7 @@ body.dark-theme * {
 .dark-theme .module-message__simple-attachment {
   background-color: var(--midnight-bg-secondary) !important;
   border-radius: 8px !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--midnight-border-subtle) !important;
 }
 
 .dark-theme .module-message__simple-attachment__file-name,
@@ -368,7 +442,7 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Scrollbar — Midnight thin dark scrollbar
+   Scrollbar — Midnight thin dark
    ========================================================================== */
 .dark-theme .ConversationView__timeline::-webkit-scrollbar {
   width: 8px !important;
@@ -397,15 +471,12 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Selection state
+   Selection / focus states
    ========================================================================== */
 .dark-theme .module-message__wrapper--selected {
   background: rgba(88, 101, 242, 0.08) !important;
 }
 
-/* ==========================================================================
-   Keyboard focus
-   ========================================================================== */
 .dark-theme .module-message:focus-within {
   background: var(--midnight-bg-hover) !important;
 }
@@ -418,20 +489,22 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Error container — reduce min-width since bubbles are gone
+   Error container
    ========================================================================== */
 .dark-theme .module-message__error-container {
   min-width: 20px !important;
 }
 
 /* ==========================================================================
-   Conversation list (left sidebar) — Midnight DM list style
+   Conversation list (left sidebar)
    ========================================================================== */
 .dark-theme .module-conversation-list {
   background-color: var(--midnight-bg-secondary) !important;
 }
 
-/* Conversation header buttons — Midnight icon style */
+/* ==========================================================================
+   Conversation header
+   ========================================================================== */
 .dark-theme .module-ConversationHeader__button::before {
   background-color: var(--midnight-text-muted) !important;
 }
@@ -439,7 +512,6 @@ body.dark-theme * {
   background-color: var(--midnight-text-normal) !important;
 }
 
-/* Conversation header info text */
 .dark-theme .module-ConversationHeader__header__info__title {
   color: var(--midnight-header-primary) !important;
 }
@@ -447,36 +519,9 @@ body.dark-theme * {
   color: var(--midnight-text-muted) !important;
 }
 
-/* AvatarSpacer: automatically 40px via GROUP_AVATAR_SIZE = FORTY in TSX */
-
 /* ==========================================================================
-   Timestamp on hover for collapsed messages (Midnight-style)
-   Midnight shows the time in the left gutter on hover for grouped messages.
+   System messages
    ========================================================================== */
-.dark-theme .module-message--collapsed-above .module-message__metadata {
-  font-size: 0.6875rem !important;
-}
-
-/* ==========================================================================
-   Timeline floating header — Midnight date pill style
-   ========================================================================== */
-.dark-theme .TimelineFloatingHeader {
-  background-color: var(--midnight-bg-secondary) !important;
-  color: var(--midnight-text-muted) !important;
-  border: 1px solid var(--midnight-bg-tertiary) !important;
-}
-
-/* ==========================================================================
-   System/admin messages — Midnight-style muted
-   ========================================================================== */
-.dark-theme .module-message-admin,
 .dark-theme .SystemMessage {
   color: var(--midnight-text-muted) !important;
-}
-
-/* ==========================================================================
-   Conversation view bottom bar background
-   ========================================================================== */
-.dark-theme .ConversationView__composition-area {
-  background-color: var(--midnight-bg-primary) !important;
 }
