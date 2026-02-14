@@ -949,7 +949,7 @@ body.dark-theme *:not(.font-symbols) {
    Link previews — Midnight embed style
    ========================================================================== */
 .dark-theme .module-message__link-preview {
-  background-color: #0e0f11 !important;
+  background-color: oklab(0.190993 -0.000410579 -0.0043043) !important;
   border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;

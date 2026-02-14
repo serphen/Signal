@@ -533,7 +533,10 @@ function MessageMenu({
   React.useEffect(() => {
     if (isShiftHeld && isHovered && !hasAutoOpened.current) {
       hasAutoOpened.current = true;
-      menuButtonRef.current?.click();
+      // Radix DropdownMenu.Trigger listens on pointerdown (button=0)
+      menuButtonRef.current?.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, button: 0 })
+      );
     }
     if (!isShiftHeld) {
       hasAutoOpened.current = false;
