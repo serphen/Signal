@@ -1773,17 +1773,15 @@ body.dark-theme *:not(.font-symbols) {
 
 /* ==========================================================================
    Kill title-bar drag area padding/height — flush UI to the top edge
+   Exception: NavTabs keeps its padding (not overridden here).
    ========================================================================== */
-.dark-theme {
-  --title-bar-drag-area-height: 0px !important;
+
+/* NavSidebar: flush to top */
+.dark-theme .NavSidebar {
+  padding-top: 0 !important;
 }
 
-/* NavTabs: keep top padding (drag area) — exception */
-.dark-theme .NavTabs {
-  padding-top: var(--title-bar-drag-area-height) !important;
-}
-
-/* Conversation header: remove top padding, use fixed height */
+/* Conversation header: flush to top, fixed height */
 .dark-theme .module-ConversationHeader {
   padding-top: 0 !important;
   height: 48px !important;
