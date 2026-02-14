@@ -269,6 +269,7 @@ const actions = () => ({
   ),
   setCenterMessage: action('setCenterMessage'),
   setIsNearBottom: action('setIsNearBottom'),
+  clearUnreadMetrics: action('clearUnreadMetrics'),
   loadOlderMessages: action('loadOlderMessages'),
   loadNewerMessages: action('loadNewerMessages'),
   loadNewestMessages: action('loadNewestMessages'),

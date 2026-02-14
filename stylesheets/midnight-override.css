@@ -607,7 +607,7 @@ body.dark-theme *:not(.font-symbols) {
 
 /* --- Quill wrapper: Midnight uses ~16px horizontal padding inside textArea --- */
 .dark-theme .module-composition-input__quill {
-  padding-inline: 16px !important;
+  padding-inline: 12px !important;
 }
 
 /* --- Quill container font: Signal defaults to font-body-1 (14px/20px),
@@ -623,6 +623,10 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-composition-input__input .ql-blank::before {
   color: var(--midnight-input-placeholder) !important;
   font-style: normal !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
 }
 
 /* ==========================================================================
@@ -1822,6 +1826,11 @@ body.dark-theme *:not(.font-symbols) {
   height: 0 !important;
 }
 
+/* 24px breathing room after the last message in the timeline */
+.dark-theme .module-timeline__messages {
+  padding-bottom: 24px !important;
+}
+
 /* ==========================================================================
    Midnight-style Drag & Drop Upload Overlay
    Shows a dark overlay with "Upload to @username" when dragging files
@@ -1906,6 +1915,7 @@ body.dark-theme *:not(.font-symbols) {
 /* Title: "Upload to @username" */
 .dark-theme .ConversationView__drop-overlay__title {
   font-size: 24px !important;
+  line-height: 32px !important;
   font-weight: 600 !important;
   color: var(--midnight-text-normal, #dbdee1) !important;
   margin-bottom: 8px !important;
@@ -1920,6 +1930,7 @@ body.dark-theme *:not(.font-symbols) {
 /* Instructions text */
 .dark-theme .ConversationView__drop-overlay__instructions {
   font-size: 14px !important;
+  line-height: 20px !important;
   color: var(--midnight-text-muted, #949ba4) !important;
   font-family: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
   white-space: pre-line !important;
