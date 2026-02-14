@@ -40,7 +40,7 @@
   --midnight-text-muted: #888991;              /* --text-muted (neutral-33) */
   --midnight-text-link: #3789ea;               /* --text-link (blue-new-42) */
   --midnight-chat-text-muted: #767780;         /* --chat-text-muted (neutral-38) */
-  --midnight-header-primary: #888991;          /* --text-muted — username color */
+  --midnight-header-primary: #e4e4e6;          /* --text-strong (neutral-8) — username color, oklab(0.919362 0.000797629 -0.00255835) */
   --midnight-font: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* Layout tokens — from Midnight CSS variables */
