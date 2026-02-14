@@ -188,6 +188,71 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
+   Inline header timestamp — Midnight: "Username — HH:MM" on group-start
+   Always visible. Sits inline next to the author name with em-dash separator.
+   Midnight: font-size 12px, line-height 22px, muted color, font-weight 500.
+   ========================================================================== */
+.dark-theme .module-message__header-timestamp {
+  display: inline !important;
+  margin-inline-start: 0 !important;
+  font-size: 0.75rem !important;         /* 12px */
+  line-height: 1.375rem !important;      /* 22px */
+  color: var(--midnight-text-muted) !important;
+  font-weight: 500 !important;
+  vertical-align: baseline !important;
+}
+
+/* Em-dash separator before the time — Midnight: " — " */
+.dark-theme .module-message__header-timestamp::before {
+  content: " \2014 " !important;          /* — (em dash) */
+  color: var(--midnight-text-muted) !important;
+}
+
+.dark-theme .module-message__header-timestamp time {
+  display: inline !important;
+  color: var(--midnight-text-muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+/* ==========================================================================
+   Gutter timestamp — Midnight: shown ONLY on hover for continuation messages
+   Positioned over the avatar spacer area, hidden by default.
+   Midnight uses compact time (e.g. "15:31") centered in the 40px gutter.
+   ========================================================================== */
+.dark-theme .module-message__gutter-timestamp {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: var(--midnight-avatar-size) !important;  /* 40px */
+  height: 1.375rem !important;                    /* 22px — one line */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0 !important;
+  transition: opacity 0.1s ease-out !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.dark-theme .module-message__gutter-timestamp time {
+  font-size: 0.6875rem !important;      /* 11px — Midnight compact */
+  line-height: 1.375rem !important;
+  color: var(--midnight-text-muted) !important;
+  font-weight: 500 !important;
+}
+
+/* Show gutter timestamp ONLY on message row hover */
+.dark-theme .module-message:hover .module-message__gutter-timestamp {
+  opacity: 1 !important;
+}
+
+/* Avatar spacer needs relative positioning for the gutter timestamp */
+.dark-theme .module-message--collapsed-above .module-message__author-avatar-container {
+  position: relative !important;
+}
+
+/* ==========================================================================
    Text content — Midnight: 16px, line-height 22px
    ========================================================================== */
 .dark-theme .module-message__text,
@@ -205,54 +270,52 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Metadata (timestamp + delivery status)
-   Midnight has NO delivery status. We hide status icons by default,
-   show them only on hover for Signal-specific context.
-   Timestamp: 12px, muted, left-aligned.
+   Bottom metadata — overlay at bottom-right of message, visible on hover.
+   Midnight has no delivery status. We show it as a subtle floating overlay
+   at the bottom-right of the message content, like a tooltip.
    ========================================================================== */
 .dark-theme .module-message__metadata {
   color: var(--midnight-text-muted) !important;
-  font-size: 0.75rem !important;          /* 12px */
-  line-height: 1.375rem !important;       /* 22px */
-  margin-top: 0 !important;
-  justify-content: flex-start !important;
+  font-size: 0.6875rem !important;       /* 11px */
+  line-height: 1rem !important;
+  /* Float as overlay at bottom-right */
+  position: absolute !important;
+  bottom: 2px !important;
+  right: var(--midnight-gutter) !important; /* 16px from right edge */
+  margin: 0 !important;
+  padding: 2px 6px !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  border-radius: 4px !important;
+  z-index: 2 !important;
+  /* Hidden by default */
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.1s ease-out !important;
+  justify-content: flex-end !important;
+  white-space: nowrap !important;
+}
+
+/* Show metadata overlay on message hover */
+.dark-theme .module-message:hover .module-message__metadata {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .dark-theme .module-message__metadata--outgoing {
   color: var(--midnight-text-muted) !important;
 }
 
-/* --- Delivery status icons: hidden by default, visible on hover --- */
-/* Midnight doesn't have delivery status, so hide it normally */
+/* --- Delivery status icons: muted even when visible --- */
 .dark-theme .module-message__metadata__status-icon {
-  opacity: 0 !important;
-  transition: opacity 0.15s ease-out !important;
-  width: 0 !important;
-  margin: 0 !important;
-  overflow: hidden !important;
+  opacity: 0.6 !important;
 }
 
-/* Show on message hover */
-.dark-theme .module-message:hover .module-message__metadata__status-icon {
-  opacity: 0.5 !important;
-  width: 12px !important;
-  margin-inline: 6px !important;
-}
-
-/* Also hide the "edited" label by default, show on hover */
+/* Also style the "edited" label */
 .dark-theme .module-message__metadata__edited {
-  opacity: 0 !important;
-  width: 0 !important;
-  overflow: hidden !important;
-  transition: opacity 0.15s ease-out !important;
+  color: var(--midnight-text-muted) !important;
 }
 
-.dark-theme .module-message:hover .module-message__metadata__edited {
-  opacity: 1 !important;
-  width: auto !important;
-}
-
-/* Inline metadata — Midnight doesn't float timestamps bottom-right */
+/* Inline metadata — same overlay treatment */
 .dark-theme .module-message__metadata--inline {
   margin-top: 0 !important;
   float: none !important;

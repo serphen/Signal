@@ -33,6 +33,7 @@ import { AvatarSpacer } from '../AvatarSpacer.dom.js';
 import { MessageBodyReadMore } from './MessageBodyReadMore.dom.js';
 import { MessageMetadata } from './MessageMetadata.dom.js';
 import { MessageTextMetadataSpacer } from './MessageTextMetadataSpacer.dom.js';
+import { formatTimestamp } from '../../util/formatTimestamp.dom.js';
 import { ImageGrid } from './ImageGrid.dom.js';
 import { GIF } from './GIF.dom.js';
 import { CurveType, Image } from './Image.dom.js';
@@ -1137,8 +1138,15 @@ export class Message extends React.PureComponent<Props, State> {
   }
 
   #renderAuthor(): ReactNode {
-    const { author, contactLabel, contactNameColor, i18n, isSticker, quote } =
-      this.props;
+    const {
+      author,
+      contactLabel,
+      contactNameColor,
+      i18n,
+      isSticker,
+      quote,
+      timestamp,
+    } = this.props;
 
     if (!this.#shouldRenderAuthor()) {
       return null;
@@ -1160,6 +1168,15 @@ export class Message extends React.PureComponent<Props, State> {
           title={author.title}
           module={moduleName}
         />
+        <span className="module-message__header-timestamp">
+          <time dateTime={new Date(timestamp).toISOString()}>
+            {formatTimestamp(timestamp, {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: false,
+            })}
+          </time>
+        </span>
       </div>
     );
   }
@@ -2302,10 +2319,12 @@ export class Message extends React.PureComponent<Props, State> {
       shouldCollapseAbove,
       showContactModal,
       theme,
+      timestamp,
     } = this.props;
 
     // Midnight-style: show avatar on first message of a group (not collapsed above)
     // Show spacer on continuation messages to keep text aligned
+    // For continuation messages, add a hover timestamp in the gutter (Midnight style)
     return (
       <div
         className={classNames('module-message__author-avatar-container', {
@@ -2314,7 +2333,18 @@ export class Message extends React.PureComponent<Props, State> {
         })}
       >
         {shouldCollapseAbove ? (
-          <AvatarSpacer size={GROUP_AVATAR_SIZE} />
+          <>
+            <AvatarSpacer size={GROUP_AVATAR_SIZE} />
+            <span className="module-message__gutter-timestamp">
+              <time dateTime={new Date(timestamp).toISOString()}>
+                {formatTimestamp(timestamp, {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: false,
+                })}
+              </time>
+            </span>
+          </>
         ) : (
           <Avatar
             avatarUrl={author.avatarUrl}
