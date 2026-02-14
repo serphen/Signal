@@ -24,7 +24,7 @@
    CSS Custom Properties — Midnight Midnight palette + exact layout tokens
    ========================================================================== */
 :root {
-  --midnight-bg-primary: #111214;
+  --midnight-bg-primary: #000000;
   --midnight-bg-secondary: #1e1f22;
   --midnight-bg-tertiary: #0b0d0e;
   --midnight-bg-hover: rgba(255, 255, 255, 0.06);
@@ -97,7 +97,7 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message {
   padding-inline: 0 !important;
   padding-left: var(--midnight-gutter) !important;    /* 16px */
-  padding-right: 48px !important;                     /* 48px — Midnight right padding */
+  padding-right: var(--midnight-gutter) !important;   /* 16px — same as Midnight */
   padding-top: var(--midnight-msg-vertical-pad) !important;    /* 2px */
   padding-bottom: var(--midnight-msg-vertical-pad) !important; /* 2px */
   border-radius: 0 !important;
@@ -120,13 +120,11 @@ body.dark-theme *:not(.font-symbols) {
 /* Group-start messages (avatar + author shown): Midnight 17px top margin */
 .dark-theme .module-message:not(.module-message--collapsed-above) {
   margin-top: var(--midnight-group-spacing) !important;
-  min-height: var(--midnight-group-start-min-height) !important; /* 44px min */
 }
 
-/* Continuation messages: no extra top margin, tight spacing */
+/* Continuation messages: no extra top margin, zero spacing */
 .dark-theme .module-message--collapsed-above {
   margin-top: 0 !important;
-  min-height: 1.375rem !important; /* 22px — one line height */
 }
 
 /* ==========================================================================
@@ -144,11 +142,20 @@ body.dark-theme *:not(.font-symbols) {
   margin: 0 !important;
   overflow: visible !important;
   color: var(--midnight-text-normal) !important;
+  /* static so metadata can position absolute to .module-message row */
+  position: static !important;
 }
 
 .dark-theme .module-message__container-outer {
   max-width: 100% !important;
   line-height: 1.375rem !important; /* 22px — Midnight consistent line height */
+}
+
+/* Kill all container margin/padding for collapsed messages (Signal adds 1px) */
+.dark-theme .module-message--collapsed-above .module-message__container,
+.dark-theme .module-message--collapsed-below .module-message__container {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* ==========================================================================
@@ -216,18 +223,18 @@ body.dark-theme *:not(.font-symbols) {
 
 /* ==========================================================================
    Gutter timestamp — Midnight: shown ONLY on hover for continuation messages
-   Positioned over the avatar spacer area, hidden by default.
-   Midnight uses compact time (e.g. "15:31") centered in the 40px gutter.
+   Midnight: width 56px (16px gutter + 40px avatar), text-align:end, position:absolute.
+   We offset left by -16px from the avatar container to span the full gutter.
    ========================================================================== */
 .dark-theme .module-message__gutter-timestamp {
   position: absolute !important;
   top: 0 !important;
-  left: 0 !important;
-  width: var(--midnight-avatar-size) !important;  /* 40px */
-  height: 1.375rem !important;                    /* 22px — one line */
+  left: calc(-1 * var(--midnight-gutter)) !important;  /* -16px: start at row edge */
+  width: 56px !important;                              /* 16px + 40px = full gutter */
+  height: 1.375rem !important;                         /* 22px — one line */
   display: flex !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-end !important;                /* text-align: end */
   opacity: 0 !important;
   transition: opacity 0.1s ease-out !important;
   pointer-events: none !important;
@@ -239,6 +246,7 @@ body.dark-theme *:not(.font-symbols) {
   line-height: 1.375rem !important;
   color: var(--midnight-text-muted) !important;
   font-weight: 500 !important;
+  margin-inline-end: 0.25rem !important; /* Midnight: --custom-message-meta-space */
 }
 
 /* Show gutter timestamp ONLY on message row hover */
@@ -246,20 +254,32 @@ body.dark-theme *:not(.font-symbols) {
   opacity: 1 !important;
 }
 
-/* Avatar spacer needs relative positioning for the gutter timestamp */
+/* Avatar spacer in continuation messages: keep width for alignment, zero height.
+   The AvatarSpacer is a div with inline style height:40 — override with !important.
+   position:relative needed for the absolute gutter timestamp. */
 .dark-theme .module-message--collapsed-above .module-message__author-avatar-container {
   position: relative !important;
+  height: auto !important;
+  align-self: stretch !important;
+}
+.dark-theme .module-message--collapsed-above .module-message__author-avatar-container > div:not(.module-message__gutter-timestamp) {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* ==========================================================================
-   Text content — Midnight: 16px, line-height 22px
+   Text content — Midnight: 16px, line-height 22px, zero extra spacing
    ========================================================================== */
 .dark-theme .module-message__text,
 .dark-theme .module-message__text--incoming,
 .dark-theme .module-message__text--outgoing {
   color: var(--midnight-text-normal) !important;
-  font-size: 1rem !important;
-  line-height: 1.375rem !important;
+  font-size: 1rem !important;           /* 16px */
+  line-height: 1.375rem !important;     /* 22px */
+  letter-spacing: normal !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .dark-theme .module-message__text a,
@@ -269,10 +289,14 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* ==========================================================================
-   Bottom metadata — hover-only, right-aligned.
-   Only the last message of a group renders metadata (Signal logic).
+   Bottom metadata — hover-only, absolute right, aligned with last text line.
+   Anchored to .module-message (position:relative) since container is static.
+   Same right offset as action buttons (14px).
    ========================================================================== */
 .dark-theme .module-message__metadata {
+  position: absolute !important;
+  right: 14px !important;
+  bottom: var(--midnight-msg-vertical-pad) !important; /* 2px — match row padding */
   color: var(--midnight-text-muted) !important;
   font-size: 0.75rem !important;
   line-height: 1.375rem !important;
@@ -280,15 +304,17 @@ body.dark-theme *:not(.font-symbols) {
   justify-content: flex-end !important;
   opacity: 0 !important;
   transition: opacity 0.1s ease-out !important;
+  z-index: 1 !important;
 }
 
 .dark-theme .module-message:hover .module-message__metadata {
   opacity: 1 !important;
 }
 
+/* Override inline variant — no float/margin needed, absolute handles it */
 .dark-theme .module-message__metadata--inline {
-  float: inline-end !important;
-  margin-top: -14px !important; /* pull up into text line */
+  float: none !important;
+  margin-top: 0 !important;
 }
 
 .dark-theme .module-message__metadata--outgoing {
@@ -469,10 +495,39 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* ==========================================================================
-   Attachments
+   Image attachments — Midnight-style: rounded corners, proper spacing
    ========================================================================== */
+.dark-theme .module-message__attachment-container {
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+  margin-inline: 0 !important;
+  text-align: start !important;
+  background-color: transparent !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
 .dark-theme .module-message__img-attachment {
   border-radius: 8px !important;
+  margin-bottom: 0 !important;  /* Signal adds -3px */
+}
+
+.dark-theme .module-image-grid {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+/* Remove Signal's inset box-shadow border on images */
+.dark-theme .module-image__border-overlay,
+.dark-theme .module-image__border-overlay--with-border {
+  box-shadow: none !important;
+}
+
+/* Image metadata overlay (no-caption images) — remove Signal's absolute bottom overlay */
+.dark-theme .module-message__metadata--with-image-no-caption {
+  position: absolute !important;
+  bottom: 2px !important;
+  right: 14px !important;
 }
 
 .dark-theme .module-message__simple-attachment {
@@ -521,14 +576,15 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* ==========================================================================
-   Selection / focus states
+   Selection / focus / targeted states — disable click-to-highlight
    ========================================================================== */
-.dark-theme .module-message__wrapper--selected {
-  background: rgba(88, 101, 242, 0.08) !important;
+.dark-theme .module-message__container--targeted,
+.dark-theme .module-message__container--targeted-lighter {
+  animation: none !important;
 }
 
-.dark-theme .module-message:focus-within {
-  background: var(--midnight-bg-hover) !important;
+.dark-theme .module-message__wrapper--selected {
+  background: transparent !important;
 }
 
 /* ==========================================================================
