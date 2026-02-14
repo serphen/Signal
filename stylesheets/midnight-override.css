@@ -48,13 +48,17 @@
   --midnight-reaction-bg: #2b2d31;
   --midnight-divider: #3f4147;
   --midnight-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Override Signal's own font variable so everything picks up sd sans */
+  --font-sans: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* ==========================================================================
-   Global font
+   Global font — override Signal's --font-sans + body font.
+   Excludes SignalSymbols icon font (.font-symbols) so icons render correctly.
    ========================================================================== */
 body.dark-theme,
-body.dark-theme * {
+body.dark-theme *:not(.font-symbols) {
   font-family: var(--midnight-font) !important;
 }
 
@@ -86,19 +90,21 @@ body.dark-theme * {
 
 /* ==========================================================================
    Message row — exact Midnight cozy layout
-   Midnight: padding 2px top/bottom, 72px left (content indent), 16px right.
+   Midnight: padding 2px top/bottom, 48px left (content indent), 48px right.
    Avatar is position:absolute at left:16px.
    We use flex with avatar container instead, same visual result.
    ========================================================================== */
 .dark-theme .module-message {
   padding-inline: 0 !important;
   padding-left: var(--midnight-gutter) !important;    /* 16px */
-  padding-right: var(--midnight-gutter) !important;   /* 16px — Midnight uses 16px */
+  padding-right: 48px !important;                     /* 48px — Midnight right padding */
   padding-top: var(--midnight-msg-vertical-pad) !important;    /* 2px */
   padding-bottom: var(--midnight-msg-vertical-pad) !important; /* 2px */
   border-radius: 0 !important;
   align-items: flex-start !important;
   position: relative !important;
+  /* Consistent line height for all message rows */
+  line-height: 1.375rem !important; /* 22px — Midnight baseline */
 }
 
 /* Midnight: hover highlights entire message row */
@@ -117,10 +123,10 @@ body.dark-theme * {
   min-height: var(--midnight-group-start-min-height) !important; /* 44px min */
 }
 
-/* Continuation messages: no extra top margin, consistent tight spacing */
+/* Continuation messages: no extra top margin, tight spacing */
 .dark-theme .module-message--collapsed-above {
   margin-top: 0 !important;
-  min-height: 1.375rem !important; /* 22px */
+  min-height: 1.375rem !important; /* 22px — one line height */
 }
 
 /* ==========================================================================
@@ -142,7 +148,7 @@ body.dark-theme * {
 
 .dark-theme .module-message__container-outer {
   max-width: 100% !important;
-  line-height: normal !important;
+  line-height: 1.375rem !important; /* 22px — Midnight consistent line height */
 }
 
 /* ==========================================================================
@@ -263,14 +269,15 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Bottom metadata — hover-only, inline at the end of content.
+   Bottom metadata — hover-only, right-aligned.
+   Only the last message of a group renders metadata (Signal logic).
    ========================================================================== */
 .dark-theme .module-message__metadata {
   color: var(--midnight-text-muted) !important;
   font-size: 0.75rem !important;
   line-height: 1.375rem !important;
   margin-top: 0 !important;
-  justify-content: flex-start !important;
+  justify-content: flex-end !important;
   opacity: 0 !important;
   transition: opacity 0.1s ease-out !important;
 }
@@ -280,8 +287,8 @@ body.dark-theme * {
 }
 
 .dark-theme .module-message__metadata--inline {
-  float: none !important;
-  margin-top: 0 !important;
+  float: inline-end !important;
+  margin-top: -14px !important; /* pull up into text line */
 }
 
 .dark-theme .module-message__metadata--outgoing {
@@ -299,12 +306,6 @@ body.dark-theme * {
 
 .dark-theme .module-message__metadata__edited {
   color: var(--midnight-text-muted) !important;
-}
-
-/* Inline metadata — same absolute positioning */
-.dark-theme .module-message__metadata--inline {
-  margin-top: 0 !important;
-  float: none !important;
 }
 
 /* ==========================================================================

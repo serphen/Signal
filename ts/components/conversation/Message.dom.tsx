@@ -846,15 +846,12 @@ export class Message extends React.PureComponent<Props, State> {
   ): MetadataPlacement {
     const { imageBroken } = this.state;
 
-    if (
-      !expirationLength &&
-      !expirationTimestamp &&
-      !isPinned &&
-      (!status || SENT_STATUSES.has(status)) &&
-      shouldHideMetadata
-    ) {
-      return MetadataPlacement.NotRendered;
-    }
+    // Midnight theme: always render metadata (shown on hover via CSS)
+    // Original Signal logic hides metadata for continuation messages:
+    // if (!expirationLength && !expirationTimestamp && !isPinned &&
+    //     (!status || SENT_STATUSES.has(status)) && shouldHideMetadata) {
+    //   return MetadataPlacement.NotRendered;
+    // }
 
     if (giftBadge) {
       const description =
