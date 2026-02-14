@@ -3,7 +3,7 @@
 
 import classNames from 'classnames';
 import lodash from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Manager, Popper, Reference } from 'react-popper';
@@ -149,6 +149,23 @@ export function TimelineMessage(props: Props): React.JSX.Element {
     HTMLDivElement | undefined
   >(undefined);
 
+  // Track Shift key to expand all menu options on hover
+  const [isShiftHeld, setIsShiftHeld] = useState(false);
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsShiftHeld(true);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsShiftHeld(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+    };
+  }, []);
+
   const isWindowWidthNotNarrow =
     containerWidthBreakpoint !== WidthBreakpoint.Narrow;
 
@@ -263,7 +280,7 @@ export function TimelineMessage(props: Props): React.JSX.Element {
   );
 
   const shouldShowAdditional =
-    doesMessageBodyOverflow(text || '') || !isWindowWidthNotNarrow;
+    doesMessageBodyOverflow(text || '') || !isWindowWidthNotNarrow || isShiftHeld;
 
   const canSelect = interactivity === MessageInteractivity.Normal;
 
@@ -409,6 +426,7 @@ export function TimelineMessage(props: Props): React.JSX.Element {
         <MessageMenu
           i18n={i18n}
           isWindowWidthNotNarrow={isWindowWidthNotNarrow}
+          isShiftHeld={isShiftHeld}
           direction={direction}
           onDownload={handleDownload}
           onReplyToMessage={canReply ? handleReplyToMessage : null}
@@ -448,6 +466,7 @@ export function TimelineMessage(props: Props): React.JSX.Element {
   }, [
     i18n,
     isWindowWidthNotNarrow,
+    isShiftHeld,
     direction,
     canReply,
     canReact,
@@ -485,6 +504,7 @@ export function TimelineMessage(props: Props): React.JSX.Element {
 type MessageMenuProps = {
   i18n: LocalizerType;
   isWindowWidthNotNarrow: boolean;
+  isShiftHeld: boolean;
   onDownload: (() => void) | null;
   onReplyToMessage: (() => void) | null;
   onReact: (() => void) | null;
@@ -498,12 +518,27 @@ function MessageMenu({
   i18n,
   direction,
   isWindowWidthNotNarrow,
+  isShiftHeld,
   onDownload,
   onReplyToMessage,
   onReact,
   renderMessageContextMenu,
 }: MessageMenuProps) {
   // This a menu meant for mouse use only
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [isHovered, setIsHovered] = React.useState(false);
+  const hasAutoOpened = React.useRef(false);
+
+  // Auto-open the ... menu when Shift is held while hovering the action bar
+  React.useEffect(() => {
+    if (isShiftHeld && isHovered && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      menuButtonRef.current?.click();
+    }
+    if (!isShiftHeld) {
+      hasAutoOpened.current = false;
+    }
+  }, [isShiftHeld, isHovered]);
 
   return (
     <div
@@ -511,6 +546,8 @@ function MessageMenu({
         'module-message__buttons',
         `module-message__buttons--${direction}`
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {isWindowWidthNotNarrow && (
         <>
@@ -605,7 +642,10 @@ function MessageMenu({
           return renderMessageContextMenu(
             'AxoDropdownMenu',
             <button
-              ref={maybePopperRef}
+              ref={el => {
+                menuButtonRef.current = el;
+                if (typeof maybePopperRef === 'function') maybePopperRef(el);
+              }}
               type="button"
               aria-label={i18n('icu:messageContextMenuButton')}
               className={classNames(

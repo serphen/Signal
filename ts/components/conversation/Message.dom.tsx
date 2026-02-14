@@ -3004,12 +3004,12 @@ export class Message extends React.PureComponent<Props, State> {
         {this.renderQuote()}
         {this.renderStoryReplyContext()}
         {this.renderAttachment()}
-        {this.renderPreview()}
         {this.renderAttachmentTooBig()}
         {this.renderPayment()}
         {this.renderPoll()}
         {this.renderEmbeddedContact()}
         {this.renderText()}
+        {this.renderPreview()}
         {this.renderUndownloadableTextAttachment()}
         {this.#renderAction()}
         {this.#renderMetadata()}

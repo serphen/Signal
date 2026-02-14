@@ -145,9 +145,11 @@ export function MessageContextMenu({
           </AxoMenuBuilder.Item>
         )}
         {onDeleteMessage && (
-          <AxoMenuBuilder.Item symbol="trash" onSelect={onDeleteMessage}>
-            {i18n('icu:MessageContextMenu__deleteMessage')}
-          </AxoMenuBuilder.Item>
+          <span className="MessageContextMenu__delete" style={{ display: 'contents' }}>
+            <AxoMenuBuilder.Item symbol="trash" onSelect={onDeleteMessage}>
+              {i18n('icu:MessageContextMenu__deleteMessage')}
+            </AxoMenuBuilder.Item>
+          </span>
         )}
         {onRetryMessageSend && (
           <AxoMenuBuilder.Item symbol="send" onSelect={onRetryMessageSend}>
@@ -155,12 +157,14 @@ export function MessageContextMenu({
           </AxoMenuBuilder.Item>
         )}
         {onRetryDeleteForEveryone && (
-          <AxoMenuBuilder.Item
-            symbol="trash"
-            onSelect={onRetryDeleteForEveryone}
-          >
-            {i18n('icu:retryDeleteForEveryone')}
-          </AxoMenuBuilder.Item>
+          <span className="MessageContextMenu__delete" style={{ display: 'contents' }}>
+            <AxoMenuBuilder.Item
+              symbol="trash"
+              onSelect={onRetryDeleteForEveryone}
+            >
+              {i18n('icu:retryDeleteForEveryone')}
+            </AxoMenuBuilder.Item>
+          </span>
         )}
       </AxoMenuBuilder.Content>
     </AxoMenuBuilder.Root>

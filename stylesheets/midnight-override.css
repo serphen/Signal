@@ -408,6 +408,20 @@ body.dark-theme *:not(.font-symbols) {
   padding: 0 !important;
 }
 
+/* Stickers in conversation: 2x smaller (200px → 100px) */
+.dark-theme .module-image-grid--with-sticker {
+  padding: 4px !important;
+}
+.dark-theme .module-image-grid--with-sticker .module-image {
+  width: 100px !important;
+  height: 100px !important;
+}
+.dark-theme .module-image-grid--with-sticker .module-image__image {
+  max-width: 100px !important;
+  max-height: 100px !important;
+  object-fit: contain !important;
+}
+
 /* ==========================================================================
    Reactions — Midnight pills
    Midnight: rounded pill, #1e1f22 bg, 8px padding horizontal, 4px vertical,
@@ -536,6 +550,12 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message__buttons--outgoing {
   padding-inline: 4px !important;
   flex-direction: row !important;
+  gap: 6px !important;
+}
+.dark-theme .module-message__buttons--incoming > *,
+.dark-theme .module-message__buttons--outgoing > * {
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 /* Keep action buttons visible when any popup/menu is open from them */
@@ -543,6 +563,28 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message__buttons:has([aria-expanded='true']),
 .dark-theme .module-message__buttons:has([data-state='open']) {
   opacity: 1 !important;
+}
+
+/* Context menu: delete action always red */
+.dark-theme .MessageContextMenu__delete > [role="menuitem"] {
+  color: #f23f43 !important;
+}
+
+/* Context menu: spacing between items */
+.dark-theme [data-radix-menu-content] > [role="menuitem"] {
+  padding: 8px 12px !important;
+  margin: 1px 0 !important;
+  cursor: pointer !important;
+}
+
+/* Pointer cursor for action buttons, menu items, and composer + button options */
+.dark-theme .module-message__buttons [role="button"],
+.dark-theme .module-message__buttons button,
+.dark-theme [data-radix-menu-content] [role="menuitem"],
+.dark-theme .MessageContextMenu__delete,
+.dark-theme .MessageContextMenu__delete *,
+.dark-theme .CompositionArea__attach-file {
+  cursor: pointer !important;
 }
 
 /* ==========================================================================
@@ -907,7 +949,7 @@ body.dark-theme *:not(.font-symbols) {
    Link previews — Midnight embed style
    ========================================================================== */
 .dark-theme .module-message__link-preview {
-  background-color: var(--midnight-bg-secondary) !important; /* #131416 (neutral-91) */
+  background-color: #0e0f11 !important;
   border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
