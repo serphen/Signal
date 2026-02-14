@@ -655,7 +655,7 @@ body.dark-theme *:not(.font-symbols) {
 
 /* --- Quill wrapper: Midnight uses ~16px horizontal padding inside textArea --- */
 .dark-theme .module-composition-input__quill {
-  padding-inline: 17px !important;
+  padding-inline: 18px !important;
 }
 
 /* --- Quill container font: Signal defaults to font-body-1 (14px/20px),
