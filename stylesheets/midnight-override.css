@@ -1097,36 +1097,35 @@ body.dark-theme *:not(.font-symbols) {
    ========================================================================== */
 .dark-theme .module-conversation-list {
   background-color: var(--midnight-bg-secondary) !important;
-  padding: 0 0 0 8px !important; /* Midnight: margin-left 8px on channel items */
+  padding: 0 8px 0 8px !important; /* Midnight: symmetric 8px left/right margin */
 }
 
-/* Conversation list item — Midnight: .channel__972a0 height 42px, .link__972a0 */
+/* Conversation list item — pill style matching CallsList/ListTile */
 .dark-theme .module-conversation-list__item--contact-or-conversation {
-  border-radius: 8px !important;
-  padding: 8px 16px 8px 8px !important; /* Midnight: link padding */
-  margin-block: 1px !important;
-  background: transparent !important;
+  border: 2px solid transparent !important;
+  border-width: 2px 10px !important;
+  background-clip: padding-box !important;
+  border-radius: 20px / 12px !important;
+  padding: 6px 14px !important;
+  margin-block: 0 !important;
+  background-color: transparent !important;
   position: relative !important;
-  height: auto !important;
-  min-height: 42px !important; /* Midnight: channel height ~42px */
+  height: 72px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 0 !important;
 }
 
 .dark-theme .module-conversation-list__item--contact-or-conversation:hover {
   background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Selected item — Midnight: interactiveSelected bg rgba(148,149,157,0.24) */
-.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected,
-.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] {
+/* Selected item */
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected {
   background-color: rgba(148, 149, 157, 0.24) !important;
 }
 
 /* Selected + hover slightly brighter */
-.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected:hover,
-.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"]:hover {
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected:hover {
   background-color: rgba(148, 149, 157, 0.32) !important;
 }
 
@@ -1156,6 +1155,9 @@ body.dark-theme *:not(.font-symbols) {
   font-weight: 400 !important;
   line-height: 16px !important;
 }
+.dark-theme .module-conversation-list__item--contact-or-conversation__content__message__text--always-full-size {
+  height: auto !important;
+}
 
 /* Unread count badge — Midnight: red notification badge */
 .dark-theme .module-conversation-list__item--contact-or-conversation__unread-indicator {
@@ -1168,11 +1170,6 @@ body.dark-theme *:not(.font-symbols) {
   height: 16px !important;
 }
 
-/* Avatar container — Midnight: 32px avatar, 12px gap to content */
-.dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container {
-  margin-inline-end: 12px !important; /* Midnight: avatar marginRight 12px */
-}
-
 /* Avatar size — Midnight DM list uses 32px avatars */
 .dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container .module-Avatar,
 .dark-theme .module-conversation-list__item--contact-or-conversation__avatar-container .module-Avatar__contents {
@@ -1181,10 +1178,11 @@ body.dark-theme *:not(.font-symbols) {
   min-width: 32px !important;
 }
 
-/* Content area — Midnight: overflow hidden, min-width 0 */
+/* Content area — Midnight: overflow hidden, min-width 0, vertically centered */
 .dark-theme .module-conversation-list__item--contact-or-conversation__content {
   min-width: 0 !important;
   overflow: hidden !important;
+  justify-content: center !important; /* vertical center (flex-direction: column) */
 }
 
 /* Archive button */
