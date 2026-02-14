@@ -123,16 +123,16 @@ body.dark-theme * {
   align-items: flex-start !important;
 }
 
-/* Group-start messages: 1.0625rem (17px) top margin — exact Midnight value */
+/* Group-start messages (avatar + author shown): Midnight 17px top margin */
 .dark-theme .module-message:not(.module-message--collapsed-above) {
   margin-top: var(--midnight-group-spacing) !important;
   min-height: var(--midnight-group-start-min-height) !important; /* 44px min */
 }
 
-/* Continuation messages: no top margin */
+/* Continuation messages: no extra top margin, consistent tight spacing */
 .dark-theme .module-message--collapsed-above {
   margin-top: 0 !important;
-  min-height: 1.375rem !important; /* 22px — Midnight min-height for non-group-start */
+  min-height: 1.375rem !important; /* 22px */
 }
 
 /* ==========================================================================
@@ -151,6 +151,7 @@ body.dark-theme * {
   overflow: visible !important;
   display: block !important;
   color: var(--midnight-text-normal) !important;
+  position: static !important;  /* metadata anchors to .module-message row */
 }
 
 .dark-theme .module-message__container-outer {
@@ -158,12 +159,6 @@ body.dark-theme * {
   flex: 1 !important;              /* fill all space after avatar */
   min-width: 0 !important;
   line-height: normal !important;
-}
-
-/* Remove position:relative from the inner container so that
-   absolutely-positioned metadata anchors to .module-message (the row) */
-.dark-theme .module-message__container {
-  position: static !important;
 }
 
 /* ==========================================================================
@@ -314,6 +309,11 @@ body.dark-theme * {
 
 .dark-theme .module-message__metadata--outgoing {
   color: var(--midnight-text-muted) !important;
+}
+
+/* Hide timestamp from bottom metadata — already shown in header/gutter */
+.dark-theme .module-message__metadata__date {
+  display: none !important;
 }
 
 .dark-theme .module-message__metadata__status-icon {
