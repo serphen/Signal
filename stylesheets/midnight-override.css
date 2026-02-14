@@ -409,25 +409,111 @@ body.dark-theme *:not(.font-symbols) {
 
 /* ==========================================================================
    Reactions — Midnight pills
+   Midnight: rounded pill, #1e1f22 bg, 8px padding horizontal, 4px vertical,
+   gap 4px between pills, emoji 16px + count 12px font.
+   "is-me" reactions have blurple border + blurple bg tint.
    ========================================================================== */
 .dark-theme .module-message__reactions {
   padding-top: 4px !important;
+  height: auto !important;
+  gap: 4px !important;
+  flex-wrap: wrap !important;
 }
 
 .dark-theme .module-message__reactions--outgoing {
   align-self: flex-start !important;
   padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
   margin-inline-end: 0 !important;
+  margin-inline-start: 0 !important;
+}
+
+.dark-theme .module-message__reactions--incoming {
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  margin-inline-start: 0 !important;
 }
 
 .dark-theme .module-message__reactions__reaction {
   background: var(--midnight-reaction-bg) !important;
-  border-color: var(--midnight-reaction-bg) !important;
+  border-color: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  padding: 0 6px !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+}
+
+.dark-theme .module-message__reactions__reaction:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .dark-theme .module-message__reactions__reaction--is-me {
   border-color: rgba(88, 101, 242, 0.6) !important;
   background: rgba(88, 101, 242, 0.15) !important;
+}
+
+.dark-theme .module-message__reactions__reaction--is-me:hover {
+  border-color: rgba(88, 101, 242, 0.8) !important;
+}
+
+.dark-theme .module-message__reactions__reaction__count {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--midnight-text-normal) !important;
+  margin-inline-start: 2px !important;
+}
+
+.dark-theme .module-message__reactions__reaction--is-me .module-message__reactions__reaction__count {
+  color: #dee0fc !important;
+}
+
+/* Reaction picker — Midnight: dark bg, rounded */
+.dark-theme .module-ReactionPickerPicker {
+  background: var(--midnight-bg-secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  padding: 4px !important;
+}
+
+.dark-theme .module-ReactionPickerPicker__button--more::before {
+  background-color: var(--midnight-channels-default) !important;
+}
+
+.dark-theme .module-ReactionPickerPicker__button--more:hover::before {
+  background-color: var(--midnight-text-normal) !important;
+}
+
+.dark-theme .module-ReactionPickerPicker__button--more {
+  background: var(--midnight-bg-surface-highest) !important;
+}
+
+.dark-theme .module-ReactionPickerPicker__button--more:hover,
+.dark-theme .module-ReactionPickerPicker__button--more:focus {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Reaction viewer modal */
+.dark-theme .module-reaction-viewer {
+  background: var(--midnight-bg-secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 8px !important;
+}
+
+.dark-theme .module-reaction-viewer__header__button--selected {
+  background: var(--midnight-bg-surface-highest) !important;
+}
+
+.dark-theme .module-reaction-viewer__header__button__count,
+.dark-theme .module-reaction-viewer__header__button__all {
+  color: var(--midnight-text-normal) !important;
+}
+
+.dark-theme .module-reaction-viewer__body__row__name {
+  color: var(--midnight-text-strong) !important;
 }
 
 /* ==========================================================================
@@ -451,34 +537,329 @@ body.dark-theme *:not(.font-symbols) {
   flex-direction: row !important;
 }
 
-/* ==========================================================================
-   Composition area — Midnight input bar
-   ========================================================================== */
-.dark-theme .CompositionArea {
-  background-color: var(--midnight-bg-primary) !important; /* match chat area */
-  padding-inline: var(--midnight-gutter) !important;
+/* Keep action buttons visible when any popup/menu is open from them */
+.dark-theme .module-message__buttons:has([data-axo-contextmenu-state='open']),
+.dark-theme .module-message__buttons:has([aria-expanded='true']),
+.dark-theme .module-message__buttons:has([data-state='open']) {
+  opacity: 1 !important;
 }
 
-.dark-theme .module-composition-input__input {
+/* ==========================================================================
+   Composition area — Midnight Midnight input bar
+   Matches midnight.html structure:
+     scrollableContainer (pill #1e1f22, 8px radius)
+       attachButton (+, 20px icon, far left)
+       textArea (height: 56px, centered)
+       buttons (emoji 18px, GIF 20px, stickers 20px — far right)
+   We make the ROW the pill. Buttons reordered via CSS order.
+   ========================================================================== */
+
+/* --- Outer container: #000 bg, 24px bottom breathing room --- */
+.dark-theme .CompositionArea {
+  background-color: var(--midnight-bg-primary) !important;
+  padding: 0 16px 24px 16px !important;
+  min-height: unset !important;
+}
+.dark-theme .ConversationView__composition-area {
+  background-color: var(--midnight-bg-primary) !important;
+  border-top: none !important;
+}
+
+/* --- Hide the expand toggle — not a Midnight feature --- */
+.dark-theme .CompositionArea__toggle-large {
+  display: none !important;
+}
+
+/* --- Main input row = the unified pill ---
+   Midnight: scrollableContainer with themedBackground (#1e1f22), 8px radius */
+.dark-theme .CompositionArea__row:not(.CompositionArea__row--column):not(.CompositionArea__row--control-row) {
   background-color: var(--midnight-input-bg) !important;
   border-radius: 8px !important;
+  align-items: center !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* --- Input element: transparent (row is the pill) --- */
+.dark-theme .module-composition-input__input {
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  border: none !important;
+  color: var(--midnight-text-normal) !important;
+  font-size: 1rem !important;       /* Midnight: 16px */
+  line-height: 1.375rem !important;  /* Midnight: 22px */
+}
+
+/* --- Input wrapper: fill space, kill Signal's 6px margin --- */
+.dark-theme .CompositionArea__input {
+  margin: 0 !important;
+  order: 0 !important; /* center position */
+}
+
+/* --- Scroller: match Midnight's textArea ---
+   Midnight: textArea has inline height: 56px (includes scrollable area).
+   The pill visual height for single line ≈ 44px from screenshots.
+   22px content + 11px*2 padding = 44px. */
+.dark-theme .module-composition-input__input__scroller {
+  min-height: 22px !important;
+  padding: 11px 0 !important;
+}
+
+/* --- Quill wrapper: Midnight uses ~16px horizontal padding inside textArea --- */
+.dark-theme .module-composition-input__quill {
+  padding-inline: 16px !important;
+}
+
+/* --- Quill container font: Signal defaults to font-body-1 (14px/20px),
+   Midnight uses 16px/22px with weight 400 --- */
+.dark-theme .module-composition-input__input .ql-container {
+  font-size: 1rem !important;         /* 16px — Midnight input font */
+  line-height: 1.375rem !important;   /* 22px */
+  font-weight: 400 !important;        /* Midnight: normal weight in compose */
+  letter-spacing: normal !important;  /* kill Signal's -0.08px */
+}
+
+/* --- Placeholder --- */
+.dark-theme .module-composition-input__input .ql-blank::before {
+  color: var(--midnight-input-placeholder) !important;
+  font-style: normal !important;
+}
+
+/* ==========================================================================
+   Button layout via CSS order (mic hidden):
+   Result:  [+attach] [____input____] [emoji/sticker] [quality?] [send]
+   Midnight: [+attach] [____input____] [gift] [GIF] [stickers] [emoji] [apps]
+   ========================================================================== */
+
+/* All button cells: tight spacing, centered */
+.dark-theme .CompositionArea__button-cell {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  padding: 0 4px !important;
+}
+
+/* Attach → far left (Midnight's + button)
+   The attach button is ALWAYS the last child of the row in DOM order.
+   Works for both variants: plain .CompositionArea__attach-file
+   and AxoDropdownMenu (when polls are enabled). */
+.dark-theme .CompositionArea__row:not(.CompositionArea__row--column):not(.CompositionArea__row--control-row) > .CompositionArea__button-cell:last-child {
+  order: -1 !important;
+  padding-inline-start: 8px !important;
+}
+
+/* FunPicker (emoji/sticker) → right of input */
+.dark-theme .CompositionArea__button-cell:has(.FunButton) {
+  order: 1 !important;
+}
+
+/* MediaQuality → right of FunPicker */
+.dark-theme .CompositionArea__button-cell:has(.MediaQualitySelector__button) {
+  order: 2 !important;
+}
+
+/* Send → far right */
+.dark-theme .CompositionArea__button-cell:has(.CompositionArea__send-button) {
+  order: 3 !important;
+  padding-inline-end: 8px !important;
+}
+
+/* ==========================================================================
+   Button icons — all use CSS mask, so color = background-color
+   Midnight: idle #7a7b83 (channels-default), hover #dcdcdf (text-normal)
+   ========================================================================== */
+
+/* --- Attach file (+) — both variants --- */
+
+/* Plain variant (.CompositionArea__attach-file button) */
+.dark-theme .CompositionArea__attach-file {
+  background: transparent !important;
+  border: none !important;
+}
+.dark-theme .CompositionArea__attach-file::before {
+  background-color: var(--midnight-channels-default) !important;
+}
+.dark-theme .CompositionArea__attach-file:hover::before {
+  background-color: var(--midnight-text-normal) !important;
+}
+
+/* AxoDropdownMenu variant (polls enabled) — the + icon uses currentColor */
+.dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child button,
+.dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child [role="button"] {
+  color: var(--midnight-channels-default) !important;
+  background: transparent !important;
+  border: none !important;
+}
+.dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child button:hover,
+.dark-theme .CompositionArea__row > .CompositionArea__button-cell:last-child [role="button"]:hover {
+  color: var(--midnight-text-normal) !important;
+  background: transparent !important;
+}
+
+/* --- FunPicker (emoji/sticker) — icon is a CSS mask via color-svg --- */
+.dark-theme .FunButton {
+  background: transparent !important;
+  border: none !important;
+}
+.dark-theme .FunButton[aria-expanded='true'] {
+  background: transparent !important; /* kill Signal's gray bg when open */
+}
+.dark-theme .FunButton__Icon {
+  background-color: var(--midnight-channels-default) !important;
+}
+.dark-theme .FunButton:hover .FunButton__Icon {
+  background-color: var(--midnight-text-normal) !important;
+}
+
+/* --- GIF picker button icon (text-based, like Midnight) --- */
+.FunButton__Icon--GifPicker {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+  color: var(--midnight-channels-default) !important;
+  background: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+}
+.FunButton__Icon--GifPicker::after {
+  content: "GIF" !important;
+}
+.FunButton:hover .FunButton__Icon--GifPicker {
+  color: var(--midnight-text-normal) !important;
+  background: none !important;
+}
+
+/* --- Microphone: hidden from compose bar ---
+   Midnight doesn't have a mic in the compose bar.
+   User wants voice messages accessible via the + menu (requires TSX change). */
+.dark-theme .CompositionArea__button-cell:has(.AudioCapture) {
+  display: none !important;
+}
+
+/* --- Send button --- */
+.dark-theme .CompositionArea__send-button {
+  background: transparent !important;
+  border: none !important;
+}
+.dark-theme .CompositionArea__send-button::after {
+  background-color: var(--midnight-channels-default) !important;
+}
+.dark-theme .CompositionArea__send-button:hover::after {
+  background-color: var(--midnight-text-normal) !important;
+}
+.dark-theme .CompositionArea__send-button:disabled::after {
+  background-color: var(--midnight-channels-default) !important;
+  opacity: 0.4 !important;
+}
+
+/* --- Media quality selector --- */
+.dark-theme .MediaQualitySelector__button {
+  background: transparent !important;
+  border: none !important;
+}
+.dark-theme .MediaQualitySelector__button::before {
+  background-color: var(--midnight-channels-default) !important;
+}
+.dark-theme .MediaQualitySelector__button:hover::before {
+  background-color: var(--midnight-text-normal) !important;
+}
+
+/* ==========================================================================
+   Above-pill elements: quote, attachments, link preview
+   ========================================================================== */
+
+.dark-theme .CompositionArea__row--column {
+  background: transparent !important;
+}
+.dark-theme .CompositionArea .quote-wrapper {
+  background-color: var(--midnight-bg-secondary) !important;
+  border-radius: 8px 8px 0 0 !important;
+  border: none !important;
+  padding: 8px !important;
+  margin-bottom: 0 !important;
+}
+.dark-theme .CompositionArea__attachment-list {
+  background-color: var(--midnight-bg-secondary) !important;
+  border-radius: 8px 8px 0 0 !important;
+  border: none !important;
+}
+.dark-theme .CompositionInput__link-preview {
+  background-color: var(--midnight-bg-secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 8px !important;
+}
+.dark-theme .CompositionInput__link-preview__close-button {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==========================================================================
+   Popovers: format menu, suggestions/mentions
+   ========================================================================== */
+
+.dark-theme .module-composition-input__format-menu {
+  background: var(--midnight-bg-secondary) !important;
+  border: 1px solid var(--midnight-border-subtle) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+.dark-theme .module-composition-input__format-menu__item::before {
+  background-color: var(--midnight-channels-default) !important;
+}
+.dark-theme .module-composition-input__format-menu__item:hover::before {
+  background-color: var(--midnight-text-normal) !important;
+}
+.dark-theme .module-composition-input__format-menu__item--active::before {
+  background-color: var(--midnight-text-link) !important;
+}
+.dark-theme .module-composition-input__format-menu__item__popover {
+  background-color: var(--midnight-bg-secondary) !important;
+  color: var(--midnight-text-normal) !important;
+  border-radius: 4px !important;
+}
+
+.dark-theme .module-composition-input__suggestions {
+  background: var(--midnight-bg-secondary) !important;
+  border: 1px solid var(--midnight-border-subtle) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+.dark-theme .module-composition-input__suggestions__row {
   color: var(--midnight-text-normal) !important;
 }
-
-.dark-theme .module-composition-input__input .ql-blank::before {
-  color: var(--midnight-input-placeholder) !important; /* #73747d (neutral-39) */
+.dark-theme .module-composition-input__suggestions__row:hover,
+.dark-theme .module-composition-input__suggestions__row--selected {
+  background: var(--midnight-bg-hover) !important;
+  color: var(--midnight-text-strong) !important;
 }
 
-.dark-theme .CompositionArea__button-cell {
+/* ==========================================================================
+   Recording & edit states
+   ========================================================================== */
+
+.dark-theme .CompositionRecording {
+  background-color: var(--midnight-input-bg) !important;
+  border-radius: 8px !important;
+  padding-inline: 12px !important;
+}
+.dark-theme .CompositionRecording__wave {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 8px !important;
+}
+.dark-theme .module-composition-input__editing-message {
   color: var(--midnight-text-muted) !important;
+  background: transparent !important;
 }
-
-.dark-theme .CompositionArea__attach-file:before {
-  background-color: var(--midnight-text-muted) !important;
+.dark-theme .CompositionArea__edit-button--discard {
+  background-color: var(--midnight-channels-default) !important;
 }
-
-.dark-theme .CompositionArea__send-button::after {
-  background-color: var(--midnight-text-normal) !important;
+.dark-theme .CompositionArea__edit-button--accept {
+  background-color: #5865f2 !important;
+}
+.dark-theme .CompositionArea__edit-button--accept:disabled {
+  opacity: 0.4 !important;
 }
 
 /* ==========================================================================
@@ -600,10 +981,85 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* ==========================================================================
-   Typing indicator
+   Unread indicator — Midnight "NEW" red separator
+   Midnight: red line across full width, "NEW" label in red on the right.
+   Signal structure: bar div (line) + text div (count) stacked vertically.
+   We restyle to look like Midnight's red separator.
    ========================================================================== */
+.dark-theme .module-last-seen-indicator {
+  padding-top: 24px !important;
+  padding-bottom: 8px !important; /* less bottom padding than Signal's 35px */
+  margin-inline: 16px 14px !important; /* match Midnight divider margins */
+  user-select: none !important;
+  position: relative !important;
+}
+
+.dark-theme .module-last-seen-indicator__bar {
+  background-color: #f23f42 !important; /* Midnight danger/red */
+  height: 1px !important;
+  width: 100% !important;
+}
+
+.dark-theme .module-last-seen-indicator__text {
+  position: absolute !important;
+  top: 24px !important; /* align with the bar */
+  right: 0 !important;
+  transform: translateY(-50%) !important; /* center on the line */
+  margin-top: 0 !important;
+  color: #f23f42 !important; /* Midnight red */
+  font-size: 0.6875rem !important; /* 11px */
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: end !important;
+  padding-inline-start: 4px !important;
+  background-color: var(--midnight-bg-primary) !important; /* cut through the line */
+}
+
+/* ==========================================================================
+   Typing indicator — Midnight-style
+   Midnight shows "username is typing..." as small text at the bottom of the
+   chat, overlapping the top of the compose area. Signal uses an animated
+   bubble. We restyle to match Midnight's compact text-like appearance.
+   ========================================================================== */
+
+/* Container: minimal height, positioned at very bottom of timeline */
+.dark-theme .module-timeline__typing-bubble-container {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
 .dark-theme .module-message__container-outer--typing-bubble {
   background: transparent !important;
+}
+
+/* The typing message row: compact, minimal spacing */
+.dark-theme .module-message--typing-bubble {
+  margin-top: 0 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.dark-theme .module-message--typing-bubble .module-message__container--incoming {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Hide group avatars in typing bubble for cleaner look */
+.dark-theme .module-message--typing-bubble .module-message__author-avatar-container--typing {
+  display: none !important;
+}
+
+/* Typing dots: Midnight muted color, slightly smaller */
+.dark-theme .module-typing-animation__dot--light {
+  background-color: var(--midnight-text-strong) !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+/* Typing animation container: Midnight-style compact */
+.dark-theme .module-message__typing-animation-container {
+  padding: 4px 8px !important;
+  min-height: auto !important;
 }
 
 /* ==========================================================================
@@ -614,27 +1070,234 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 /* ==========================================================================
-   Conversation list (left sidebar)
+   Conversation list (left sidebar) — Midnight Midnight DM list
+   Midnight: bg #131416, items 48-56px tall, 8px rounded, hover overlay,
+   selected item has lighter bg, contact name 16px medium, message
+   preview 14px normal muted, timestamp 12px muted.
    ========================================================================== */
 .dark-theme .module-conversation-list {
   background-color: var(--midnight-bg-secondary) !important;
+  padding: 8px !important;
+}
+
+/* Conversation list item */
+.dark-theme .module-conversation-list__item--contact-or-conversation {
+  border-radius: 8px !important;
+  padding-block: 8px !important;
+  padding-inline: 10px !important;
+  margin-block: 1px !important;
+  background: transparent !important;
+}
+
+.dark-theme .module-conversation-list__item--contact-or-conversation:hover {
+  background-color: var(--midnight-bg-hover) !important;
+}
+
+.dark-theme .module-conversation-list__item--contact-or-conversation.module-conversation-list__item--selected,
+.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Contact name */
+.dark-theme .module-conversation-list__item__content__header__name {
+  color: var(--midnight-text-normal) !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+
+/* Timestamp */
+.dark-theme .module-conversation-list__item__content__header__date {
+  color: var(--midnight-text-muted) !important;
+  font-size: 0.75rem !important;
+}
+
+/* Message preview */
+.dark-theme .module-conversation-list__item__content__message__text {
+  color: var(--midnight-channels-default) !important; /* #7a7b83 — muted preview */
+  font-size: 0.875rem !important; /* 14px */
+  font-weight: 400 !important;
+}
+
+/* Unread count badge — Midnight: text-only or small dot */
+.dark-theme .module-conversation-list__item__unread-indicator {
+  background-color: #f23f42 !important; /* Midnight uses red notification badges */
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  min-width: 16px !important;
+  height: 16px !important;
+}
+
+/* Avatar container */
+.dark-theme .module-conversation-list__item__avatar-container {
+  margin-inline-end: 10px !important;
+}
+
+/* Archive button */
+.dark-theme .module-conversation-list__item--archive-button {
+  color: var(--midnight-text-muted) !important;
+  border-radius: 8px !important;
+}
+
+.dark-theme .module-conversation-list__item--archive-button:hover {
+  background-color: var(--midnight-bg-hover) !important;
+}
+
+/* Left pane header */
+.dark-theme .module-left-pane__header {
+  background-color: var(--midnight-bg-secondary) !important;
+}
+
+/* Left pane footer (gradient) */
+.dark-theme .module-left-pane__footer {
+  background: linear-gradient(transparent, var(--midnight-bg-secondary)) !important;
+}
+
+/* Search input in left pane */
+.dark-theme .LeftPaneSearchInput__container {
+  background-color: var(--midnight-bg-primary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+}
+
+.dark-theme .LeftPaneSearchInput__input {
+  color: var(--midnight-text-normal) !important;
+}
+
+.dark-theme .LeftPaneSearchInput__input::placeholder {
+  color: var(--midnight-input-placeholder) !important;
+}
+
+/* NavSidebar tabs */
+.dark-theme .NavSidebar__Item {
+  border-radius: 4px !important;
+}
+
+.dark-theme .NavSidebar__Item:hover {
+  background-color: var(--midnight-bg-hover) !important;
+}
+
+.dark-theme .NavSidebar__ItemLabel {
+  color: var(--midnight-channels-default) !important;
+}
+
+.dark-theme .NavSidebar__Item--selected .NavSidebar__ItemLabel {
+  color: var(--midnight-text-strong) !important;
 }
 
 /* ==========================================================================
    Conversation header
    ========================================================================== */
 .dark-theme .module-ConversationHeader__button::before {
-  background-color: var(--midnight-channels-default) !important; /* #7a7b83 (neutral-37) */
+  background-color: var(--midnight-channels-default) !important;
 }
 .dark-theme .module-ConversationHeader__button:hover::before {
-  background-color: var(--midnight-text-strong) !important; /* #e4e4e6 on hover */
+  background-color: var(--midnight-text-strong) !important;
 }
 
 .dark-theme .module-ConversationHeader__header__info__title {
-  color: var(--midnight-text-strong) !important; /* #e4e4e6 — header text */
+  color: var(--midnight-text-strong) !important;
 }
 .dark-theme .module-ConversationHeader__header__info__subtitle {
   color: var(--midnight-text-muted) !important;
+}
+
+/* ==========================================================================
+   Context menus / Dropdowns — Midnight Midnight
+   Midnight: bg #131416, rounded 4px, font 14px/18px, padding 6px 8px per item,
+   hover = blurple #5865f2 bg with white text, 2px block padding on container.
+   ========================================================================== */
+
+/* Signal's ContextMenu component */
+.dark-theme .ContextMenu__popper {
+  background: var(--midnight-bg-secondary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24) !important;
+  padding-block: 6px !important;
+}
+
+.dark-theme .ContextMenu__option--container {
+  padding-block: 6px !important;
+  padding-inline: 8px !important;
+  border-radius: 2px !important;
+  margin-inline: 4px !important;
+  color: var(--midnight-text-normal) !important;
+  font-size: 14px !important;
+  line-height: 18px !important;
+}
+
+.dark-theme .ContextMenu__option:hover .ContextMenu__option--container,
+.dark-theme .ContextMenu__option--focused .ContextMenu__option--container {
+  background-color: #5865f2 !important;
+  color: #ffffff !important;
+}
+
+.dark-theme .ContextMenu__option--icon {
+  color: var(--midnight-channels-default) !important;
+}
+
+.dark-theme .ContextMenu__option:hover .ContextMenu__option--icon {
+  color: #ffffff !important;
+}
+
+.dark-theme .ContextMenu__divider {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  margin: 4px !important;
+}
+
+.dark-theme .ContextMenu__title {
+  color: var(--midnight-text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  padding-inline: 8px !important;
+  margin-bottom: 4px !important;
+}
+
+/* Danger items (delete, etc.) */
+.dark-theme .ContextMenu__option--container[class*="danger"],
+.dark-theme .ContextMenu__option--container:has([class*="danger"]) {
+  color: #f23f42 !important;
+}
+
+.dark-theme .ContextMenu__option:hover .ContextMenu__option--container[class*="danger"] {
+  background-color: #f23f42 !important;
+  color: #ffffff !important;
+}
+
+/* AxoDropdownMenu (used in + attach menu, etc.) */
+.dark-theme [data-radix-popper-content-wrapper] {
+  z-index: 125 !important;
+}
+
+.dark-theme [role="menu"][class*="AxoDropdownMenu"],
+.dark-theme [data-radix-menu-content] {
+  background: var(--midnight-bg-secondary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24) !important;
+  padding: 6px 4px !important;
+}
+
+.dark-theme [role="menuitem"] {
+  border-radius: 2px !important;
+  padding: 6px 8px !important;
+  font-size: 14px !important;
+  line-height: 18px !important;
+  color: var(--midnight-text-normal) !important;
+}
+
+.dark-theme [role="menuitem"]:hover,
+.dark-theme [role="menuitem"][data-highlighted] {
+  background-color: #5865f2 !important;
+  color: #ffffff !important;
+}
+
+.dark-theme [role="menuitem"]:hover [class*="Symbol"],
+.dark-theme [role="menuitem"][data-highlighted] [class*="Symbol"] {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -642,4 +1305,233 @@ body.dark-theme *:not(.font-symbols) {
    ========================================================================== */
 .dark-theme .SystemMessage {
   color: var(--midnight-text-muted) !important;
+}
+
+/* ==========================================================================
+   Risibank Collection Browser — Midnight Midnight style
+   ========================================================================== */
+.risibank-browser {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+}
+
+.risibank-browser__search {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.risibank-browser__search-input {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: #1e1f22;
+  border: none;
+  border-radius: 6px;
+  color: #dcdcdf;
+  font-size: 13px;
+  font-family: var(--midnight-font);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.risibank-browser__search-input::placeholder {
+  color: #73747d;
+}
+
+.risibank-browser__search-input:focus {
+  box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.5);
+}
+
+.risibank-browser__content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.risibank-browser__content::-webkit-scrollbar {
+  width: 6px;
+}
+.risibank-browser__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.risibank-browser__content::-webkit-scrollbar-thumb {
+  background-color: #595a63;
+  border-radius: 3px;
+}
+
+.risibank-browser__loading,
+.risibank-browser__empty {
+  color: #9d9ea5;
+  text-align: center;
+  padding: 24px 12px;
+  font-size: 13px;
+}
+
+.risibank-browser__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.risibank-browser__card {
+  background-color: #1e1f22;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.risibank-browser__card:hover {
+  background-color: #2b2d31;
+}
+
+.risibank-browser__card-previews {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  aspect-ratio: 1;
+  background-color: #131416;
+}
+
+.risibank-browser__card-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.risibank-browser__card-info {
+  padding: 5px 6px;
+}
+
+.risibank-browser__card-name {
+  color: #e4e4e6;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.risibank-browser__card-meta {
+  color: #9d9ea5;
+  font-size: 10px;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -- Install button (shared between grid & detail) -- */
+
+.risibank-browser__install-btn {
+  padding: 5px 12px;
+  background-color: #5865f2;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--midnight-font);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.risibank-browser__install-btn:hover:not(:disabled) {
+  background-color: #4752c4;
+}
+
+.risibank-browser__install-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Risibank Collection Detail View
+   ========================================================================== */
+.risibank-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.risibank-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.risibank-detail__back {
+  background: none;
+  border: none;
+  color: #dcdcdf;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.risibank-detail__back:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.risibank-detail__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.risibank-detail__name {
+  color: #e4e4e6;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.risibank-detail__author {
+  color: #9d9ea5;
+  font-size: 12px;
+}
+
+.risibank-detail__install-btn {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.risibank-detail__stickers {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  align-content: start;
+}
+
+.risibank-detail__stickers::-webkit-scrollbar {
+  width: 6px;
+}
+.risibank-detail__stickers::-webkit-scrollbar-track {
+  background: transparent;
+}
+.risibank-detail__stickers::-webkit-scrollbar-thumb {
+  background-color: #595a63;
+  border-radius: 3px;
+}
+
+.risibank-detail__sticker-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background-color: #1e1f22;
+  border-radius: 6px;
+  display: block;
 }

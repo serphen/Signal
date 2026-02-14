@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { StickerManagerPackRow } from './StickerManagerPackRow.dom.js';
 import { StickerPreviewModal } from './StickerPreviewModal.dom.js';
+import { RisibankCollectionBrowser } from './RisibankCollectionBrowser.dom.js';
 import type { LocalizerType } from '../../types/Util.std.js';
 import type { StickerPackType } from '../../state/ducks/stickers.preload.js';
 import { Tabs } from '../Tabs.dom.js';
@@ -37,6 +38,7 @@ export type Props = OwnProps;
 enum TabViews {
   Available = 'Available',
   Installed = 'Installed',
+  Risibank = 'Risibank',
 }
 
 export const StickerManager = React.memo(function StickerManagerInner({
@@ -111,6 +113,10 @@ export const StickerManager = React.memo(function StickerManagerInner({
               id: TabViews.Installed,
               label: i18n('icu:stickers--StickerManager--InstalledPacks'),
             },
+            {
+              id: TabViews.Risibank,
+              label: 'Import from Risibank',
+            },
           ]}
         >
           {({ selectedTab }) => (
@@ -181,6 +187,9 @@ export const StickerManager = React.memo(function StickerManagerInner({
                     )}
                   </div>
                 ))}
+              {selectedTab === TabViews.Risibank && (
+                <RisibankCollectionBrowser i18n={i18n} />
+              )}
             </>
           )}
         </Tabs>
