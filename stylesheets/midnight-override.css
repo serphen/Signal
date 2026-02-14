@@ -2057,8 +2057,8 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 .dark-theme .module-sticker-manager__text.module-sticker-manager__text--heading {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+  padding-top: 12px !important;
+  padding-bottom: 24px !important;
 }
 
 /* ==========================================================================
