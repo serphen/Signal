@@ -894,6 +894,7 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme [class*="module-quote--outgoing"],
 .dark-theme [class*="module-quote--compose"] {
   background-color: rgba(255, 255, 255, 0.06) !important;
+  background-image: none !important;
 }
 
 /* Quote spine — Midnight uses a muted gray, not Signal's blurple */
