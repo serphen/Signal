@@ -1,6 +1,34 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
+## Quick Start
+
+```bash
+git clone https://github.com/serphen/Signal-Desktop.git
+cd Signal-Desktop
+cp config/production.json config/development.json
+nvm install
+nvm use
+
+npm install -g pnpm
+pnpm install
+pnpm rebuild
+```
+
+To rebuild the project:
+
+```bash
+pnpm run generate
+```
+
+To launch:
+
+```bash
+pnpm start
+```
+
+---
+
 # Signal Desktop
 
 Signal Desktop links with Signal on [Android](https://github.com/signalapp/Signal-Android) or [iOS](https://github.com/signalapp/Signal-iOS) and lets you message from your Windows, macOS, and Linux computers.
