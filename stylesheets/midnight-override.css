@@ -224,6 +224,7 @@ body.dark-theme *:not(.font-symbols) {
   color: var(--midnight-text-muted) !important;
   font-weight: 500 !important;
   vertical-align: baseline !important;
+  padding-left: 2px !important;
 }
 
 .dark-theme .module-message__header-timestamp time {
