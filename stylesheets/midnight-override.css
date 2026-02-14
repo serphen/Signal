@@ -1828,14 +1828,9 @@ body.dark-theme *:not(.font-symbols) {
    over the conversation, matching Midnight's uploadDropModal design.
    ========================================================================== */
 
-/* ConversationView needs position:relative for the overlay */
-.dark-theme .ConversationView {
-  position: relative !important;
-}
-
 /* Full-screen overlay backdrop */
 .dark-theme .ConversationView__drop-overlay {
-  position: absolute !important;
+  position: fixed !important;
   inset: 0 !important;
   z-index: 1000 !important;
   display: flex !important;
