@@ -21,17 +21,26 @@
 }
 
 /* ==========================================================================
-   CSS Custom Properties — Midnight Midnight palette + exact layout tokens
+   CSS Custom Properties — Midnight Midnight visual-refresh palette + layout tokens
+   Source: canary.midnight.com theme-midnight with visual-refresh
    ========================================================================== */
 :root {
-  --midnight-bg-primary: #000000;
-  --midnight-bg-secondary: #1e1f22;
-  --midnight-bg-tertiary: #0b0d0e;
-  --midnight-bg-hover: rgba(255, 255, 255, 0.06);
-  --midnight-text-normal: #dbdee1;
-  --midnight-text-muted: #949ba4;
-  --midnight-text-link: #00a8fc;
-  --midnight-header-primary: #f2f3f5;
+  /* Backgrounds — Midnight Midnight visual-refresh tokens */
+  --midnight-bg-primary: #000000;              /* --background-base-lowest (neutral-100) */
+  --midnight-bg-chat: #0c0c0e;                 /* --background-base-low (neutral-95) — main chat area */
+  --midnight-bg-secondary: #131416;            /* --background-surface-high (neutral-91) */
+  --midnight-bg-tertiary: #000000;             /* --background-base-lowest (neutral-100) */
+  --midnight-bg-surface-highest: #1e1f22;      /* --background-surface-highest (neutral-83) */
+  --midnight-bg-hover: rgba(255, 255, 255, 0.122); /* --message-background-hover / --background-mod-subtle */
+
+  /* Text — Midnight Midnight visual-refresh tokens */
+  --midnight-text-normal: #dcdcdf;             /* --text-default (neutral-10) */
+  --midnight-text-strong: #e4e4e6;             /* --text-strong (neutral-8) */
+  --midnight-text-subtle: #9d9ea5;             /* --text-subtle (neutral-27) */
+  --midnight-text-muted: #888991;              /* --text-muted (neutral-33) */
+  --midnight-text-link: #3789ea;               /* --text-link (blue-new-42) */
+  --midnight-chat-text-muted: #767780;         /* --chat-text-muted (neutral-38) */
+  --midnight-header-primary: #888991;          /* --text-muted — username color */
   --midnight-font: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* Layout tokens — from Midnight CSS variables */
@@ -43,11 +52,14 @@
   --midnight-group-start-min-height: 2.75rem;  /* 44px */
   --midnight-meta-space: 0.25rem;              /* 4px */
 
-  /* Misc */
-  --midnight-input-bg: #383a40;
-  --midnight-reaction-bg: #2b2d31;
-  --midnight-divider: #3f4147;
-  --midnight-border-subtle: rgba(255, 255, 255, 0.06);
+  /* Misc — Midnight Midnight visual-refresh */
+  --midnight-input-bg: #1e1f22;                /* --background-surface-highest (neutral-83) */
+  --midnight-reaction-bg: #1e1f22;             /* --background-surface-highest (neutral-83) */
+  --midnight-divider: #3b3c43;                 /* --spine-default (neutral-63) */
+  --midnight-border-subtle: rgba(255, 255, 255, 0.200); /* --border-subtle */
+  --midnight-scrollbar-thumb: #595a63;         /* --scrollbar-thin-thumb (neutral-47) */
+  --midnight-input-placeholder: #73747d;       /* --input-placeholder-text (neutral-39) */
+  --midnight-channels-default: #7a7b83;        /* --channels-default (neutral-37) */
 
   /* Override Signal's own font variable so everything picks up sd sans */
   --font-sans: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -67,7 +79,7 @@ body.dark-theme *:not(.font-symbols) {
    ========================================================================== */
 .dark-theme .ConversationView__pane,
 .dark-theme .conversation {
-  background-color: var(--midnight-bg-primary) !important;
+  background-color: var(--midnight-bg-primary) !important; /* #000000 — user preference */
 }
 
 .dark-theme .module-ConversationHeader {
@@ -186,7 +198,7 @@ body.dark-theme *:not(.font-symbols) {
    ========================================================================== */
 .dark-theme .module-message__author {
   color: var(--midnight-header-primary) !important;
-  font-weight: 600 !important;  /* Midnight uses semibold (600) */
+  font-weight: 500 !important;  /* Midnight: --font-weight-medium */
   font-size: 1rem !important;   /* 16px */
   line-height: 1.375rem !important; /* 22px */
   margin-bottom: 0 !important;
@@ -196,7 +208,7 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .module-message__author_with_sticker {
   color: var(--midnight-header-primary) !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 /* ==========================================================================
@@ -244,7 +256,7 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message__gutter-timestamp time {
   font-size: 0.6875rem !important;      /* 11px — Midnight compact */
   line-height: 1.375rem !important;
-  color: var(--midnight-text-muted) !important;
+  color: var(--midnight-chat-text-muted) !important; /* #767780 (neutral-38) */
   font-weight: 500 !important;
   margin-inline-end: 0.25rem !important; /* Midnight: --custom-message-meta-space */
 }
@@ -443,7 +455,7 @@ body.dark-theme *:not(.font-symbols) {
    Composition area — Midnight input bar
    ========================================================================== */
 .dark-theme .CompositionArea {
-  background-color: var(--midnight-bg-primary) !important;
+  background-color: var(--midnight-bg-primary) !important; /* match chat area */
   padding-inline: var(--midnight-gutter) !important;
 }
 
@@ -454,7 +466,7 @@ body.dark-theme *:not(.font-symbols) {
 }
 
 .dark-theme .module-composition-input__input .ql-blank::before {
-  color: var(--midnight-text-muted) !important;
+  color: var(--midnight-input-placeholder) !important; /* #73747d (neutral-39) */
 }
 
 .dark-theme .CompositionArea__button-cell {
@@ -481,14 +493,14 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .module-quote--incoming,
 .dark-theme .module-quote--outgoing {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.122) !important; /* --background-mod-subtle */
 }
 
 /* ==========================================================================
    Link previews — Midnight embed style
    ========================================================================== */
 .dark-theme .module-message__link-preview {
-  background-color: #2b2d31 !important;
+  background-color: var(--midnight-bg-secondary) !important; /* #131416 (neutral-91) */
   border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
@@ -556,11 +568,11 @@ body.dark-theme *:not(.font-symbols) {
   background: transparent !important;
 }
 .dark-theme .ConversationView__timeline::-webkit-scrollbar-thumb {
-  background-color: #1a1b1e !important;
+  background-color: var(--midnight-scrollbar-thumb) !important; /* #595a63 (neutral-47) */
   border-radius: 4px !important;
 }
 .dark-theme .ConversationView__timeline::-webkit-scrollbar-thumb:hover {
-  background-color: #4e5058 !important;
+  background-color: #7a7b83 !important; /* slightly lighter on hover */
 }
 
 /* ==========================================================================
@@ -612,14 +624,14 @@ body.dark-theme *:not(.font-symbols) {
    Conversation header
    ========================================================================== */
 .dark-theme .module-ConversationHeader__button::before {
-  background-color: var(--midnight-text-muted) !important;
+  background-color: var(--midnight-channels-default) !important; /* #7a7b83 (neutral-37) */
 }
 .dark-theme .module-ConversationHeader__button:hover::before {
-  background-color: var(--midnight-text-normal) !important;
+  background-color: var(--midnight-text-strong) !important; /* #e4e4e6 on hover */
 }
 
 .dark-theme .module-ConversationHeader__header__info__title {
-  color: var(--midnight-header-primary) !important;
+  color: var(--midnight-text-strong) !important; /* #e4e4e6 — header text */
 }
 .dark-theme .module-ConversationHeader__header__info__subtitle {
   color: var(--midnight-text-muted) !important;
