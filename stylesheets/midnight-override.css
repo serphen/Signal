@@ -1110,7 +1110,7 @@ body.dark-theme *:not(.font-symbols) {
   margin-block: 0 !important;
   background-color: transparent !important;
   position: relative !important;
-  height: 72px !important;
+  height: 64px !important;
   display: flex !important;
   align-items: center !important;
 }
@@ -1129,31 +1129,32 @@ body.dark-theme *:not(.font-symbols) {
   background-color: rgba(148, 149, 157, 0.32) !important;
 }
 
-/* Contact name — Midnight: .name__20a53 16px/20px weight 500 */
+/* Contact name — ListTile size, Midnight color + font */
 .dark-theme .module-conversation-list__item--contact-or-conversation__content__header__name {
-  color: var(--midnight-channels-default) !important; /* #7a7b83 — non-selected */
-  font-weight: 500 !important;
-  font-size: 1rem !important; /* 16px */
+  font-family: var(--midnight-font) !important;
+  font-size: 14px !important;
   line-height: 20px !important;
+  font-weight: 500 !important;
+  color: var(--midnight-channels-default) !important; /* #7a7b83 */
 }
 
 /* Selected item name → brighter */
-.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected .module-conversation-list__item--contact-or-conversation__content__header__name,
-.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"] .module-conversation-list__item--contact-or-conversation__content__header__name {
+.dark-theme .module-conversation-list__item--contact-or-conversation--is-selected .module-conversation-list__item--contact-or-conversation__content__header__name {
   color: var(--midnight-text-strong) !important; /* #e4e4e6 */
 }
 
-/* Hide timestamp — Midnight DM list doesn't show timestamps */
+/* Timestamp — Midnight font, vertically aligned with name */
 .dark-theme .module-conversation-list__item--contact-or-conversation__content__header__date {
-  display: none !important;
+  font-family: var(--midnight-font) !important;
+  font-size: 12px !important;
+  line-height: 20px !important; /* same as name for vertical alignment */
+  align-self: center !important;
 }
 
-/* Message preview / subtext — Midnight: muted, smaller */
+/* Message preview / subtext — match ListTile__subtitle (12px/17px, gray-25) */
 .dark-theme .module-conversation-list__item--contact-or-conversation__content__message__text {
-  color: var(--midnight-text-muted) !important; /* #888991 */
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  line-height: 16px !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
 }
 .dark-theme .module-conversation-list__item--contact-or-conversation__content__message__text--always-full-size {
   height: auto !important;
