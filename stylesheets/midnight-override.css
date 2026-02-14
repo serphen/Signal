@@ -1817,3 +1817,111 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-title-bar-drag-area {
   height: 0 !important;
 }
+
+/* ==========================================================================
+   Midnight-style Drag & Drop Upload Overlay
+   Shows a dark overlay with "Upload to @username" when dragging files
+   over the conversation, matching Midnight's uploadDropModal design.
+   ========================================================================== */
+
+/* ConversationView needs position:relative for the overlay */
+.dark-theme .ConversationView {
+  position: relative !important;
+}
+
+/* Full-screen overlay backdrop */
+.dark-theme .ConversationView__drop-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  pointer-events: none !important;
+}
+
+/* Central modal card */
+.dark-theme .ConversationView__drop-overlay__modal {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 40px 60px !important;
+  border-radius: 8px !important;
+  border: 2px dashed var(--midnight-brand-500, #5865f2) !important;
+  background-color: var(--midnight-bg-primary, #111214) !important;
+  text-align: center !important;
+  max-width: 480px !important;
+  pointer-events: none !important;
+}
+
+/* File type icons row */
+.dark-theme .ConversationView__drop-overlay__icons {
+  display: flex !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+}
+
+/* Individual file type icon */
+.dark-theme .ConversationView__drop-overlay__icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background-color: var(--midnight-brand-500, #5865f2) !important;
+  position: relative !important;
+}
+
+/* Image icon: mountain/sun landscape pictogram */
+.dark-theme .ConversationView__drop-overlay__icon--image::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M21 3H3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1ZM4 5h16v9.59l-3.29-3.3a1 1 0 0 0-1.42 0L11 15.59l-2.29-2.3a1 1 0 0 0-1.42 0L4 16.59V5Zm0 14v-1.59l3.71-3.7 2.29 2.29a1 1 0 0 0 1.42 0l4.29-4.3L20 16.41V19H4ZM8 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M21 3H3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1ZM4 5h16v9.59l-3.29-3.3a1 1 0 0 0-1.42 0L11 15.59l-2.29-2.3a1 1 0 0 0-1.42 0L4 16.59V5Zm0 14v-1.59l3.71-3.7 2.29 2.29a1 1 0 0 0 1.42 0l4.29-4.3L20 16.41V19H4ZM8 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'/%3E%3C/svg%3E") !important;
+  -webkit-mask-size: 24px 24px !important;
+  mask-size: 24px 24px !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  background-color: #fff !important;
+}
+
+/* Document icon: file pictogram */
+.dark-theme .ConversationView__drop-overlay__icon--document::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M4 3a1 1 0 0 1 1-1h9.59a1 1 0 0 1 .7.29l4.42 4.42a1 1 0 0 1 .29.7V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3Zm2 1v16h12V9h-4a1 1 0 0 1-1-1V4H6Zm9 .41V7h2.59L15 4.41ZM8 13a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H9Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M4 3a1 1 0 0 1 1-1h9.59a1 1 0 0 1 .7.29l4.42 4.42a1 1 0 0 1 .29.7V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3Zm2 1v16h12V9h-4a1 1 0 0 1-1-1V4H6Zm9 .41V7h2.59L15 4.41ZM8 13a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H9Z'/%3E%3C/svg%3E") !important;
+  -webkit-mask-size: 24px 24px !important;
+  mask-size: 24px 24px !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  background-color: #fff !important;
+}
+
+/* Title: "Upload to @username" */
+.dark-theme .ConversationView__drop-overlay__title {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  color: var(--midnight-text-normal, #dbdee1) !important;
+  margin-bottom: 8px !important;
+  font-family: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+.dark-theme .ConversationView__drop-overlay__title strong {
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+
+/* Instructions text */
+.dark-theme .ConversationView__drop-overlay__instructions {
+  font-size: 14px !important;
+  color: var(--midnight-text-muted, #949ba4) !important;
+  font-family: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  white-space: pre-line !important;
+}

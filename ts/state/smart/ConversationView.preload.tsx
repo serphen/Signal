@@ -10,6 +10,7 @@ import { SmartConversationHeader } from './ConversationHeader.preload.js';
 import { SmartTimeline } from './Timeline.preload.js';
 import {
   getActivePanel,
+  getConversationSelector,
   getIsPanelAnimating,
   getSelectedMessageIds,
 } from '../selectors/conversations.dom.js';
@@ -51,6 +52,10 @@ export const SmartConversationView = memo(function SmartConversationView(
   const isPanelAnimating = useSelector(getIsPanelAnimating);
   const shouldHideConversationView = activePanel && !isPanelAnimating;
 
+  const conversationSelector = useSelector(getConversationSelector);
+  const conversation = conversationSelector(props.selectedConversationId);
+  const conversationTitle = conversation?.title ?? '';
+
   const onExitSelectMode = useCallback(() => {
     toggleSelectMode(false);
   }, [toggleSelectMode]);
@@ -58,6 +63,7 @@ export const SmartConversationView = memo(function SmartConversationView(
   return (
     <ConversationView
       conversationId={props.selectedConversationId}
+      conversationTitle={conversationTitle}
       hasOpenModal={hasOpenModal}
       hasOpenPanel={activePanel != null}
       isSelectMode={isSelectMode}
