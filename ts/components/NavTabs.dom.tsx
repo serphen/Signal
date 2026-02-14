@@ -232,7 +232,7 @@ export function NavTabs({
   renderStoriesTab,
   renderSettingsTab,
   selectedNavTab,
-  shouldShowProfileIcon,
+  shouldShowProfileIcon: _shouldShowProfileIcon,
   storiesEnabled,
   theme,
   unreadCallsCount,
@@ -337,8 +337,7 @@ export function NavTabs({
             hasPendingUpdate={hasPendingUpdate}
           />
         </TabList>
-        {shouldShowProfileIcon && (
-          <div className="NavTabs__Misc">
+        <div className="NavTabs__Misc">
             <button
               type="button"
               className="NavTabs__Item NavTabs__Item--Profile"
@@ -379,7 +378,6 @@ export function NavTabs({
               </Tooltip>
             </button>
           </div>
-        )}
       </nav>
       <TabPanel id={NavTab.Chats} className="NavTabs__TabPanel">
         {renderChatsTab}

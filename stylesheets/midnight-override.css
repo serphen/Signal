@@ -710,26 +710,12 @@ body.dark-theme *:not(.font-symbols) {
   background-color: var(--midnight-text-normal) !important;
 }
 
-/* --- GIF picker button icon (text-based, like Midnight) --- */
-.FunButton__Icon--GifPicker {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 10px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.5px !important;
-  line-height: 1 !important;
-  color: var(--midnight-channels-default) !important;
-  background: none !important;
-  -webkit-mask: none !important;
-  mask: none !important;
-}
+/* --- GIF picker button icon — now uses Midnight SVG mask (override below) --- */
 .FunButton__Icon--GifPicker::after {
-  content: "GIF" !important;
+  content: none !important;
 }
 .FunButton:hover .FunButton__Icon--GifPicker {
-  color: var(--midnight-text-normal) !important;
-  background: none !important;
+  background-color: var(--midnight-text-normal) !important;
 }
 
 /* --- Microphone: hidden from compose bar ---
@@ -1591,4 +1577,219 @@ body.dark-theme *:not(.font-symbols) {
 .risibank-browser__install-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* ==========================================================================
+   Midnight SVG Icons — Compose Toolbar
+   Replace Signal's default mask-images with Midnight SVG data URIs.
+   ========================================================================== */
+
+/* Plus (+) attach button — Midnight's circled plus icon */
+.dark-theme .CompositionArea__attach-file::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M13 3a1 1 0 1 0-2 0v8H3a1 1 0 1 0 0 2h8v8a1 1 0 0 0 2 0v-8h8a1 1 0 0 0 0-2h-8V3Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M13 3a1 1 0 1 0-2 0v8H3a1 1 0 1 0 0 2h8v8a1 1 0 0 0 2 0v-8h8a1 1 0 0 0 0-2h-8V3Z'/%3E%3C/svg%3E") !important;
+}
+
+/* Emoji (smiley face) — Midnight's emoji picker icon */
+.dark-theme .FunButton__Icon--FunPicker,
+.dark-theme .FunButton__Icon--EmojiPicker {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22ZM6.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm11 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-9.8 1.17a1 1 0 0 1 1.39.27 3.5 3.5 0 0 0 5.82 0 1 1 0 0 1 1.66 1.12 5.5 5.5 0 0 1-9.14 0 1 1 0 0 1 .27-1.4Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22ZM6.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm11 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-9.8 1.17a1 1 0 0 1 1.39.27 3.5 3.5 0 0 0 5.82 0 1 1 0 0 1 1.66 1.12 5.5 5.5 0 0 1-9.14 0 1 1 0 0 1 .27-1.4Z'/%3E%3C/svg%3E") !important;
+}
+
+/* Sticker icon — Midnight's actual sticker picker icon (extracted from midnight.html) */
+.dark-theme .FunButton__Icon--StickerPicker {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M15.55 5a5.5 5.5 0 0 1 5.15 3.67h.3a2 2 0 0 1 2 2v3.18a2 2 0 0 1-2 1.99h-.2A4.54 4.54 0 0 1 16.55 19a4.45 4.45 0 0 1-3.6-1.83 1.2 1.2 0 0 0-1.9 0 4.44 4.44 0 0 1-3.9 1.82 4.54 4.54 0 0 1-3.94-3.15H3a2 2 0 0 1-2-2v-3.18c0-1.1.9-1.99 2-1.99h.3A5.5 5.5 0 0 1 8.46 5h7.09Zm-7.1 2C6.6 7 5.06 8.5 4.97 10.41l-.02.66v3.18c0 1.43 1.05 2.66 2.34 2.74.85.06 1.63-.32 2.14-1.01a3.2 3.2 0 0 1 2.57-1.3c1 0 1.97.48 2.57 1.3.5.69 1.3 1.08 2.14 1.01 1.3-.08 2.34-1.31 2.34-2.74l-.02-3.84a3.54 3.54 0 0 0-3.49-3.43H8.45Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M15.55 5a5.5 5.5 0 0 1 5.15 3.67h.3a2 2 0 0 1 2 2v3.18a2 2 0 0 1-2 1.99h-.2A4.54 4.54 0 0 1 16.55 19a4.45 4.45 0 0 1-3.6-1.83 1.2 1.2 0 0 0-1.9 0 4.44 4.44 0 0 1-3.9 1.82 4.54 4.54 0 0 1-3.94-3.15H3a2 2 0 0 1-2-2v-3.18c0-1.1.9-1.99 2-1.99h.3A5.5 5.5 0 0 1 8.46 5h7.09Zm-7.1 2C6.6 7 5.06 8.5 4.97 10.41l-.02.66v3.18c0 1.43 1.05 2.66 2.34 2.74.85.06 1.63-.32 2.14-1.01a3.2 3.2 0 0 1 2.57-1.3c1 0 1.97.48 2.57 1.3.5.69 1.3 1.08 2.14 1.01 1.3-.08 2.34-1.31 2.34-2.74l-.02-3.84a3.54 3.54 0 0 0-3.49-3.43H8.45Z'/%3E%3C/svg%3E") !important;
+}
+
+/* GIF icon — Midnight's actual GIF icon SVG (extracted from midnight.html) */
+.dark-theme .FunButton__Icon--GifPicker {
+  display: block !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M16.23 12c0 1.29-.95 2.25-2.22 2.25A2.18 2.18 0 0 1 11.8 12c0-1.29.95-2.25 2.22-2.25 1.27 0 2.22.96 2.22 2.25ZM23 12c0 5.01-4 9-8.99 9a8.93 8.93 0 0 1-8.75-6.9H3.34l-.9-4.2H5.3c.26-.96.68-1.89 1.21-2.7H1.89L1 3h12.74C19.13 3 23 6.99 23 12Zm-4.26 0c0-2.67-2.1-4.8-4.73-4.8A4.74 4.74 0 0 0 9.28 12c0 2.67 2.1 4.8 4.73 4.8a4.74 4.74 0 0 0 4.73-4.8Z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='M16.23 12c0 1.29-.95 2.25-2.22 2.25A2.18 2.18 0 0 1 11.8 12c0-1.29.95-2.25 2.22-2.25 1.27 0 2.22.96 2.22 2.25ZM23 12c0 5.01-4 9-8.99 9a8.93 8.93 0 0 1-8.75-6.9H3.34l-.9-4.2H5.3c.26-.96.68-1.89 1.21-2.7H1.89L1 3h12.74C19.13 3 23 6.99 23 12Zm-4.26 0c0-2.67-2.1-4.8-4.73-4.8A4.74 4.74 0 0 0 9.28 12c0 2.67 2.1 4.8 4.73 4.8a4.74 4.74 0 0 0 4.73-4.8Z'/%3E%3C/svg%3E") !important;
+  background-color: var(--midnight-channels-default) !important;
+  -webkit-mask-size: contain !important;
+  mask-size: contain !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+}
+
+/* ==========================================================================
+   Conversation List Polish — Midnight DM list refinements
+   ========================================================================== */
+
+/* Hide timestamps in conversation list items for cleaner Midnight look */
+.dark-theme .module-conversation-list__item__content__header__date {
+  display: none !important;
+}
+
+/* Tighter avatar sizes — Midnight DM list uses 32px avatars */
+.dark-theme .module-conversation-list__item__avatar-container .module-Avatar,
+.dark-theme .module-conversation-list__item__avatar-container .module-Avatar__contents {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+}
+
+/* Selected conversation left-edge pill indicator (Midnight style) */
+.dark-theme .module-conversation-list__item--contact-or-conversation.module-conversation-list__item--selected::before,
+.dark-theme .module-conversation-list__item--contact-or-conversation[data-is-selected="true"]::before {
+  content: "" !important;
+  position: absolute !important;
+  left: -2px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 4px !important;
+  height: 40px !important;
+  border-radius: 0 4px 4px 0 !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure conversation list items have position:relative for the pill */
+.dark-theme .module-conversation-list__item--contact-or-conversation {
+  position: relative !important;
+}
+
+/* Tighter vertical padding for denser list */
+.dark-theme .module-conversation-list__item--contact-or-conversation {
+  padding-block: 6px !important;
+}
+
+/* ==========================================================================
+   Code Blocks — Midnight-style dark background, full-width, horizontal scroll
+   Rendered from MessageTextRenderer when monospace + multiline is detected.
+   ========================================================================== */
+
+/* Full code block: pre element with language header */
+.dark-theme pre.codeblock {
+  background-color: #2b2d31 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 4px !important;
+  padding: 8px 12px !important;
+  margin: 4px 0 !important;
+  font-family: "Consolas", "Andale Mono", "Courier New", monospace !important;
+  font-size: 0.875rem !important;     /* 14px — Midnight code font */
+  line-height: 1.125rem !important;   /* 18px */
+  white-space: pre !important;
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  display: block !important;
+  word-wrap: normal !important;
+  color: var(--midnight-text-normal) !important;
+}
+
+/* Language label at top of code block */
+.dark-theme .codeblock__lang {
+  font-size: 0.6875rem !important;    /* 11px */
+  font-weight: 600 !important;
+  color: var(--midnight-text-muted) !important;
+  text-transform: lowercase !important;
+  margin-bottom: 4px !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  font-family: "sd sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+.dark-theme pre.codeblock code {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  white-space: pre !important;
+}
+
+/* Scrollbar for code blocks */
+.dark-theme pre.codeblock::-webkit-scrollbar {
+  height: 6px !important;
+}
+.dark-theme pre.codeblock::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.dark-theme pre.codeblock::-webkit-scrollbar-thumb {
+  background-color: var(--midnight-scrollbar-thumb) !important;
+  border-radius: 3px !important;
+}
+
+/* Inline monospace: Midnight style — no column limit, natural width */
+.dark-theme .MessageTextRenderer__formatting--monospace {
+  background-color: #2b2d31 !important;
+  padding: 0.2em 0.4em !important;
+  border-radius: 3px !important;
+  font-size: 85% !important;
+  font-family: "Consolas", "Andale Mono", "Courier New", monospace !important;
+  color: var(--midnight-text-normal) !important;
+}
+
+/* ==========================================================================
+   NavTabs Restructure — Midnight-style left sidebar
+   - Chats tab at the very top
+   - Hide Tabs / Show Tabs button removed entirely
+   - Settings tab hidden (profile icon opens settings)
+   - Profile avatar pinned to very bottom
+   ========================================================================== */
+
+/* Hide the NavTabsToggle (Hide Tabs / Show Tabs) — not needed */
+.dark-theme .NavTabs > .NavTabs__Item.NavTabs__Toggle {
+  display: none !important;
+}
+
+/* Hide the Settings tab — profile avatar already opens settings */
+.dark-theme .NavTabs__Item--Settings {
+  display: none !important;
+}
+
+/* Remove the 1fr spacer from the grid — tabs stack at top,
+   flex on the TabList container pushes Misc to the bottom. */
+.dark-theme .NavTabs__TabList {
+  grid-template-rows:
+    [Chats] auto
+    [Calls] auto
+    [Stories] auto !important;
+  flex: 0 0 auto !important;
+}
+
+/* NavTabs is already a flex column — ensure Misc is pushed to very bottom */
+.dark-theme .NavTabs {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Spacer between tabs and profile — pushes profile to bottom */
+.dark-theme .NavTabs__TabList {
+  margin-bottom: auto !important;
+}
+
+/* Profile/Misc: always visible, pinned to very bottom */
+.dark-theme .NavTabs__Misc {
+  display: flex !important;
+  margin-top: auto !important;
+}
+
+/* ==========================================================================
+   Kill title-bar drag area padding/height — flush UI to the top edge
+   ========================================================================== */
+.dark-theme {
+  --title-bar-drag-area-height: 0px !important;
+}
+
+/* NavTabs: keep top padding (drag area) — exception */
+.dark-theme .NavTabs {
+  padding-top: var(--title-bar-drag-area-height) !important;
+}
+
+/* Conversation header: remove top padding, use fixed height */
+.dark-theme .module-ConversationHeader {
+  padding-top: 0 !important;
+  height: 48px !important;
+}
+
+/* Top-level drag area spacer */
+.dark-theme .module-title-bar-drag-area {
+  height: 0 !important;
 }

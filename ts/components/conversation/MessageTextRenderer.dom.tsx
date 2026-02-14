@@ -30,6 +30,21 @@ import type { FunJumboEmojiSize } from '../fun/FunEmoji.dom.js';
 const { sortBy } = lodash;
 
 const EMOJI_REGEXP = emojiRegex();
+
+const KNOWN_LANGUAGES = [
+  'javascript', 'js', 'typescript', 'ts', 'python', 'py', 'java', 'c',
+  'cpp', 'c++', 'csharp', 'c#', 'cs', 'go', 'rust', 'rs', 'ruby', 'rb',
+  'php', 'swift', 'kotlin', 'scala', 'html', 'css', 'scss', 'sass',
+  'less', 'json', 'xml', 'yaml', 'yml', 'toml', 'sql', 'bash', 'sh',
+  'shell', 'zsh', 'powershell', 'ps1', 'dockerfile', 'docker', 'makefile',
+  'lua', 'perl', 'r', 'matlab', 'julia', 'elixir', 'ex', 'erlang',
+  'haskell', 'hs', 'clojure', 'clj', 'lisp', 'scheme', 'ocaml', 'ml',
+  'fsharp', 'f#', 'dart', 'zig', 'nim', 'v', 'assembly', 'asm', 'nasm',
+  'wasm', 'graphql', 'gql', 'proto', 'protobuf', 'terraform', 'tf',
+  'diff', 'patch', 'ini', 'conf', 'nginx', 'apache', 'markdown', 'md',
+  'latex', 'tex', 'csv', 'tsv', 'plaintext', 'text', 'txt', 'log',
+  'jsx', 'tsx', 'vue', 'svelte', 'astro', 'objc', 'objective-c',
+];
 export enum RenderLocation {
   ConversationList = 'ConversationList',
   Quote = 'Quote',
@@ -259,6 +274,36 @@ function renderNode({
   }
   if (node.isStrikethrough) {
     content = <s>{content}</s>;
+  }
+
+  // Code block detection: monospace text with newlines → render as <pre><code>
+  if (node.isMonospace && node.text.includes('\n') && renderLocation === RenderLocation.Timeline) {
+    const text = node.text;
+    const firstNewline = text.indexOf('\n');
+    let lang: string | null = null;
+    let codeText = text;
+
+    if (firstNewline > 0) {
+      const possibleLang = text.substring(0, firstNewline).trim().toLowerCase();
+      if (KNOWN_LANGUAGES.includes(possibleLang)) {
+        lang = possibleLang;
+        codeText = text.substring(firstNewline + 1);
+      }
+    }
+
+    return (
+      <pre
+        key={key}
+        className={classNames(
+          'codeblock',
+          lang ? `codeblock--${lang}` : null,
+          isInvisible ? 'MessageTextRenderer__formatting--invisible' : null
+        )}
+      >
+        {lang && <div className="codeblock__lang">{lang}</div>}
+        <code>{codeText}</code>
+      </pre>
+    );
   }
 
   const formattingClasses = classNames(

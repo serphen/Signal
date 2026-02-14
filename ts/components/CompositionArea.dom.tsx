@@ -63,6 +63,7 @@ import type { SmartCompositionRecordingDraftProps } from '../state/smart/Composi
 import { useEscapeHandling } from '../hooks/useEscapeHandling.dom.js';
 import SelectModeActions from './conversation/SelectModeActions.dom.js';
 import type { ShowToastAction } from '../state/ducks/toast.preload.js';
+import { ToastType } from '../types/Toast.dom.js';
 import type { DraftEditMessageType } from '../model-types.d.ts';
 import type { ForwardMessagesPayload } from '../state/ducks/globalModals.preload.js';
 import { ForwardMessagesModalType } from './ForwardMessagesModal.dom.js';
@@ -76,6 +77,8 @@ import { strictAssert } from '../util/assert.std.js';
 import { ConfirmationDialog } from './ConfirmationDialog.dom.js';
 import type { EmojiSkinTone } from './fun/data/emojis.std.js';
 import { FunPickerButton } from './fun/FunButton.dom.js';
+import { useFunContext } from './fun/FunProvider.dom.js';
+import { FunPickerTabKey } from './fun/constants.dom.js';
 import { AxoDropdownMenu } from '../axo/AxoDropdownMenu.dom.js';
 import { AxoSymbol } from '../axo/AxoSymbol.dom.js';
 import { AxoButton } from '../axo/AxoButton.dom.js';
@@ -352,6 +355,8 @@ export const CompositionArea = memo(function CompositionArea({
   const fileInputRef = useRef<null | HTMLInputElement>(null);
   const photoVideoInputRef = useRef<null | HTMLInputElement>(null);
 
+  const fun = useFunContext();
+
   const handleForceSend = useCallback(() => {
     setLarge(false);
     if (inputApiRef.current) {
@@ -513,6 +518,17 @@ export const CompositionArea = memo(function CompositionArea({
     }
   }, [inputApiRef, focusCounter, previousFocusCounter]);
 
+  // Focus composer when window regains focus
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (inputApiRef.current) {
+        inputApiRef.current.focus();
+      }
+    };
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
+  }, []);
+
   const previousMessageCompositionId = usePrevious(
     messageCompositionId,
     messageCompositionId
@@ -667,6 +683,16 @@ export const CompositionArea = memo(function CompositionArea({
     });
   }, [pushPanelForConversation]);
 
+  const handleOpenStickerPicker = useCallback(() => {
+    fun.onChangeTab(FunPickerTabKey.Stickers);
+    handleFunPickerOpenChange(true);
+  }, [fun, handleFunPickerOpenChange]);
+
+  const handleOpenGifPicker = useCallback(() => {
+    fun.onChangeTab(FunPickerTabKey.Gifs);
+    handleFunPickerOpenChange(true);
+  }, [fun, handleFunPickerOpenChange]);
+
   const leftHandSideButtonsFragment = (
     <>
       {confirmGifSelection && (
@@ -702,6 +728,26 @@ export const CompositionArea = memo(function CompositionArea({
         >
           <FunPickerButton i18n={i18n} />
         </FunPicker>
+      </div>
+      <div className="CompositionArea__button-cell">
+        <button
+          type="button"
+          className="FunButton"
+          onClick={handleOpenGifPicker}
+          aria-label={i18n('icu:FunPicker__Tab--Gifs')}
+        >
+          <span className="FunButton__Icon FunButton__Icon--GifPicker" />
+        </button>
+      </div>
+      <div className="CompositionArea__button-cell">
+        <button
+          type="button"
+          className="FunButton"
+          onClick={handleOpenStickerPicker}
+          aria-label={i18n('icu:FunPicker__Tab--Stickers')}
+        >
+          <span className="FunButton__Icon FunButton__Icon--StickerPicker" />
+        </button>
       </div>
       {showMediaQualitySelector ? (
         <div className="CompositionArea__button-cell">
@@ -751,6 +797,14 @@ export const CompositionArea = memo(function CompositionArea({
 
   const isRecording = recordingState === RecordingState.Recording;
 
+  const handleStartVoiceMessage = useCallback(() => {
+    if (draftAttachments.length) {
+      showToast({ toastType: ToastType.VoiceNoteMustBeTheOnlyAttachment });
+    } else {
+      startRecording(conversationId);
+    }
+  }, [conversationId, draftAttachments, showToast, startRecording]);
+
   let attButton;
   if (draftEditMessage || linkPreviewResult || isRecording) {
     attButton = undefined;
@@ -784,6 +838,9 @@ export const CompositionArea = memo(function CompositionArea({
                 {i18n('icu:CompositionArea__AttachMenu__Poll')}
               </AxoDropdownMenu.Item>
             )}
+            <AxoDropdownMenu.Item symbol="mic" onSelect={handleStartVoiceMessage}>
+              {i18n('icu:voiceRecording--start')}
+            </AxoDropdownMenu.Item>
           </AxoDropdownMenu.Content>
         </AxoDropdownMenu.Root>
       </div>
@@ -1051,7 +1108,10 @@ export const CompositionArea = memo(function CompositionArea({
             convertDraftBodyRangesIntoHydrated={
               convertDraftBodyRangesIntoHydrated
             }
-            onClose={() => setAttachmentToEdit(undefined)}
+            onClose={() => {
+              setAttachmentToEdit(undefined);
+              inputApiRef.current?.focus();
+            }}
             onDone={({
               caption,
               captionBodyRanges,
@@ -1081,6 +1141,7 @@ export const CompositionArea = memo(function CompositionArea({
                 convertDraftBodyRangesIntoHydrated(captionBodyRanges),
                 true
               );
+              inputApiRef.current?.focus();
             }}
             onSelectEmoji={onSelectEmoji}
             onTextTooLong={onTextTooLong}
@@ -1176,6 +1237,7 @@ export const CompositionArea = memo(function CompositionArea({
             onSubmit={handleSubmit}
             onTextTooLong={onTextTooLong}
             ourConversationId={ourConversationId}
+            placeholder={`Message @${conversationName.title}`}
             platform={platform}
             quotedMessageId={quotedMessageId}
             sendCounter={sendCounter}
