@@ -106,9 +106,21 @@ body.dark-theme * {
   background-color: var(--midnight-bg-hover) !important;
 }
 
-/* Force outgoing messages to left-align */
+/* Force outgoing messages to left-align — same as incoming (Midnight style) */
 .dark-theme .module-message--outgoing {
   flex-direction: row !important;
+  text-align: start !important;
+}
+
+.dark-theme .module-message__container-outer,
+.dark-theme .module-message__container,
+.dark-theme .module-message__text--outgoing {
+  text-align: start !important;
+}
+
+/* Outgoing container-outer: must not right-align children */
+.dark-theme .module-message--outgoing .module-message__container-outer {
+  align-items: flex-start !important;
 }
 
 /* Group-start messages: 1.0625rem (17px) top margin — exact Midnight value */
