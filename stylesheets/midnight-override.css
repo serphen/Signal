@@ -143,7 +143,15 @@ body.dark-theme * {
 
 .dark-theme .module-message__container-outer {
   max-width: 100% !important;
+  flex: 1 !important;              /* fill all space after avatar */
+  min-width: 0 !important;
   line-height: normal !important;
+}
+
+/* Remove position:relative from the inner container so that
+   absolutely-positioned metadata anchors to .module-message (the row) */
+.dark-theme .module-message__container {
+  position: static !important;
 }
 
 /* ==========================================================================
