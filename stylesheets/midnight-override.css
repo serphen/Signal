@@ -2044,3 +2044,23 @@ body.dark-theme *:not(.font-symbols) {
   padding-top: 8px !important;
   padding-bottom: 8px !important;
 }
+
+/* ==========================================================================
+   Fun Picker (emoji/sticker/GIF panels) — darker to match Midnight
+   ========================================================================== */
+.dark-theme .FunPopover__Dialog {
+  background: #1a1b1e !important;
+}
+.dark-theme .FunTabs__TabPanelInner {
+  background: #1a1b1e !important;
+}
+.dark-theme .FunSearch__Input {
+  background: #111214 !important;
+}
+.dark-theme .FunSubNav__Button:hover,
+.dark-theme .FunSubNav__ListBoxItemButton:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.dark-theme .FunTabs__TabIndicator {
+  background: var(--midnight-text-normal) !important;
+}
