@@ -298,7 +298,7 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .module-message__text a,
 .dark-theme .module-message__text--incoming a,
 .dark-theme .module-message__text--outgoing a {
-  color: var(--midnight-text-link) !important;
+  color: oklab(0.628849 -0.0433247 -0.160221) !important;
   text-decoration: none !important;
 }
 .dark-theme .module-message__text a:hover,
