@@ -148,12 +148,58 @@ import type { FunJumboEmojiSize } from '../fun/FunEmoji.dom.js';
 const { sortBy } = lodash;
 
 const EMOJI_REGEXP = emojiRegex();
+const CODE_BLOCK_REGEX = /```(\w*)\n([\s\S]*?)```/g;
 
 function highlightCode(code: string, lang: string | null): string {
   if (lang && hljs.getLanguage(lang)) {
     return hljs.highlight(code, { language: lang }).value;
   }
-  return hljs.highlightAuto(code).value;
+  // No language specified — return as plain escaped text, no auto-detection
+  return code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function CodeBlock({
+  code,
+  lang,
+  isInvisible,
+}: {
+  code: string;
+  lang: string | null;
+  isInvisible: boolean;
+}): ReactElement {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = React.useCallback(() => {
+    void navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [code]);
+
+  return (
+    <pre
+      className={classNames(
+        'codeblock',
+        lang ? `codeblock--${lang}` : null,
+        isInvisible ? 'MessageTextRenderer__formatting--invisible' : null
+      )}
+    >
+      {lang && <div className="codeblock__lang">{lang}</div>}
+      <button
+        type="button"
+        className={classNames('codeblock__copy', copied && 'codeblock__copy--copied')}
+        onClick={handleCopy}
+        aria-label="Copy code"
+      >
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      {/* eslint-disable-next-line react/no-danger -- highlight.js HTML-escapes all input */}
+      <code dangerouslySetInnerHTML={{ __html: highlightCode(code, lang) }} />
+    </pre>
+  );
 }
 
 const KNOWN_LANGUAGES = [
@@ -401,7 +447,7 @@ function renderNode({
     content = <s>{content}</s>;
   }
 
-  // Code block detection: monospace text with newlines → render as <pre><code>
+  // Code block detection: monospace body range with newlines → render as <pre><code>
   if (node.isMonospace && node.text.includes('\n') && renderLocation === RenderLocation.Timeline) {
     const text = node.text;
     const firstNewline = text.indexOf('\n');
@@ -416,20 +462,54 @@ function renderNode({
       }
     }
 
-    return (
-      <pre
-        key={key}
-        className={classNames(
-          'codeblock',
-          lang ? `codeblock--${lang}` : null,
-          isInvisible ? 'MessageTextRenderer__formatting--invisible' : null
-        )}
-      >
-        {lang && <div className="codeblock__lang">{lang}</div>}
-        {/* eslint-disable-next-line react/no-danger -- highlight.js HTML-escapes all input before wrapping tokens in <span> elements */}
-        <code dangerouslySetInnerHTML={{ __html: highlightCode(codeText, lang) }} />
-      </pre>
-    );
+    return <CodeBlock key={key} code={codeText} lang={lang} isInvisible={isInvisible} />;
+  }
+
+  // Code block detection: ```lang\n...\n``` in plain text (no MONOSPACE body range)
+  if (!node.isMonospace && renderLocation === RenderLocation.Timeline &&
+      node.mentions.length === 0 && CODE_BLOCK_REGEX.test(node.text)) {
+    CODE_BLOCK_REGEX.lastIndex = 0;
+    const parts: ReactElement[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = CODE_BLOCK_REGEX.exec(node.text)) !== null) {
+      // Text before code block
+      if (match.index > lastIndex) {
+        parts.push(
+          renderText({
+            text: node.text.slice(lastIndex, match.index),
+            key: `${key}-t${parts.length}`,
+            jumboEmojiSize,
+            isInvisible,
+          })
+        );
+      }
+
+      const rawLang = match[1].trim().toLowerCase();
+      const lang = rawLang && KNOWN_LANGUAGES.includes(rawLang) ? rawLang : null;
+      const codeText = match[2];
+
+      parts.push(
+        <CodeBlock key={`${key}-c${parts.length}`} code={codeText} lang={lang} isInvisible={isInvisible} />
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Text after last code block
+    if (lastIndex < node.text.length) {
+      parts.push(
+        renderText({
+          text: node.text.slice(lastIndex),
+          key: `${key}-t${parts.length}`,
+          jumboEmojiSize,
+          isInvisible,
+        })
+      );
+    }
+
+    return <span key={key}>{parts}</span>;
   }
 
   const formattingClasses = classNames(

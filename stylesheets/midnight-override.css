@@ -901,6 +901,15 @@ body.dark-theme *:not(.font-symbols) {
   border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
+  margin: 4px 0 !important;
+  width: 100% !important;
+}
+
+/* Link preview containers: don't let the inline width constrain the author row —
+   override the JS-set width so the container sizes naturally */
+.dark-theme .module-message__container[style*="width"] {
+  width: auto !important;
+  max-width: 400px !important;
 }
 
 /* ==========================================================================
@@ -1715,6 +1724,38 @@ body.dark-theme *:not(.font-symbols) {
   display: block !important;
   word-wrap: normal !important;
   color: var(--midnight-text-normal) !important;
+  position: relative !important;
+}
+
+/* Copy button — top-right, visible on hover */
+.dark-theme .codeblock__copy {
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 0.6875rem !important;    /* 11px */
+  font-weight: 500 !important;
+  font-family: "sd sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+  color: var(--midnight-text-muted) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  opacity: 0 !important;
+  transition: opacity 0.15s ease !important;
+  z-index: 1 !important;
+  line-height: 1.2 !important;
+}
+.dark-theme pre.codeblock:hover .codeblock__copy {
+  opacity: 1 !important;
+}
+.dark-theme .codeblock__copy:hover {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: var(--midnight-text-normal) !important;
+}
+.dark-theme .codeblock__copy--copied {
+  color: #57ab5a !important;
+  opacity: 1 !important;
 }
 
 /* Language label at top of code block */
@@ -1983,6 +2024,20 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .Preferences__profile-chip--selected {
   background-color: #1b1b1b !important;
+}
+
+/* "Read more" button — subtle, Midnight-style */
+.dark-theme .MessageBody__read-more {
+  font-size: 0.75rem !important;        /* 12px — smaller than message text */
+  font-weight: 400 !important;
+  font-style: italic !important;
+  color: var(--midnight-text-muted) !important;  /* #888991 */
+  opacity: 0.8 !important;
+  transition: opacity 0.15s ease !important;
+}
+.dark-theme .MessageBody__read-more:hover {
+  opacity: 1 !important;
+  color: var(--midnight-text-subtle) !important; /* #9d9ea5 */
 }
 
 .dark-theme .module-sticker-manager__text.module-sticker-manager__text--heading {

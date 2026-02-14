@@ -27,6 +27,7 @@ import {
   getSelectedConversationId,
   getTargetedMessage,
   getTargetedMessageSource,
+  getLeftPaneLists,
 } from '../selectors/conversations.dom.js';
 
 const log = createLogger('smart/ChatsTab');
@@ -52,6 +53,7 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
   const selectedConversationId = useSelector(getSelectedConversationId);
   const targetedMessageId = useSelector(getTargetedMessage)?.id;
   const targetedMessageSource = useSelector(getTargetedMessageSource);
+  const leftPaneLists = useSelector(getLeftPaneLists);
 
   const {
     onConversationClosed,
@@ -139,6 +141,21 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
       window.SignalCI?.handleEvent('empty-inbox:rendered', null);
     }
   }, [selectedConversationId]);
+
+  // Auto-select first conversation on startup if none is selected
+  const hasAutoSelected = useRef(false);
+  useEffect(() => {
+    if (hasAutoSelected.current || selectedConversationId) {
+      return;
+    }
+    const first =
+      leftPaneLists.pinnedConversations[0] ??
+      leftPaneLists.conversations[0];
+    if (first) {
+      hasAutoSelected.current = true;
+      showConversation({ conversationId: first.id });
+    }
+  }, [selectedConversationId, leftPaneLists, showConversation]);
 
   return (
     <ChatsTab
