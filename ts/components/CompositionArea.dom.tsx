@@ -716,7 +716,7 @@ export const CompositionArea = memo(function CompositionArea({
           {i18n('icu:CompositionArea__ConfirmGifSelection__Body')}
         </ConfirmationDialog>
       )}
-      <div className="CompositionArea__button-cell">
+      <div className="CompositionArea__button-cell CompositionArea__button-cell--emoji">
         <FunPicker
           placement="top start"
           open={funPickerOpen}
@@ -729,17 +729,7 @@ export const CompositionArea = memo(function CompositionArea({
           <FunPickerButton i18n={i18n} />
         </FunPicker>
       </div>
-      <div className="CompositionArea__button-cell">
-        <button
-          type="button"
-          className="FunButton"
-          onClick={handleOpenGifPicker}
-          aria-label={i18n('icu:FunPicker__Tab--Gifs')}
-        >
-          <span className="FunButton__Icon FunButton__Icon--GifPicker" />
-        </button>
-      </div>
-      <div className="CompositionArea__button-cell">
+      <div className="CompositionArea__button-cell CompositionArea__button-cell--sticker">
         <button
           type="button"
           className="FunButton"
@@ -747,6 +737,16 @@ export const CompositionArea = memo(function CompositionArea({
           aria-label={i18n('icu:FunPicker__Tab--Stickers')}
         >
           <span className="FunButton__Icon FunButton__Icon--StickerPicker" />
+        </button>
+      </div>
+      <div className="CompositionArea__button-cell CompositionArea__button-cell--gif">
+        <button
+          type="button"
+          className="FunButton"
+          onClick={handleOpenGifPicker}
+          aria-label={i18n('icu:FunPicker__Tab--Gifs')}
+        >
+          <span className="FunButton__Icon FunButton__Icon--GifPicker" />
         </button>
       </div>
       {showMediaQualitySelector ? (

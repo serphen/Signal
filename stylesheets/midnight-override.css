@@ -647,19 +647,29 @@ body.dark-theme *:not(.font-symbols) {
   padding-inline-start: 8px !important;
 }
 
-/* FunPicker (emoji/sticker) → right of input */
-.dark-theme .CompositionArea__button-cell:has(.FunButton) {
+/* Emoji → right of input (1st) */
+.dark-theme .CompositionArea__button-cell--emoji {
   order: 1 !important;
 }
 
-/* MediaQuality → right of FunPicker */
-.dark-theme .CompositionArea__button-cell:has(.MediaQualitySelector__button) {
+/* Sticker → after emoji (2nd) */
+.dark-theme .CompositionArea__button-cell--sticker {
   order: 2 !important;
+}
+
+/* GIF → after sticker (3rd) */
+.dark-theme .CompositionArea__button-cell--gif {
+  order: 3 !important;
+}
+
+/* MediaQuality → after GIF */
+.dark-theme .CompositionArea__button-cell:has(.MediaQualitySelector__button) {
+  order: 4 !important;
 }
 
 /* Send → far right */
 .dark-theme .CompositionArea__button-cell:has(.CompositionArea__send-button) {
-  order: 3 !important;
+  order: 5 !important;
   padding-inline-end: 8px !important;
 }
 
@@ -710,12 +720,19 @@ body.dark-theme *:not(.font-symbols) {
   background-color: var(--midnight-text-normal) !important;
 }
 
-/* --- GIF picker button icon — now uses Midnight SVG mask (override below) --- */
-.FunButton__Icon--GifPicker::after {
+/* --- GIF picker button icon — uses Midnight SVG mask (defined in SVG icons section below) --- */
+.dark-theme .FunButton__Icon--GifPicker {
+  /* Kill the old text-based "GIF" approach */
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+  color: transparent !important;
+}
+.dark-theme .FunButton__Icon--GifPicker::after {
   content: none !important;
 }
-.FunButton:hover .FunButton__Icon--GifPicker {
+.dark-theme .FunButton:hover .FunButton__Icon--GifPicker {
   background-color: var(--midnight-text-normal) !important;
+  color: transparent !important;
 }
 
 /* --- Microphone: hidden from compose bar ---
@@ -1142,7 +1159,7 @@ body.dark-theme *:not(.font-symbols) {
 
 /* Search input in left pane */
 .dark-theme .LeftPaneSearchInput__container {
-  background-color: var(--midnight-bg-primary) !important;
+  background-color: var(--midnight-bg-surface-highest) !important; /* #1e1f22 — matches Midnight search bar */
   border: none !important;
   border-radius: 4px !important;
 }
