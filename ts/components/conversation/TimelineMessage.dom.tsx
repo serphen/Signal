@@ -596,6 +596,7 @@ function MessageMenu({
                     role="button"
                     className="module-message__buttons__react"
                     aria-label={i18n('icu:reactToMessage')}
+                    title="React"
                     onDoubleClick={ev => {
                       // Prevent double click from triggering the replyToMessage action
                       ev.stopPropagation();
@@ -614,6 +615,7 @@ function MessageMenu({
               onClick={onDownload}
               role="button"
               aria-label={i18n('icu:downloadAttachment')}
+              title="Download"
               className={classNames(
                 'module-message__buttons__download',
                 `module-message__buttons__download--${direction}`
@@ -639,6 +641,7 @@ function MessageMenu({
               // This a menu meant for mouse use only
               role="button"
               aria-label={i18n('icu:replyToMessage')}
+              title="Reply"
               className={classNames(
                 'module-message__buttons__reply',
                 `module-message__buttons__download--${direction}`
@@ -659,6 +662,7 @@ function MessageMenu({
               onClick={onForward}
               role="button"
               aria-label="Forward"
+              title="Forward"
               className="module-message__buttons__forward"
             />
           )}
@@ -668,6 +672,7 @@ function MessageMenu({
               onClick={onEdit}
               role="button"
               aria-label="Edit"
+              title="Edit"
               className="module-message__buttons__edit"
             />
           )}
@@ -677,6 +682,7 @@ function MessageMenu({
               onClick={onCopy}
               role="button"
               aria-label="Copy"
+              title="Copy"
               className="module-message__buttons__copy"
             />
           )}
@@ -686,6 +692,7 @@ function MessageMenu({
               onClick={onDelete}
               role="button"
               aria-label="Delete"
+              title="Delete"
               className="module-message__buttons__delete"
             />
           )}
@@ -706,6 +713,7 @@ function MessageMenu({
               ref={maybePopperRef}
               type="button"
               aria-label={i18n('icu:messageContextMenuButton')}
+              title="More"
               className={classNames(
                 'module-message__buttons__menu',
                 `module-message__buttons__download--${direction}`

@@ -64,32 +64,6 @@ export function MessageContextMenu({
           }
         }}
       >
-        {shouldShowAdditional && (
-          <>
-            {onDownload && (
-              <AxoMenuBuilder.Item symbol="download" onSelect={onDownload}>
-                {i18n('icu:MessageContextMenu__download')}
-              </AxoMenuBuilder.Item>
-            )}
-            {onReplyToMessage && (
-              <AxoMenuBuilder.Item
-                symbol="reply"
-                onSelect={() => {
-                  // onReplyToMessage will focus the quill input
-                  shouldReturnFocusToTrigger.current = false;
-                  onReplyToMessage();
-                }}
-              >
-                {i18n('icu:MessageContextMenu__reply')}
-              </AxoMenuBuilder.Item>
-            )}
-            {onReact && (
-              <AxoMenuBuilder.Item symbol="heart-plus" onSelect={onReact}>
-                {i18n('icu:MessageContextMenu__react')}
-              </AxoMenuBuilder.Item>
-            )}
-          </>
-        )}
         {onEndPoll && (
           <AxoMenuBuilder.Item symbol="stop-circle" onSelect={onEndPoll}>
             {i18n('icu:Poll__end-poll')}
