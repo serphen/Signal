@@ -106,38 +106,8 @@ body.dark-theme * {
   background-color: var(--midnight-bg-hover) !important;
 }
 
-/* Force ALL messages to left-align — Midnight style, no right-aligned bubbles.
-   Duplicate selectors at max specificity to guarantee override. */
-.module-message--outgoing {
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  text-align: start !important;
-}
-.dark-theme .module-message,
-.dark-theme .module-message--outgoing,
-.dark-theme .module-message--incoming {
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  text-align: start !important;
-}
-
-/* Error container: hide — 28px dead space, no use in Midnight layout */
-.dark-theme .module-message__error-container {
-  display: none !important;
-}
-
-.dark-theme .module-message__container-outer,
-.dark-theme .module-message__container,
-.dark-theme .module-message__text--outgoing {
-  text-align: start !important;
-  text-align: left !important;
-}
-
-.dark-theme .module-message--outgoing .module-message__container-outer {
-  align-items: flex-start !important;
-}
-
-.dark-theme .module-message__buttons--outgoing {
+/* Force outgoing messages to left-align (same as incoming) */
+.dark-theme .module-message--outgoing {
   flex-direction: row !important;
 }
 
@@ -167,15 +137,11 @@ body.dark-theme * {
   padding: 0 !important;
   margin: 0 !important;
   overflow: visible !important;
-  display: block !important;
   color: var(--midnight-text-normal) !important;
-  /* Keep position: relative (original) — needed for child layout */
 }
 
 .dark-theme .module-message__container-outer {
   max-width: 100% !important;
-  flex: 1 1 auto !important;       /* fill all space after avatar */
-  min-width: 0 !important;
   line-height: normal !important;
 }
 
@@ -297,31 +263,25 @@ body.dark-theme * {
 }
 
 /* ==========================================================================
-   Bottom metadata — flush right, hover-only.
-   Sits at the bottom-right of the container (which fills the row width).
+   Bottom metadata — hover-only, inline at the end of content.
    ========================================================================== */
 .dark-theme .module-message__metadata {
   color: var(--midnight-text-muted) !important;
   font-size: 0.75rem !important;
   line-height: 1.375rem !important;
-  position: absolute !important;
-  bottom: 0 !important;
-  right: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: none !important;
-  z-index: 2 !important;
+  margin-top: 0 !important;
+  justify-content: flex-start !important;
   opacity: 0 !important;
-  pointer-events: none !important;
   transition: opacity 0.1s ease-out !important;
-  justify-content: flex-end !important;
-  white-space: nowrap !important;
 }
 
-/* Show on hover */
 .dark-theme .module-message:hover .module-message__metadata {
   opacity: 1 !important;
-  pointer-events: auto !important;
+}
+
+.dark-theme .module-message__metadata--inline {
+  float: none !important;
+  margin-top: 0 !important;
 }
 
 .dark-theme .module-message__metadata--outgoing {
