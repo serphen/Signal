@@ -2086,6 +2086,9 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .FunSubNav__ListBoxItemButton:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
+.dark-theme .FunSubNav__ListBoxItem__ButtonIndicator {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
 .dark-theme .FunTabs__TabIndicator {
   background: var(--midnight-text-normal) !important;
 }
