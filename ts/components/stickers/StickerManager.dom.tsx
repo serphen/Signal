@@ -188,7 +188,7 @@ export const StickerManager = React.memo(function StickerManagerInner({
                   </div>
                 ))}
               {selectedTab === TabViews.Risibank && (
-                <RisibankCollectionBrowser i18n={i18n} />
+                <RisibankCollectionBrowser i18n={i18n} installedPacks={installedPacks} />
               )}
             </>
           )}

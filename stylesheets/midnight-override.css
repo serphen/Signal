@@ -1535,3 +1535,60 @@ body.dark-theme *:not(.font-symbols) {
   border-radius: 6px;
   display: block;
 }
+
+/* ==========================================================================
+   Risibank — Section divider & labels (Collections / Stickers)
+   ========================================================================== */
+.risibank-browser__divider {
+  height: 1px;
+  background-color: #3b3c43;
+  margin: 12px 0 8px;
+}
+
+.risibank-browser__section-label {
+  color: #9d9ea5;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   Risibank — Individual sticker grid (6 columns, card-like items)
+   ========================================================================== */
+.risibank-browser__sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+/* Single-preview variant: one image fills the entire preview area */
+.risibank-browser__card-previews--single {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* Sticker card: pointer cursor for install-on-click */
+.risibank-browser__card--sticker {
+  cursor: pointer;
+}
+
+.risibank-browser__card--sticker:hover {
+  background-color: #2b2d31;
+}
+
+/* Installed state — muted, not clickable */
+.risibank-browser__card--installed {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.risibank-browser__card--installed:hover {
+  background-color: #1e1f22;
+}
+
+.risibank-browser__install-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
