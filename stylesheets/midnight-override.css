@@ -2064,3 +2064,11 @@ body.dark-theme *:not(.font-symbols) {
 .dark-theme .FunTabs__TabIndicator {
   background: var(--midnight-text-normal) !important;
 }
+
+/* NavTabs profile avatar — 32px instead of 28px */
+.dark-theme .NavTabs__ItemContent .module-Avatar,
+.dark-theme .NavTabs__ItemContent .module-Avatar__contents {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+}
