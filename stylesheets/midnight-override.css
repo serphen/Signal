@@ -106,21 +106,39 @@ body.dark-theme * {
   background-color: var(--midnight-bg-hover) !important;
 }
 
-/* Force outgoing messages to left-align — same as incoming (Midnight style) */
-.dark-theme .module-message--outgoing {
+/* Force ALL messages to left-align — Midnight style, no right-aligned bubbles.
+   Duplicate selectors at max specificity to guarantee override. */
+.module-message--outgoing {
   flex-direction: row !important;
+  justify-content: flex-start !important;
   text-align: start !important;
+}
+.dark-theme .module-message,
+.dark-theme .module-message--outgoing,
+.dark-theme .module-message--incoming {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  text-align: start !important;
+}
+
+/* Error container: hide — 28px dead space, no use in Midnight layout */
+.dark-theme .module-message__error-container {
+  display: none !important;
 }
 
 .dark-theme .module-message__container-outer,
 .dark-theme .module-message__container,
 .dark-theme .module-message__text--outgoing {
   text-align: start !important;
+  text-align: left !important;
 }
 
-/* Outgoing container-outer: must not right-align children */
 .dark-theme .module-message--outgoing .module-message__container-outer {
   align-items: flex-start !important;
+}
+
+.dark-theme .module-message__buttons--outgoing {
+  flex-direction: row !important;
 }
 
 /* Group-start messages (avatar + author shown): Midnight 17px top margin */
