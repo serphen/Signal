@@ -587,6 +587,45 @@ body.dark-theme *:not(.font-symbols) {
   cursor: pointer !important;
 }
 
+/* Shift-expanded action buttons — extra icons in the toolbar */
+.dark-theme .module-message__buttons__forward,
+.dark-theme .module-message__buttons__edit,
+.dark-theme .module-message__buttons__copy,
+.dark-theme .module-message__buttons__delete {
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+  background-color: var(--midnight-text-muted);
+}
+.dark-theme .module-message__buttons__forward:hover,
+.dark-theme .module-message__buttons__edit:hover,
+.dark-theme .module-message__buttons__copy:hover,
+.dark-theme .module-message__buttons__delete:hover {
+  background-color: var(--midnight-text-normal);
+}
+.dark-theme .module-message__buttons__forward {
+  -webkit-mask: url('../images/icons/v3/forward/forward-compact.svg') no-repeat center / contain;
+  mask: url('../images/icons/v3/forward/forward-compact.svg') no-repeat center / contain;
+}
+.dark-theme .module-message__buttons__edit {
+  -webkit-mask: url('../images/icons/v3/edit/edit-compact.svg') no-repeat center / contain;
+  mask: url('../images/icons/v3/edit/edit-compact.svg') no-repeat center / contain;
+}
+.dark-theme .module-message__buttons__copy {
+  -webkit-mask: url('../images/icons/v3/copy/copy-compact.svg') no-repeat center / contain;
+  mask: url('../images/icons/v3/copy/copy-compact.svg') no-repeat center / contain;
+}
+.dark-theme .module-message__buttons__delete {
+  -webkit-mask: url('../images/icons/v3/trash/trash-compact.svg') no-repeat center / contain;
+  mask: url('../images/icons/v3/trash/trash-compact.svg') no-repeat center / contain;
+}
+.dark-theme .module-message__buttons__delete {
+  background-color: #f23f43 !important;
+}
+.dark-theme .module-message__buttons__delete:hover {
+  background-color: #ff5c5f !important;
+}
+
 /* ==========================================================================
    Composition area — Midnight Midnight input bar
    Matches midnight.html structure:
@@ -949,7 +988,7 @@ body.dark-theme *:not(.font-symbols) {
    Link previews — Midnight embed style
    ========================================================================== */
 .dark-theme .module-message__link-preview {
-  background-color: oklab(0.190993 -0.000410579 -0.0043043) !important;
+  background-color: #060607 !important;
   border: 1px solid var(--midnight-border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;

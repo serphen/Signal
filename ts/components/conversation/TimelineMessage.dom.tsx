@@ -3,7 +3,7 @@
 
 import classNames from 'classnames';
 import lodash from 'lodash';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Manager, Popper, Reference } from 'react-popper';
@@ -431,6 +431,27 @@ export function TimelineMessage(props: Props): React.JSX.Element {
           onDownload={handleDownload}
           onReplyToMessage={canReply ? handleReplyToMessage : null}
           onReact={canReact ? handleReact : null}
+          onForward={
+            canForward
+              ? () =>
+                  toggleForwardMessagesModal({
+                    type: ForwardMessagesModalType.Forward,
+                    messageIds: [id],
+                  })
+              : null
+          }
+          onEdit={
+            canEditMessage
+              ? () => setMessageToEdit(conversationId, id)
+              : null
+          }
+          onCopy={canCopy ? () => copyMessageText(id) : null}
+          onDelete={() => {
+            toggleDeleteMessagesModal({
+              conversationId,
+              messageIds: [id],
+            });
+          }}
           renderMessageContextMenu={renderMessageContextMenu}
         />
         {reactionPickerRoot &&
@@ -470,6 +491,14 @@ export function TimelineMessage(props: Props): React.JSX.Element {
     direction,
     canReply,
     canReact,
+    canCopy,
+    canEditMessage,
+    canForward,
+    conversationId,
+    copyMessageText,
+    setMessageToEdit,
+    toggleDeleteMessagesModal,
+    toggleForwardMessagesModal,
     handleDownload,
     handleReplyToMessage,
     handleReact,
@@ -508,6 +537,10 @@ type MessageMenuProps = {
   onDownload: (() => void) | null;
   onReplyToMessage: (() => void) | null;
   onReact: (() => void) | null;
+  onForward: (() => void) | null;
+  onEdit: (() => void) | null;
+  onCopy: (() => void) | null;
+  onDelete: (() => void) | null;
   renderMessageContextMenu: (
     renderer: AxoMenuBuilder.Renderer,
     children: ReactNode
@@ -522,26 +555,13 @@ function MessageMenu({
   onDownload,
   onReplyToMessage,
   onReact,
+  onForward,
+  onEdit,
+  onCopy,
+  onDelete,
   renderMessageContextMenu,
 }: MessageMenuProps) {
   // This a menu meant for mouse use only
-  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
-  const [isHovered, setIsHovered] = React.useState(false);
-  const hasAutoOpened = React.useRef(false);
-
-  // Auto-open the ... menu when Shift is held while hovering the action bar
-  React.useEffect(() => {
-    if (isShiftHeld && isHovered && !hasAutoOpened.current) {
-      hasAutoOpened.current = true;
-      // Radix DropdownMenu.Trigger listens on pointerdown (button=0)
-      menuButtonRef.current?.dispatchEvent(
-        new PointerEvent('pointerdown', { bubbles: true, button: 0 })
-      );
-    }
-    if (!isShiftHeld) {
-      hasAutoOpened.current = false;
-    }
-  }, [isShiftHeld, isHovered]);
 
   return (
     <div
@@ -549,8 +569,6 @@ function MessageMenu({
         'module-message__buttons',
         `module-message__buttons--${direction}`
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {isWindowWidthNotNarrow && (
         <>
@@ -633,6 +651,46 @@ function MessageMenu({
           )}
         </>
       )}
+      {isShiftHeld && (
+        <>
+          {onForward && (
+            // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
+            <div
+              onClick={onForward}
+              role="button"
+              aria-label="Forward"
+              className="module-message__buttons__forward"
+            />
+          )}
+          {onEdit && (
+            // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
+            <div
+              onClick={onEdit}
+              role="button"
+              aria-label="Edit"
+              className="module-message__buttons__edit"
+            />
+          )}
+          {onCopy && (
+            // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
+            <div
+              onClick={onCopy}
+              role="button"
+              aria-label="Copy"
+              className="module-message__buttons__copy"
+            />
+          )}
+          {onDelete && (
+            // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
+            <div
+              onClick={onDelete}
+              role="button"
+              aria-label="Delete"
+              className="module-message__buttons__delete"
+            />
+          )}
+        </>
+      )}
       <Reference>
         {({ ref: popperRef }) => {
           // Only attach the popper reference to the collapsed menu button if
@@ -645,10 +703,7 @@ function MessageMenu({
           return renderMessageContextMenu(
             'AxoDropdownMenu',
             <button
-              ref={el => {
-                menuButtonRef.current = el;
-                if (typeof maybePopperRef === 'function') maybePopperRef(el);
-              }}
+              ref={maybePopperRef}
               type="button"
               aria-label={i18n('icu:messageContextMenuButton')}
               className={classNames(
