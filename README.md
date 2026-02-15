@@ -1,7 +1,7 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Option 1: Devcontainer
+## Option 1: Devcontainer (build only)
 
 Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electron-builder, rcodesign, Claude Code).
 
@@ -15,7 +15,6 @@ code Signal-Desktop
 4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
 5. You're in. Run:
 ```bash
-./scripts/run_dev.sh              # Launch in dev mode
 ./scripts/build.sh                # Build macOS .app (cross-build with prebuilt darwin binaries)
 ./scripts/build.sh mac arm64      # Build for Apple Silicon
 ./scripts/build.sh linux          # Build Linux app
