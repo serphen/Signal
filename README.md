@@ -11,7 +11,7 @@ git clone https://github.com/serphen/Signal-Desktop.git
 code Signal-Desktop
 ```
 4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
-5. Wait for the container to build (first time only), then you're in a ready-to-go Linux environment
+5. Wait for the container to build (first time only), then you're in a ready-to-go Linux environment with Node.js, pnpm, electron-builder, rcodesign, and Claude Code pre-installed
 
 ## Dev mode
 
