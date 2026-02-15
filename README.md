@@ -1,7 +1,10 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Option 1: Devcontainer (recommended)
+## Option 1: Devcontainer
+
+Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electron-builder, Claude Code).
+Good for development and building Linux apps.
 
 1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
 2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
@@ -11,18 +14,18 @@ git clone https://github.com/serphen/Signal-Desktop.git
 code Signal-Desktop
 ```
 4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
-5. Wait for the container to build (first time only), then you're in a ready-to-go Linux environment with Node.js, pnpm, electron-builder, rcodesign, and Claude Code pre-installed
-
-Then run:
+5. You're in. Run:
 ```bash
-./scripts/run_dev.sh              # Launch in dev mode
-./scripts/build.sh                # Build macOS .app (default)
-./scripts/build.sh mac arm64      # Build for Apple Silicon
-./scripts/build.sh mac x64        # Build for Intel
-./scripts/build.sh linux          # Build Linux app
+./scripts/run_dev.sh        # Launch in dev mode
+./scripts/build.sh linux    # Build Linux app
 ```
 
-## Option 2: Manual setup (directly on macOS)
+> **Note:** Building a macOS `.app` requires running on macOS directly (native modules
+> like `@signalapp/libsignal-client` cannot be cross-compiled from Linux).
+
+## Option 2: Directly on macOS
+
+Required for building the macOS `.app`. Also gives you live dev mode with hot reload via `pnpm start`.
 
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
@@ -32,26 +35,23 @@ npm install -g pnpm
 pnpm install && pnpm rebuild
 ```
 
-Dev mode:
+Dev mode (live reload):
 ```bash
 pnpm run generate
 pnpm start
 ```
 
-Build standalone .app:
+Build standalone `.app`:
 ```bash
-./scripts/build.sh
+./scripts/build.sh              # macOS .app (default)
+./scripts/build.sh mac arm64    # Apple Silicon
+./scripts/build.sh mac x64      # Intel
 ```
 
-## Output
-
-The `.app` is in `dist/mac-arm64/` (Apple Silicon) or `dist/mac/` (Intel). Launch with:
+The `.app` is in `dist/mac-arm64/` or `dist/mac/`. Launch with:
 ```bash
 open dist/mac-arm64/Signal.app
 ```
-
-The build script auto-detects the environment: it uses native `codesign` on macOS
-and `rcodesign` (Mozilla) on Linux for ad-hoc signing. No Apple certificate needed.
 
 ---
 
