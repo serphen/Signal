@@ -12,8 +12,13 @@ cd "$PROJECT_DIR"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 export COREPACK_ENABLE_AUTO_PIN=0
 
-echo "==> Installing dependencies..."
-pnpm install --no-frozen-lockfile
+# Install deps only if needed
+if [ ! -d "node_modules" ]; then
+  echo "==> Installing dependencies..."
+  pnpm install --frozen-lockfile=false --force
+else
+  echo "==> Dependencies already installed, skipping."
+fi
 
 echo "==> Building assets..."
 pnpm run generate
