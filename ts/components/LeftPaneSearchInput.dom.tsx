@@ -88,9 +88,10 @@ export function LeftPaneSearchInput({
       (isSearchingGlobally && !wasSearchingGlobally) ||
       startSearchCounter !== prevSearchCounter
     ) {
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         inputRef.current?.select();
-      });
+        inputRef.current?.focus();
+      }, 50);
     }
   }, [
     prevSearchConversationId,

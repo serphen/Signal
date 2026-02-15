@@ -248,6 +248,7 @@ function endConversationSearch(): ThunkAction<
 function searchInConversation(
   searchConversationId: string
 ): SearchInConversationActionType {
+  window.dispatchEvent(new CustomEvent('sidebar-expand'));
   return {
     type: 'SEARCH_IN_CONVERSATION',
     payload: { searchConversationId },
