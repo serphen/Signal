@@ -27,6 +27,26 @@ To launch:
 pnpm start
 ```
 
+## Build .app (macOS standalone)
+
+```bash
+# 1. Build assets
+pnpm run generate && pnpm run build:esbuild:prod
+
+# 2. Create a no-op sign script (signing requires Signal's internal certificates)
+echo '#!/bin/bash' > /tmp/nosign.sh && chmod +x /tmp/nosign.sh
+
+# 3. Package the .app
+SIGNAL_ENV=production CSC_IDENTITY_AUTO_DISCOVERY=false SIGN_MACOS_SCRIPT=/tmp/nosign.sh \
+  npx electron-builder --mac --dir -c.mac.notarize=false -c.forceCodeSigning=false
+```
+
+The `.app` is in `dist/mac-arm64/` (Apple Silicon) or `dist/mac/` (Intel). Launch it with:
+
+```bash
+open dist/mac-arm64/Signal.app
+```
+
 ---
 
 # Signal Desktop
