@@ -12,12 +12,16 @@ Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electro
 git clone https://github.com/serphen/Signal-Desktop.git
 ```
 4. In VS Code, open the `Signal-Desktop` folder, then press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
-5. You're in. Run:
+5. You're in. Build the macOS .app (Apple Silicon by default):
 ```bash
-./scripts/build.sh                # Build macOS .app (cross-build with prebuilt darwin binaries)
-./scripts/build.sh mac arm64      # Build for Apple Silicon
-./scripts/build.sh linux          # Build Linux app
-./scripts/build.sh windows        # Build Windows app
+./scripts/build.sh
+```
+
+Other platforms:
+```bash
+./scripts/build.sh mac x64      # macOS Intel
+./scripts/build.sh linux        # Linux
+./scripts/build.sh windows      # Windows
 ```
 
 ## Option 2: Native build (no Docker)
@@ -40,9 +44,7 @@ pnpm start
 
 Build standalone `.app`:
 ```bash
-./scripts/build.sh              # macOS .app (default)
-./scripts/build.sh mac arm64    # Apple Silicon
-./scripts/build.sh mac x64      # Intel
+./scripts/build.sh
 ```
 
 The `.app` is in `dist/mac-arm64/` or `dist/mac/`. Launch with:
