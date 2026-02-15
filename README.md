@@ -10,7 +10,7 @@ Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electro
 3. Clone and open:
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
-code Signal-Desktop
+code Signal-Desktop   # Open VS Code in this folder
 ```
 4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
 5. You're in. Run:
