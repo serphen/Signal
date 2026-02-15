@@ -89,6 +89,7 @@ export function NavSidebar({
 }: NavSidebarProps): React.JSX.Element {
   const isRTL = i18n.getLocaleDirection() === 'rtl';
   const [dragState, setDragState] = useState(DragState.INITIAL);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [preferredWidth, setPreferredWidth] = useState(() => {
     return getWidthFromPreferredWidth(preferredLeftPaneWidth, {
@@ -171,7 +172,7 @@ export function NavSidebar({
         className={classNames('NavSidebar', {
           'NavSidebar--narrow': widthBreakpoint === WidthBreakpoint.Narrow,
         })}
-        style={{ width }}
+        style={{ width: isCollapsed ? 0 : width }}
       >
         {!hideHeader && (
           <div className="NavSidebar__Header">
@@ -219,6 +220,15 @@ export function NavSidebar({
         )}
 
         <div className="NavSidebar__Content">{children}</div>
+
+        <button
+          type="button"
+          className={classNames('NavSidebar__CollapseToggle', {
+            'NavSidebar__CollapseToggle--collapsed': isCollapsed,
+          })}
+          onClick={() => setIsCollapsed(prev => !prev)}
+          title={isCollapsed ? 'Expand' : 'Collapse'}
+        />
 
         <div
           className={classNames('NavSidebar__DragHandle', {

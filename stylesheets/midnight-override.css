@@ -78,6 +78,7 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .NavSidebar {
   background-color: var(--midnight-bg-primary) !important;
+  position: relative !important;
 }
 
 .dark-theme .NavTabs {
@@ -1319,6 +1320,53 @@ body.dark-theme *:not(.font-symbols) {
 
 .dark-theme .LeftPaneSearchInput__input::placeholder {
   color: var(--midnight-input-placeholder) !important;
+}
+
+/* NavSidebar collapse toggle — bottom-right corner */
+.dark-theme .NavSidebar__CollapseToggle {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+  padding: 0;
+  -webkit-mask: url('../images/icons/v3/chevron/chevron-left.svg') no-repeat center / 16px 16px;
+  mask: url('../images/icons/v3/chevron/chevron-left.svg') no-repeat center / 16px 16px;
+  background-color: var(--midnight-text-muted);
+}
+.dark-theme .NavSidebar:hover .NavSidebar__CollapseToggle,
+.dark-theme .NavSidebar__CollapseToggle--collapsed {
+  opacity: 1;
+}
+.dark-theme .NavSidebar__CollapseToggle:hover {
+  background-color: var(--midnight-text-normal);
+}
+.dark-theme .NavSidebar__CollapseToggle--collapsed {
+  -webkit-mask-image: url('../images/icons/v3/chevron/chevron-right.svg');
+  mask-image: url('../images/icons/v3/chevron/chevron-right.svg');
+  right: -28px;
+  opacity: 0.6;
+}
+.dark-theme .NavSidebar__CollapseToggle--collapsed:hover {
+  opacity: 1;
+}
+
+/* NavSidebar collapsed state */
+.dark-theme .NavSidebar[style*="width: 0"] {
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__Header,
+.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__Content,
+.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__DragHandle {
+  display: none !important;
 }
 
 /* NavSidebar tabs */
