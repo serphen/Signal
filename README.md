@@ -1,32 +1,44 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Option 1: Devcontainer
+# Signal Desktop — Build
 
-Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electron-builder, rcodesign, Claude Code). Builds a standalone `.app` (macOS) or binary (Linux). You can also use it for dev — just rebuild and reinstall the app after each change.
+The easiest way to build is with the devcontainer. Everything is pre-installed and isolated — just clone, open, and build.
 
-1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
-2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
-3. Clone the repo and open the folder in VS Code
+## Quick start (recommended)
+
+1. Install [OrbStack](https://orbstack.dev/) and [VS Code](https://code.visualstudio.com/) with the **Dev Containers** extension
+2. Clone the repo
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
 ```
-4. In VS Code, open the `Signal-Desktop` folder, then press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
-5. You're in. Build the macOS .app (Apple Silicon by default):
+3. Open the `Signal-Desktop` folder in VS Code, then `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
+4. Build:
 ```bash
 ./scripts/build.sh
 ```
+
+That's it. The macOS `.app` (Apple Silicon) lands in `dist/mac-arm64/Signal.app`.
 
 Other platforms:
 ```bash
 ./scripts/build.sh mac x64      # macOS Intel
 ./scripts/build.sh linux        # Linux
-./scripts/build.sh windows      # Windows
+./scripts/build.sh windows      # Windows (installs Wine on first run)
 ```
 
-## Option 2: Native build (no Docker)
+You can also use it for dev — just rebuild and relaunch the app after each change.
 
-Build and run directly on the host system, without Docker. Faster iteration since `pnpm start` gives you live dev mode with hot reload — no need to rebuild the whole app after each change.
+## Tips
+
+- **DevTools (Inspect Element):** `Cmd+Option+I`
+
+---
+
+<details>
+<summary>Alternative: native build (no Docker)</summary>
+
+Build directly on the host. Useful if you want hot reload via `pnpm start` for faster iteration.
 
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
@@ -47,11 +59,6 @@ Build standalone `.app`:
 ./scripts/build.sh
 ```
 
-The `.app` is in `dist/mac-arm64/` or `dist/mac/`. Launch with:
-```bash
-open dist/mac-arm64/Signal.app
-```
+Output is in `dist/mac-arm64/` or `dist/mac/`.
 
-## Tips
-
-- **DevTools (Inspect Element):** `Cmd+Option+I`
+</details>
