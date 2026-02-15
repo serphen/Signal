@@ -11,6 +11,7 @@ services:
     volumes:
       - ..:/workspace:cached
       - /workspace/.devcontainer
+      - /workspace/node_modules
 
     command: sleep infinity
 

@@ -17,12 +17,30 @@ if [ -d "node_modules" ] && [ ! -w "node_modules" ] && command -v sudo &>/dev/nu
   sudo chown "$(id -u):$(id -g)" node_modules
 fi
 
-# Install deps only if needed (check pnpm marker, not just empty directory)
+# Install deps only if needed
 if [ ! -f "node_modules/.modules.yaml" ]; then
   echo "==> Installing dependencies..."
   pnpm install --frozen-lockfile=false --force
 else
   echo "==> Dependencies already installed, skipping."
+fi
+
+# On Linux (devcontainer): install platform-specific binaries for cross-build
+if [ "$(uname)" != "Darwin" ]; then
+  ARCH_NAME=$(uname -m)
+
+  # esbuild: need Linux binary for JS compilation (pnpm installed darwin variant)
+  if [ "$ARCH_NAME" = "aarch64" ]; then ESBUILD_PKG="@esbuild/linux-arm64"; else ESBUILD_PKG="@esbuild/linux-x64"; fi
+  if [ ! -d "node_modules/$ESBUILD_PKG" ]; then
+    echo "==> Installing esbuild Linux binary..."
+    npm install --no-save "$ESBUILD_PKG" 2>/dev/null || true
+  fi
+
+  # @parcel/watcher: install darwin prebuilt (has platform-specific optional deps)
+  if [ ! -d "node_modules/@parcel/watcher-darwin-arm64" ]; then
+    echo "==> Installing @parcel/watcher darwin prebuilt..."
+    npm install --no-save @parcel/watcher-darwin-arm64 2>/dev/null || true
+  fi
 fi
 
 echo "==> Building assets..."
@@ -46,8 +64,8 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.mac.notarize=false \
         -c.forceCodeSigning=false
   else
-    # On Linux: cross-build using prebuilt darwin binaries (skip native rebuild)
-    echo "    Cross-building macOS .app from Linux (using prebuilt darwin binaries)..."
+    # On Linux: cross-build macOS .app
+    echo "    Cross-building macOS .app from Linux..."
 
     NOSIGN="/tmp/nosign.sh"
     echo '#!/bin/bash' > "$NOSIGN" && chmod +x "$NOSIGN"
@@ -65,23 +83,35 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.npmRebuild=false \
         -c.asar=false \
         -c.afterPack="$NOOP_JS" \
-        -c.afterSign="$NOOP_JS" \
-        -c.mac.singleArchFiles=""
+        -c.afterSign="$NOOP_JS"
 
-    # Fix native module prebuilds: pnpm symlinks may break during copy
-    echo "==> Fixing native module prebuilds..."
+    # Fix native modules in the .app bundle
     for dir in dist/mac-arm64 dist/mac-x64 dist/mac; do
       if [ -d "$dir/Signal.app" ]; then
-        APP_MODULES="$dir/Signal.app/Contents/Resources/app/node_modules"
+        APP_RES="$dir/Signal.app/Contents/Resources/app"
+
+        # Re-copy @signalapp modules with dereferenced symlinks (pnpm symlinks break)
+        echo "==> Fixing native module prebuilds..."
         for pkg in @signalapp/libsignal-client @signalapp/sqlcipher @signalapp/ringrtc; do
-          SRC="node_modules/$pkg"
-          DST="$APP_MODULES/$pkg"
-          if [ -d "$DST" ] && [ -d "$SRC" ]; then
-            # Re-copy with dereferenced symlinks to ensure prebuilds are real files
-            rm -rf "$DST"
-            cp -rL "$SRC" "$DST"
+          if [ -d "node_modules/$pkg" ] && [ -d "$APP_RES/node_modules/$pkg" ]; then
+            rm -rf "$APP_RES/node_modules/$pkg"
+            cp -rL "node_modules/$pkg" "$APP_RES/node_modules/$pkg"
           fi
         done
+
+        # Inject pre-compiled macOS fs-xattr binary (compiled on host, committed to repo)
+        if [ -f "prebuilds/darwin-arm64/fs-xattr.node" ]; then
+          echo "==> Injecting fs-xattr darwin prebuilt..."
+          mkdir -p "$APP_RES/node_modules/fs-xattr/build/Release"
+          cp "prebuilds/darwin-arm64/fs-xattr.node" "$APP_RES/node_modules/fs-xattr/build/Release/xattr.node"
+        fi
+
+        # Inject @parcel/watcher darwin prebuilt
+        if [ -d "node_modules/@parcel/watcher-darwin-arm64" ]; then
+          echo "==> Injecting @parcel/watcher darwin prebuilt..."
+          rm -rf "$APP_RES/node_modules/@parcel/watcher-darwin-arm64"
+          cp -rL "node_modules/@parcel/watcher-darwin-arm64" "$APP_RES/node_modules/@parcel/watcher-darwin-arm64"
+        fi
       fi
     done
 
