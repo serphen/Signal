@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3 python3-pip \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (skip corepack prompts)
+ENV COREPACK_ENABLE_AUTO_PIN=0
+RUN corepack enable && corepack prepare pnpm@latest --activate && \
+  COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm --version
 
 # Install rcodesign (Mozilla cross-platform Apple code signing)
 ARG RCODESIGN_VERSION=0.27.0

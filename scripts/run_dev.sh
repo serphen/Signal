@@ -6,6 +6,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_DIR"
 
+# Skip interactive prompts
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+export COREPACK_ENABLE_AUTO_PIN=0
+
 # Install deps if needed
 if [ ! -d "node_modules" ]; then
   echo "==> Installing dependencies..."

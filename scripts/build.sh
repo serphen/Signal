@@ -8,8 +8,12 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_DIR"
 
+# Skip interactive prompts
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+export COREPACK_ENABLE_AUTO_PIN=0
+
 echo "==> Installing dependencies..."
-pnpm install
+pnpm install --no-frozen-lockfile
 
 echo "==> Building assets..."
 pnpm run generate
