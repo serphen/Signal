@@ -58,7 +58,7 @@
    Excludes SignalSymbols icon font (.font-symbols) so icons render correctly.
    ========================================================================== */
 body.dark-theme,
-body.dark-theme *:not(.font-symbols):not(code):not(pre):not(.MessageTextRenderer__formatting--monospace) {
+body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]):not(.MessageTextRenderer__formatting--monospace) {
   font-family: var(--midnight-font) !important;
 }
 
