@@ -1,9 +1,9 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Option 1: Devcontainer (build only)
+## Option 1: Devcontainer
 
-Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electron-builder, rcodesign, Claude Code).
+Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electron-builder, rcodesign, Claude Code). Builds a standalone `.app` (macOS) or binary (Linux). You can also use it for dev — just rebuild and reinstall the app after each change.
 
 1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
 2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
@@ -49,6 +49,10 @@ The `.app` is in `dist/mac-arm64/` or `dist/mac/`. Launch with:
 ```bash
 open dist/mac-arm64/Signal.app
 ```
+
+## Tips
+
+- **DevTools (Inspect Element):** `Cmd+Option+I`
 
 ---
 
