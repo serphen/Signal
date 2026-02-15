@@ -58,7 +58,8 @@ if [ "$PLATFORM" = "mac" ]; then
       npx electron-builder --mac --dir $ARCH_FLAG \
         -c.mac.notarize=false \
         -c.forceCodeSigning=false \
-        -c.npmRebuild=false
+        -c.npmRebuild=false \
+        -c.asar.smartUnpack=false
 
     # Ad-hoc sign with rcodesign if available
     if command -v rcodesign &>/dev/null; then
