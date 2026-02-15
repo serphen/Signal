@@ -6,8 +6,7 @@
  * Only CSS overrides + minimal TSX changes (avatar/author always visible).
  */
 
-/* Font faces — generated from woff2 files, imported as base64 data URIs */
-@import url("./_fonts.css");
+/* Font faces loaded via _fonts.css (linked in background.html) */
 
 /* ==========================================================================
    CSS Custom Properties — Midnight Midnight visual-refresh palette + layout tokens
