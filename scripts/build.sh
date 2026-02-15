@@ -65,7 +65,25 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.npmRebuild=false \
         -c.asar=false \
         -c.afterPack="$NOOP_JS" \
-        -c.afterSign="$NOOP_JS"
+        -c.afterSign="$NOOP_JS" \
+        -c.mac.singleArchFiles=""
+
+    # Fix native module prebuilds: pnpm symlinks may break during copy
+    echo "==> Fixing native module prebuilds..."
+    for dir in dist/mac-arm64 dist/mac-x64 dist/mac; do
+      if [ -d "$dir/Signal.app" ]; then
+        APP_MODULES="$dir/Signal.app/Contents/Resources/app/node_modules"
+        for pkg in @signalapp/libsignal-client @signalapp/sqlcipher @signalapp/ringrtc; do
+          SRC="node_modules/$pkg"
+          DST="$APP_MODULES/$pkg"
+          if [ -d "$DST" ] && [ -d "$SRC" ]; then
+            # Re-copy with dereferenced symlinks to ensure prebuilds are real files
+            rm -rf "$DST"
+            cp -rL "$SRC" "$DST"
+          fi
+        done
+      fi
+    done
 
     # Ad-hoc sign with rcodesign if available
     if command -v rcodesign &>/dev/null; then
