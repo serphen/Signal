@@ -1351,7 +1351,9 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
 .dark-theme .NavSidebar__CollapseToggle--collapsed {
   -webkit-mask-image: url('../images/icons/v3/chevron/chevron-right.svg');
   mask-image: url('../images/icons/v3/chevron/chevron-right.svg');
-  right: -28px;
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
   opacity: 0.6;
 }
 .dark-theme .NavSidebar__CollapseToggle--collapsed:hover {
@@ -1359,13 +1361,13 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
 }
 
 /* NavSidebar collapsed state */
-.dark-theme .NavSidebar[style*="width: 0"] {
+.dark-theme .NavSidebar[style*="width: 28"] {
   overflow: hidden !important;
   min-width: 0 !important;
 }
-.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__Header,
-.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__Content,
-.dark-theme .NavSidebar[style*="width: 0"] .NavSidebar__DragHandle {
+.dark-theme .NavSidebar[style*="width: 28"] .NavSidebar__Header,
+.dark-theme .NavSidebar[style*="width: 28"] .NavSidebar__Content,
+.dark-theme .NavSidebar[style*="width: 28"] .NavSidebar__DragHandle {
   display: none !important;
 }
 

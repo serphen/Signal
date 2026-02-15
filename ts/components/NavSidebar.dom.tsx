@@ -93,16 +93,15 @@ export function NavSidebar({
 
   // Auto-expand sidebar when Cmd/Ctrl+F search shortcut is pressed
   useEffect(() => {
-    if (!isCollapsed) return undefined;
     const onKeyDown = (e: KeyboardEvent) => {
       const cmdOrCtrl = e.metaKey || e.ctrlKey;
       if (cmdOrCtrl && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
         setIsCollapsed(false);
       }
     };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isCollapsed]);
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, []);
 
   const [preferredWidth, setPreferredWidth] = useState(() => {
     return getWidthFromPreferredWidth(preferredLeftPaneWidth, {
@@ -185,7 +184,7 @@ export function NavSidebar({
         className={classNames('NavSidebar', {
           'NavSidebar--narrow': widthBreakpoint === WidthBreakpoint.Narrow,
         })}
-        style={{ width: isCollapsed ? 0 : width }}
+        style={{ width: isCollapsed ? 28 : width }}
       >
         {!hideHeader && (
           <div className="NavSidebar__Header">
