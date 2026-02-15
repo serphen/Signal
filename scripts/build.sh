@@ -59,7 +59,7 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.mac.notarize=false \
         -c.forceCodeSigning=false \
         -c.npmRebuild=false \
-        -c.asar.smartUnpack=false
+        -c.asar=false
 
     # Ad-hoc sign with rcodesign if available
     if command -v rcodesign &>/dev/null; then
