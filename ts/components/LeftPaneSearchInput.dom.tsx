@@ -142,6 +142,9 @@ export function LeftPaneSearchInput({
             event.preventDefault();
             event.stopPropagation();
           }
+          if (event.key === 'Escape') {
+            window.dispatchEvent(new CustomEvent('sidebar-collapse'));
+          }
         }}
         onChange={event => {
           changeValue(event.currentTarget.value);

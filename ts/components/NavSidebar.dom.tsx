@@ -91,11 +91,16 @@ export function NavSidebar({
   const [dragState, setDragState] = useState(DragState.INITIAL);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Auto-expand sidebar when search is triggered (button or Cmd/Ctrl+F)
+  // Expand/collapse sidebar via custom events (search button, Escape key)
   useEffect(() => {
     const onExpand = () => setIsCollapsed(false);
+    const onCollapse = () => setIsCollapsed(true);
     window.addEventListener('sidebar-expand', onExpand);
-    return () => window.removeEventListener('sidebar-expand', onExpand);
+    window.addEventListener('sidebar-collapse', onCollapse);
+    return () => {
+      window.removeEventListener('sidebar-expand', onExpand);
+      window.removeEventListener('sidebar-collapse', onCollapse);
+    };
   }, []);
 
   const [preferredWidth, setPreferredWidth] = useState(() => {
