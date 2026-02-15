@@ -18,6 +18,7 @@ code Signal-Desktop   # Open VS Code in this folder
 ./scripts/build.sh                # Build macOS .app (cross-build with prebuilt darwin binaries)
 ./scripts/build.sh mac arm64      # Build for Apple Silicon
 ./scripts/build.sh linux          # Build Linux app
+./scripts/build.sh windows        # Build Windows app
 ```
 
 ## Option 2: Directly on macOS

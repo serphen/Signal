@@ -151,13 +151,24 @@ elif [ "$PLATFORM" = "linux" ]; then
   echo "==> Build complete!"
   echo "    Output: dist/linux-unpacked/"
 
+elif [ "$PLATFORM" = "windows" ]; then
+  SIGNAL_ENV=production \
+  CSC_IDENTITY_AUTO_DISCOVERY=false \
+    npx electron-builder --win --dir \
+      -c.forceCodeSigning=false
+
+  echo ""
+  echo "==> Build complete!"
+  echo "    Output: dist/win-unpacked/"
+
 else
-  echo "Usage: $0 [mac|linux] [arm64|x64]"
+  echo "Usage: $0 [mac|linux|windows] [arm64|x64]"
   echo ""
   echo "Examples:"
   echo "  $0             # Build macOS .app (native arch)"
   echo "  $0 mac arm64   # Build macOS .app for Apple Silicon"
   echo "  $0 mac x64     # Build macOS .app for Intel"
   echo "  $0 linux       # Build Linux app"
+  echo "  $0 windows     # Build Windows app"
   exit 1
 fi
