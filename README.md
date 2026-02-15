@@ -22,7 +22,7 @@ git clone https://github.com/serphen/Signal-Desktop.git
 
 ## Option 2: Native build (no Docker)
 
-Build and run directly on the host system, without Docker. Faster iteration thanks to live dev mode with hot reload via `pnpm start` (no need to rebuild the whole app after each change).
+Build and run directly on the host system, without Docker. Faster iteration since `pnpm start` gives you live dev mode with hot reload — no need to rebuild the whole app after each change.
 
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
