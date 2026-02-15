@@ -1087,6 +1087,11 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
   animation: none !important;
 }
 
+/* Select mode: shift outgoing messages too (they're left-aligned in Midnight) */
+.dark-theme .module-message__wrapper--select-mode .module-message--outgoing {
+  translate: calc(16px + 22px) 0 !important;
+}
+
 .dark-theme .module-message__wrapper--selected {
   background: transparent !important;
 }
