@@ -22,40 +22,50 @@ pnpm run build:esbuild:prod
 echo "==> Packaging (platform: $PLATFORM)..."
 
 if [ "$PLATFORM" = "mac" ]; then
-  # Ad-hoc signing: use codesign on macOS, rcodesign on Linux
-  if command -v codesign &>/dev/null; then
-    SIGN_SCRIPT="$SCRIPT_DIR/sign-macos-local.sh"
-  elif command -v rcodesign &>/dev/null; then
-    SIGN_SCRIPT="/tmp/rcodesign-adhoc.sh"
-    cat > "$SIGN_SCRIPT" <<'SIGNEOF'
-#!/bin/bash
-# rcodesign doesn't have --deep like macOS codesign
-# Sign all nested Mach-O binaries bottom-up, then the app itself
-APP="$1"
-echo "  [rcodesign] Signing nested binaries..."
-find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.node" \) -exec rcodesign sign {} \; 2>/dev/null
-find "$APP/Contents/Frameworks" -maxdepth 2 -name "*.app" -exec rcodesign sign {} \; 2>/dev/null
-find "$APP/Contents/Frameworks" -maxdepth 1 -name "*.framework" -exec rcodesign sign {} \; 2>/dev/null
-echo "  [rcodesign] Signing main app..."
-rcodesign sign "$APP"
-SIGNEOF
-    chmod +x "$SIGN_SCRIPT"
-  else
-    echo "ERROR: No signing tool found. Install rcodesign or run on macOS."
-    exit 1
-  fi
-
   ARCH_FLAG=""
   if [ -n "$ARCH" ]; then
     ARCH_FLAG="--$ARCH"
   fi
 
-  SIGNAL_ENV=production \
-  CSC_IDENTITY_AUTO_DISCOVERY=false \
-  SIGN_MACOS_SCRIPT="$SIGN_SCRIPT" \
-    npx electron-builder --mac --dir $ARCH_FLAG \
-      -c.mac.notarize=false \
-      -c.forceCodeSigning=false
+  if command -v codesign &>/dev/null; then
+    # On macOS: electron-builder handles signing via our script
+    SIGNAL_ENV=production \
+    CSC_IDENTITY_AUTO_DISCOVERY=false \
+    SIGN_MACOS_SCRIPT="$SCRIPT_DIR/sign-macos-local.sh" \
+      npx electron-builder --mac --dir $ARCH_FLAG \
+        -c.mac.notarize=false \
+        -c.forceCodeSigning=false
+  else
+    # On Linux: electron-builder skips signing, we do it after with rcodesign
+    if ! command -v rcodesign &>/dev/null; then
+      echo "ERROR: rcodesign not found. Install it or run on macOS."
+      exit 1
+    fi
+
+    # Use a no-op sign script (electron-builder skips it on Linux anyway)
+    NOSIGN="/tmp/nosign.sh"
+    echo '#!/bin/bash' > "$NOSIGN" && chmod +x "$NOSIGN"
+
+    SIGNAL_ENV=production \
+    CSC_IDENTITY_AUTO_DISCOVERY=false \
+    SIGN_MACOS_SCRIPT="$NOSIGN" \
+      npx electron-builder --mac --dir $ARCH_FLAG \
+        -c.mac.notarize=false \
+        -c.forceCodeSigning=false
+
+    # Sign with rcodesign after the build
+    for dir in dist/mac-arm64 dist/mac-x64 dist/mac; do
+      if [ -d "$dir/Signal.app" ]; then
+        APP="$dir/Signal.app"
+        echo "==> Signing $APP with rcodesign..."
+        find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.node" \) -exec rcodesign sign {} \; 2>/dev/null
+        find "$APP/Contents/Frameworks" -maxdepth 2 -name "*.app" -exec rcodesign sign {} \; 2>/dev/null
+        find "$APP/Contents/Frameworks" -maxdepth 1 -name "*.framework" -exec rcodesign sign {} \; 2>/dev/null
+        rcodesign sign "$APP"
+        echo "    Signed: $APP"
+      fi
+    done
+  fi
 
   echo ""
   echo "==> Build complete!"
