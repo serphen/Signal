@@ -1408,6 +1408,17 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
 }
 .dark-theme .module-ConversationHeader__header__info__subtitle {
   color: var(--midnight-text-muted) !important;
+  align-items: baseline;
+}
+.dark-theme .module-ConversationHeader__header__info__subtitle__verified {
+  align-items: baseline;
+}
+.dark-theme .module-ConversationHeader__header__info__subtitle__last-active {
+  color: var(--midnight-text-muted);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-inline-start: 8px;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
