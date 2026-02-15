@@ -52,6 +52,10 @@ if [ "$PLATFORM" = "mac" ]; then
     NOSIGN="/tmp/nosign.sh"
     echo '#!/bin/bash' > "$NOSIGN" && chmod +x "$NOSIGN"
 
+    # No-op afterPack: skip Electron fuses (OnlyLoadAppFromAsar=true breaks asar=false)
+    NOPACK="/tmp/no-after-pack.cjs"
+    echo 'exports.afterPack = async () => {}' > "$NOPACK"
+
     SIGNAL_ENV=production \
     CSC_IDENTITY_AUTO_DISCOVERY=false \
     SIGN_MACOS_SCRIPT="$NOSIGN" \
@@ -59,7 +63,9 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.mac.notarize=false \
         -c.forceCodeSigning=false \
         -c.npmRebuild=false \
-        -c.asar=false
+        -c.asar=false \
+        -c.afterPack="$NOPACK" \
+        -c.afterSign=""
 
     # Ad-hoc sign with rcodesign if available
     if command -v rcodesign &>/dev/null; then
