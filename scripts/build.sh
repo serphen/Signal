@@ -52,9 +52,9 @@ if [ "$PLATFORM" = "mac" ]; then
     NOSIGN="/tmp/nosign.sh"
     echo '#!/bin/bash' > "$NOSIGN" && chmod +x "$NOSIGN"
 
-    # No-op afterPack: skip Electron fuses (OnlyLoadAppFromAsar=true breaks asar=false)
-    NOPACK="/tmp/no-after-pack.cjs"
-    echo 'exports.afterPack = async () => {}' > "$NOPACK"
+    # No-op hooks: skip fuses (OnlyLoadAppFromAsar breaks asar=false) and notarization
+    NOOP_JS="/tmp/noop-hook.cjs"
+    echo 'exports.afterPack = async () => {}; exports.afterSign = async () => {}' > "$NOOP_JS"
 
     SIGNAL_ENV=production \
     CSC_IDENTITY_AUTO_DISCOVERY=false \
@@ -64,8 +64,8 @@ if [ "$PLATFORM" = "mac" ]; then
         -c.forceCodeSigning=false \
         -c.npmRebuild=false \
         -c.asar=false \
-        -c.afterPack="$NOPACK" \
-        -c.afterSign=""
+        -c.afterPack="$NOOP_JS" \
+        -c.afterSign="$NOOP_JS"
 
     # Ad-hoc sign with rcodesign if available
     if command -v rcodesign &>/dev/null; then
