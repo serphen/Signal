@@ -1325,7 +1325,7 @@ body.dark-theme *:not(.font-symbols) {
 /* NavSidebar collapse toggle — bottom-right corner */
 .dark-theme .NavSidebar__CollapseToggle {
   position: absolute;
-  bottom: 8px;
+  bottom: 16px;
   right: 8px;
   width: 24px;
   height: 24px;
