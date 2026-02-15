@@ -99,11 +99,16 @@ if [ "$PLATFORM" = "mac" ]; then
           fi
         done
 
-        # Inject pre-compiled macOS fs-xattr binary (compiled on host, committed to repo)
+        # Inject pre-compiled macOS binaries (compiled on host, committed to repo)
         if [ -f "prebuilds/darwin-arm64/fs-xattr.node" ]; then
           echo "==> Injecting fs-xattr darwin prebuilt..."
           mkdir -p "$APP_RES/node_modules/fs-xattr/build/Release"
           cp "prebuilds/darwin-arm64/fs-xattr.node" "$APP_RES/node_modules/fs-xattr/build/Release/xattr.node"
+        fi
+        if [ -f "prebuilds/darwin-arm64/mac-screen-share.node" ]; then
+          echo "==> Injecting mac-screen-share darwin prebuilt..."
+          mkdir -p "$APP_RES/node_modules/@indutny/mac-screen-share/build/Release"
+          cp "prebuilds/darwin-arm64/mac-screen-share.node" "$APP_RES/node_modules/@indutny/mac-screen-share/build/Release/mac-screen-share.node"
         fi
 
         # Inject @parcel/watcher darwin prebuilt
