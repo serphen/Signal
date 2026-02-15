@@ -191,6 +191,7 @@ export const useSearchActions = (): BoundActionCreatorsMapObject<
 > => useBoundActions(actions);
 
 function startSearch(): StartSearchActionType {
+  window.dispatchEvent(new CustomEvent('sidebar-expand'));
   return {
     type: 'SEARCH_START',
     payload: null,
