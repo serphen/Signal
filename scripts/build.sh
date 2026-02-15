@@ -152,6 +152,14 @@ elif [ "$PLATFORM" = "linux" ]; then
   echo "    Output: dist/linux-unpacked/"
 
 elif [ "$PLATFORM" = "windows" ]; then
+  # Install Wine on-demand for cross-building Windows from Linux
+  if ! command -v wine &>/dev/null && [ "$(uname)" != "Darwin" ]; then
+    echo "==> Installing Wine (required for Windows cross-build)..."
+    sudo dpkg --add-architecture i386
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends wine
+  fi
+
   SIGNAL_ENV=production \
   CSC_IDENTITY_AUTO_DISCOVERY=false \
     npx electron-builder --win --dir \
