@@ -1,7 +1,7 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Setup (macOS)
+## Option 1: Devcontainer (recommended)
 
 1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
 2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
@@ -13,38 +13,45 @@ code Signal-Desktop
 4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
 5. Wait for the container to build (first time only), then you're in a ready-to-go Linux environment with Node.js, pnpm, electron-builder, rcodesign, and Claude Code pre-installed
 
-## Dev mode
-
+Then run:
 ```bash
-./scripts/run_dev.sh
+./scripts/run_dev.sh              # Launch in dev mode
+./scripts/build.sh                # Build macOS .app (default)
+./scripts/build.sh mac arm64      # Build for Apple Silicon
+./scripts/build.sh mac x64        # Build for Intel
+./scripts/build.sh linux          # Build Linux app
 ```
 
-## Build standalone .app
+## Option 2: Manual setup (directly on macOS)
 
 ```bash
-./scripts/build.sh              # macOS .app (default)
-./scripts/build.sh mac arm64    # macOS .app for Apple Silicon
-./scripts/build.sh mac x64      # macOS .app for Intel
-./scripts/build.sh linux        # Linux app
-```
-
-Output: `dist/mac-arm64/Signal.app`, `dist/mac/Signal.app`, or `dist/linux-unpacked/`.
-
-The build script auto-detects the environment: it uses native `codesign` on macOS
-and `rcodesign` (Mozilla) on Linux for ad-hoc signing. No Apple certificate needed.
-
-On macOS, launch with:
-```bash
-open dist/mac-arm64/Signal.app
-```
-
-## Manual setup (without devcontainer)
-
-```bash
+git clone https://github.com/serphen/Signal-Desktop.git
+cd Signal-Desktop
 nvm install && nvm use
 npm install -g pnpm
 pnpm install && pnpm rebuild
 ```
+
+Dev mode:
+```bash
+pnpm run generate
+pnpm start
+```
+
+Build standalone .app:
+```bash
+./scripts/build.sh
+```
+
+## Output
+
+The `.app` is in `dist/mac-arm64/` (Apple Silicon) or `dist/mac/` (Intel). Launch with:
+```bash
+open dist/mac-arm64/Signal.app
+```
+
+The build script auto-detects the environment: it uses native `codesign` on macOS
+and `rcodesign` (Mozilla) on Linux for ad-hoc signing. No Apple certificate needed.
 
 ---
 
