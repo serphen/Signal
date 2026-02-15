@@ -7,12 +7,11 @@ Sandboxed Linux environment with all tools pre-installed (Node.js, pnpm, electro
 
 1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
 2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
-3. Clone and open:
+3. Clone the repo and open the folder in VS Code
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
-code Signal-Desktop   # Open VS Code in this folder
 ```
-4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
+4. In VS Code, open the `Signal-Desktop` folder, then press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
 5. You're in. Run:
 ```bash
 ./scripts/build.sh                # Build macOS .app (cross-build with prebuilt darwin binaries)
@@ -23,7 +22,7 @@ code Signal-Desktop   # Open VS Code in this folder
 
 ## Option 2: Native build (no Docker)
 
-Build and run directly on the host system, without Docker. Supports live dev mode with hot reload via `pnpm start`.
+Build and run directly on the host system, without Docker. Faster iteration thanks to live dev mode with hot reload via `pnpm start` (no need to rebuild the whole app after each change).
 
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
