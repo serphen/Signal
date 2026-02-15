@@ -153,11 +153,10 @@ elif [ "$PLATFORM" = "linux" ]; then
 
 elif [ "$PLATFORM" = "windows" ]; then
   # Install Wine on-demand for cross-building Windows from Linux
-  if ! command -v wine &>/dev/null && [ "$(uname)" != "Darwin" ]; then
+  if ! command -v wine64 &>/dev/null && [ "$(uname)" != "Darwin" ]; then
     echo "==> Installing Wine (required for Windows cross-build)..."
-    sudo dpkg --add-architecture i386
     sudo apt-get update
-    sudo apt-get install -y --no-install-recommends wine
+    sudo apt-get install -y --no-install-recommends wine64
   fi
 
   SIGNAL_ENV=production \

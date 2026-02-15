@@ -21,9 +21,9 @@ code Signal-Desktop   # Open VS Code in this folder
 ./scripts/build.sh windows        # Build Windows app
 ```
 
-## Option 2: Directly on macOS
+## Option 2: Native build (no Docker)
 
-Run directly on the host for live dev mode with hot reload via `pnpm start`.
+Build and run directly on the host system, without Docker. Supports live dev mode with hot reload via `pnpm start`.
 
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
