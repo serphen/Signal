@@ -29,7 +29,15 @@ if [ "$PLATFORM" = "mac" ]; then
     SIGN_SCRIPT="/tmp/rcodesign-adhoc.sh"
     cat > "$SIGN_SCRIPT" <<'SIGNEOF'
 #!/bin/bash
-rcodesign sign "$1"
+# rcodesign doesn't have --deep like macOS codesign
+# Sign all nested Mach-O binaries bottom-up, then the app itself
+APP="$1"
+echo "  [rcodesign] Signing nested binaries..."
+find "$APP" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.node" \) -exec rcodesign sign {} \; 2>/dev/null
+find "$APP/Contents/Frameworks" -maxdepth 2 -name "*.app" -exec rcodesign sign {} \; 2>/dev/null
+find "$APP/Contents/Frameworks" -maxdepth 1 -name "*.framework" -exec rcodesign sign {} \; 2>/dev/null
+echo "  [rcodesign] Signing main app..."
+rcodesign sign "$APP"
 SIGNEOF
     chmod +x "$SIGN_SCRIPT"
   else
