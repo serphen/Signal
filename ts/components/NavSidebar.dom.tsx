@@ -91,6 +91,19 @@ export function NavSidebar({
   const [dragState, setDragState] = useState(DragState.INITIAL);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Auto-expand sidebar when Cmd/Ctrl+F search shortcut is pressed
+  useEffect(() => {
+    if (!isCollapsed) return undefined;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const cmdOrCtrl = e.metaKey || e.ctrlKey;
+      if (cmdOrCtrl && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+        setIsCollapsed(false);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isCollapsed]);
+
   const [preferredWidth, setPreferredWidth] = useState(() => {
     return getWidthFromPreferredWidth(preferredLeftPaneWidth, {
       requiresFullWidth,
