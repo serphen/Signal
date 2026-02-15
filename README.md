@@ -1,15 +1,17 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-## Quick Start
+## Setup (macOS)
 
+1. Install [OrbStack](https://orbstack.dev/) (lightweight Docker for Mac)
+2. Install [VS Code](https://code.visualstudio.com/) + the **Dev Containers** extension
+3. Clone and open:
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
-cd Signal-Desktop
-nvm install && nvm use
-npm install -g pnpm
-pnpm install && pnpm rebuild
+code Signal-Desktop
 ```
+4. In VS Code, press `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
+5. Wait for the container to build (first time only), then you're in a ready-to-go Linux environment
 
 ## Dev mode
 
@@ -17,41 +19,31 @@ pnpm install && pnpm rebuild
 ./scripts/run_dev.sh
 ```
 
-Installs deps + generates assets if needed, then launches Signal in dev mode.
-
 ## Build standalone .app
 
 ```bash
-./scripts/build.sh              # macOS .app (default, native arch)
+./scripts/build.sh              # macOS .app (default)
 ./scripts/build.sh mac arm64    # macOS .app for Apple Silicon
 ./scripts/build.sh mac x64      # macOS .app for Intel
-./scripts/build.sh linux        # Linux unpacked app
+./scripts/build.sh linux        # Linux app
 ```
 
 Output: `dist/mac-arm64/Signal.app`, `dist/mac/Signal.app`, or `dist/linux-unpacked/`.
+
+The build script auto-detects the environment: it uses native `codesign` on macOS
+and `rcodesign` (Mozilla) on Linux for ad-hoc signing. No Apple certificate needed.
 
 On macOS, launch with:
 ```bash
 open dist/mac-arm64/Signal.app
 ```
 
-### Cross-build macOS .app from Linux
-
-The devcontainer includes `rcodesign` (Mozilla's cross-platform Apple code signing tool).
-`build.sh` detects the environment automatically: it uses native `codesign` on macOS and
-`rcodesign` on Linux for ad-hoc signing. No Apple certificate needed.
+## Manual setup (without devcontainer)
 
 ```bash
-# Inside the devcontainer (Linux)
-./scripts/build.sh mac arm64
-```
-
-### Devcontainer
-
-```bash
-cd .devcontainer
-docker compose up -d
-docker compose exec app zsh
+nvm install && nvm use
+npm install -g pnpm
+pnpm install && pnpm rebuild
 ```
 
 ---
