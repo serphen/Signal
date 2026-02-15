@@ -12,8 +12,8 @@ cd "$PROJECT_DIR"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 export COREPACK_ENABLE_AUTO_PIN=0
 
-# Install deps only if needed
-if [ ! -d "node_modules" ]; then
+# Install deps only if needed (check pnpm marker, not just empty directory)
+if [ ! -f "node_modules/.modules.yaml" ]; then
   echo "==> Installing dependencies..."
   pnpm install --frozen-lockfile=false --force
 else
