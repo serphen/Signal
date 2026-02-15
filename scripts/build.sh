@@ -12,6 +12,11 @@ cd "$PROJECT_DIR"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 export COREPACK_ENABLE_AUTO_PIN=0
 
+# Fix permissions for container volume overlay (created as root)
+if [ -d "node_modules" ] && [ ! -w "node_modules" ] && command -v sudo &>/dev/null; then
+  sudo chown "$(id -u):$(id -g)" node_modules
+fi
+
 # Install deps only if needed (check pnpm marker, not just empty directory)
 if [ ! -f "node_modules/.modules.yaml" ]; then
   echo "==> Installing dependencies..."
