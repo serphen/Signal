@@ -3,7 +3,7 @@
 
 # Signal Desktop — Build
 
-The easiest way to build is with the devcontainer. Everything is pre-installed and isolated — just clone, open, and build.
+The easiest way to build is with the devcontainer. Everything is pre-installed and isolated — just clone, open, and build. A native build option (without Docker) is available at the bottom.
 
 ## Quick start (recommended)
 
