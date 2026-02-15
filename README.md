@@ -6,45 +6,52 @@
 ```bash
 git clone https://github.com/serphen/Signal-Desktop.git
 cd Signal-Desktop
-
-nvm install
-nvm use
-
+nvm install && nvm use
 npm install -g pnpm
-pnpm install
-pnpm rebuild
+pnpm install && pnpm rebuild
 ```
 
-To rebuild the project:
+## Dev mode
 
 ```bash
-pnpm run generate
+./scripts/run_dev.sh
 ```
 
-To launch:
+Installs deps + generates assets if needed, then launches Signal in dev mode.
+
+## Build standalone .app
 
 ```bash
-pnpm start
+./scripts/build.sh              # macOS .app (default, native arch)
+./scripts/build.sh mac arm64    # macOS .app for Apple Silicon
+./scripts/build.sh mac x64      # macOS .app for Intel
+./scripts/build.sh linux        # Linux unpacked app
 ```
 
-## Build .app (macOS standalone)
+Output: `dist/mac-arm64/Signal.app`, `dist/mac/Signal.app`, or `dist/linux-unpacked/`.
 
-```bash
-# 1. Build assets
-pnpm run generate && pnpm run build:esbuild:prod
-
-# 2. Create a no-op sign script (signing requires Signal's internal certificates)
-echo '#!/bin/bash' > /tmp/nosign.sh && chmod +x /tmp/nosign.sh
-
-# 3. Package the .app
-SIGNAL_ENV=production CSC_IDENTITY_AUTO_DISCOVERY=false SIGN_MACOS_SCRIPT=/tmp/nosign.sh \
-  npx electron-builder --mac --dir -c.mac.notarize=false -c.forceCodeSigning=false
-```
-
-The `.app` is in `dist/mac-arm64/` (Apple Silicon) or `dist/mac/` (Intel). Launch it with:
-
+On macOS, launch with:
 ```bash
 open dist/mac-arm64/Signal.app
+```
+
+### Cross-build macOS .app from Linux
+
+The devcontainer includes `rcodesign` (Mozilla's cross-platform Apple code signing tool).
+`build.sh` detects the environment automatically: it uses native `codesign` on macOS and
+`rcodesign` on Linux for ad-hoc signing. No Apple certificate needed.
+
+```bash
+# Inside the devcontainer (Linux)
+./scripts/build.sh mac arm64
+```
+
+### Devcontainer
+
+```bash
+cd .devcontainer
+docker compose up -d
+docker compose exec app zsh
 ```
 
 ---
