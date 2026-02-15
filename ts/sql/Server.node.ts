@@ -4465,24 +4465,28 @@ function getLastIncomingActivityTimestamp(
     .prepare(
       `
       SELECT MAX(ts) AS ts FROM (
-        SELECT sent_at AS ts FROM messages
-        WHERE conversationId = $conversationId
-          AND type = 'incoming'
-        ORDER BY sent_at DESC
-        LIMIT 1
+        SELECT * FROM (
+          SELECT sent_at AS ts FROM messages
+          WHERE conversationId = $conversationId
+            AND type = 'incoming'
+          ORDER BY sent_at DESC
+          LIMIT 1
+        )
 
         UNION ALL
 
-        SELECT CAST(json_extract(je.value, '$.updatedAt') AS INTEGER) AS ts
-        FROM (
-          SELECT json FROM messages
-          WHERE conversationId = $conversationId
-            AND type = 'outgoing'
-          ORDER BY sent_at DESC
-          LIMIT 50
-        ) m, json_each(json_extract(m.json, '$.sendStateByConversationId')) je
-        WHERE CAST(json_extract(je.value, '$.status') AS INTEGER) >= 4
-          AND je.key != $ourConversationId
+        SELECT * FROM (
+          SELECT CAST(json_extract(je.value, '$.updatedAt') AS INTEGER) AS ts
+          FROM (
+            SELECT json FROM messages
+            WHERE conversationId = $conversationId
+              AND type = 'outgoing'
+            ORDER BY sent_at DESC
+            LIMIT 50
+          ) m, json_each(json_extract(m.json, '$.sendStateByConversationId')) je
+          WHERE CAST(json_extract(je.value, '$.status') AS INTEGER) >= 4
+            AND je.key != $ourConversationId
+        )
       )
       `
     )
