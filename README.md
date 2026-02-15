@@ -24,7 +24,7 @@ Other platforms:
 ```bash
 ./scripts/build.sh mac x64      # macOS Intel
 ./scripts/build.sh linux        # Linux
-./scripts/build.sh windows      # Windows (installs Wine on first run)
+./scripts/build.sh windows      # Windows (x86_64 host only, needs Wine)
 ```
 
 You can also use it for dev — just rebuild and relaunch the app after each change.

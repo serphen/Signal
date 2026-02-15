@@ -152,8 +152,13 @@ elif [ "$PLATFORM" = "linux" ]; then
   echo "    Output: dist/linux-unpacked/"
 
 elif [ "$PLATFORM" = "windows" ]; then
-  # Install Wine on-demand for cross-building Windows from Linux
-  if ! command -v wine64 &>/dev/null && [ "$(uname)" != "Darwin" ]; then
+  # Wine is required for Windows cross-build, but only works on x86_64 Linux
+  if [ "$(uname)" != "Darwin" ] && ! command -v wine64 &>/dev/null; then
+    if [ "$(uname -m)" != "x86_64" ]; then
+      echo "Error: Windows cross-build requires x86_64 Linux (Wine can't run on ARM64)."
+      echo "Use an x86_64 host or build on Windows directly."
+      exit 1
+    fi
     echo "==> Installing Wine (required for Windows cross-build)..."
     sudo apt-get update
     sudo apt-get install -y --no-install-recommends wine64
