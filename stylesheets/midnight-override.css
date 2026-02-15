@@ -6,19 +6,8 @@
  * Only CSS overrides + minimal TSX changes (avatar/author always visible).
  */
 
-/* ==========================================================================
-   @font-face — Midnight "sd sans" font family
-   ========================================================================== */
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+/* Font faces — generated from woff2 files, imported as base64 data URIs */
+@import url("./_fonts.css");
 
 /* ==========================================================================
    CSS Custom Properties — Midnight Midnight visual-refresh palette + layout tokens
