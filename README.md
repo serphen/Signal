@@ -3,17 +3,20 @@
 
 # Signal Desktop
 
+[![Build](https://github.com/serphen/Signal/actions/workflows/build-macos.yml/badge.svg)](https://github.com/serphen/Signal/actions/workflows/build-macos.yml) [![Release date](https://img.shields.io/github/release-date/serphen/Signal)](https://github.com/serphen/Signal/releases/latest)
+
 ## Install (macOS Apple Silicon)
 
 ```bash
 curl -fSL \
-  https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.xz \
+  https://github.com/serphen/Signal/releases/latest/download/Signal.tar.xz \
   | tar xJ -C /Applications/ Signal.app
 ```
 
-`tar xJ` extracts **only** `Signal.app` — any other entry in the archive is ignored.
-
-[![Build](https://github.com/serphen/Signal-Desktop/actions/workflows/build-macos.yml/badge.svg)](https://github.com/serphen/Signal-Desktop/actions/workflows/build-macos.yml) [![Release date](https://img.shields.io/github/release-date/serphen/Signal-Desktop)](https://github.com/serphen/Signal-Desktop/releases/latest)
+If macOS says the app is "damaged" or "can't be opened", run:
+```bash
+xattr -cr /Applications/Signal.app
+```
 
 ---
 
@@ -26,9 +29,9 @@ The easiest way to build is with the devcontainer. Everything is pre-installed a
 1. Install [OrbStack](https://orbstack.dev/) and [VS Code](https://code.visualstudio.com/) with the **Dev Containers** extension
 2. Clone the repo
 ```bash
-git clone https://github.com/serphen/Signal-Desktop.git
+git clone https://github.com/serphen/Signal.git
 ```
-3. Open the `Signal-Desktop` folder in VS Code, then `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
+3. Open the `Signal` folder in VS Code, then `Cmd+Shift+P` > **Dev Containers: Reopen in Container**
 4. Build:
 ```bash
 ./scripts/build.sh
@@ -57,8 +60,8 @@ You can also use it for dev — just rebuild and relaunch the app after each cha
 Build directly on the host. Useful if you want hot reload via `pnpm start` for faster iteration.
 
 ```bash
-git clone https://github.com/serphen/Signal-Desktop.git
-cd Signal-Desktop
+git clone https://github.com/serphen/Signal.git
+cd Signal
 nvm install && nvm use
 npm install -g pnpm
 pnpm install && pnpm rebuild
