@@ -6,7 +6,9 @@
 ## Install (macOS Apple Silicon)
 
 ```bash
-curl -fSL https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.gz | tar xz -C /Applications/ Signal.app
+curl -fSL \
+  https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.gz \
+  | tar xz -C /Applications/ Signal.app
 ```
 
 `tar xz` extracts **only** `Signal.app` — any other entry in the archive is ignored.
