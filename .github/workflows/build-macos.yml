@@ -36,7 +36,7 @@ jobs:
       run: scripts/build.sh mac arm64
 
     - name: Package Signal.app
-      run: tar -cJf Signal.tar.xz -C dist/mac-arm64 Signal.app
+      run: tar -czf Signal.tar.gz -C dist/mac-arm64 Signal.app
 
     - name: Update latest release
       env:
@@ -44,7 +44,7 @@ jobs:
       run: |
         SHA=$(git rev-parse --short HEAD)
         DATE=$(date -u +%Y-%m-%d)
-        CHECKSUM=$(sha256sum Signal.tar.xz | cut -d' ' -f1)
+        CHECKSUM=$(sha256sum Signal.tar.gz | cut -d' ' -f1)
         JOB_URL=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs --jq '.jobs[0].html_url')
 
         # Changelog: commits since last release
@@ -56,7 +56,7 @@ jobs:
         fi
 
         gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-        gh release create latest Signal.tar.xz \
+        gh release create latest Signal.tar.gz \
           --title "Signal Desktop — macOS arm64" \
           --notes "$(cat <<EOF
         Built from [\`${SHA}\`](${JOB_URL}) on ${DATE}.
@@ -66,8 +66,8 @@ jobs:
         ## Install
         \`\`\`bash
         curl -fSL \\
-          ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/Signal.tar.xz \\
-          | tar xJ -C /Applications/ Signal.app
+          ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/Signal.tar.gz \\
+          | tar xz -C /Applications/ Signal.app
         \`\`\`
 
         ## Changelog

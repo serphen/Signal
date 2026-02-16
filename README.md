@@ -9,8 +9,8 @@
 
 ```bash
 curl -fSL \
-  https://github.com/serphen/Signal/releases/latest/download/Signal.tar.xz \
-  | tar xJ -C /Applications/ Signal.app
+  https://github.com/serphen/Signal/releases/latest/download/Signal.tar.gz \
+  | tar xz -C /Applications/ Signal.app
 ```
 
 If macOS says the app is "damaged" or "can't be opened", run:
