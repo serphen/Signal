@@ -42,8 +42,25 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        SHA=$(git rev-parse --short HEAD)
+        DATE=$(date -u +%Y-%m-%d)
+        CHECKSUM=$(sha256sum Signal.tar.xz | cut -d' ' -f1)
+        JOB_URL=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs --jq '.jobs[0].html_url')
+
         gh release delete latest --yes --cleanup-tag 2>/dev/null || true
         gh release create latest Signal.tar.xz \
           --title "Signal Desktop — macOS arm64" \
-          --notes "Built from \`$(git rev-parse --short HEAD)\` on $(date -u +%Y-%m-%d)." \
+          --notes "$(cat <<EOF
+        Built from [\`${SHA}\`](${JOB_URL}) on ${DATE}.
+
+        ## Install
+        \`\`\`bash
+        curl -fSL \\
+          ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/Signal.tar.xz \\
+          | tar xJ -C /Applications/ Signal.app
+        \`\`\`
+
+        **SHA-256:** \`${CHECKSUM}\`
+        EOF
+        )" \
           --latest
