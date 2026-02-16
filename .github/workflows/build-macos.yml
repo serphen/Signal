@@ -36,14 +36,14 @@ jobs:
       run: scripts/build.sh mac arm64
 
     - name: Package Signal.app
-      run: tar -czf Signal.tar.gz -C dist/mac-arm64 Signal.app
+      run: tar -cJf Signal.tar.xz -C dist/mac-arm64 Signal.app
 
     - name: Update latest release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-        gh release create latest Signal.tar.gz \
+        gh release create latest Signal.tar.xz \
           --title "Signal Desktop — macOS arm64" \
           --notes "Built from \`$(git rev-parse --short HEAD)\` on $(date -u +%Y-%m-%d)." \
           --latest

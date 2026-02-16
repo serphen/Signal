@@ -7,11 +7,13 @@
 
 ```bash
 curl -fSL \
-  https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.gz \
-  | tar xz -C /Applications/ Signal.app
+  https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.xz \
+  | tar xJ -C /Applications/ Signal.app
 ```
 
-`tar xz` extracts **only** `Signal.app` — any other entry in the archive is ignored.
+`tar xJ` extracts **only** `Signal.app` — any other entry in the archive is ignored.
+
+[![Build](https://github.com/serphen/Signal-Desktop/actions/workflows/build-macos.yml/badge.svg)](https://github.com/serphen/Signal-Desktop/actions/workflows/build-macos.yml) [![Release date](https://img.shields.io/github/release-date/serphen/Signal-Desktop)](https://github.com/serphen/Signal-Desktop/releases/latest)
 
 ---
 
