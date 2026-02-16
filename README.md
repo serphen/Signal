@@ -1,7 +1,19 @@
 <!-- Copyright 2014 Signal Messenger, LLC -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-# Signal Desktop — Build
+# Signal Desktop
+
+## Install (macOS Apple Silicon)
+
+```bash
+curl -fSL https://github.com/serphen/Signal-Desktop/releases/latest/download/Signal.tar.gz | tar xz -C /Applications/ Signal.app
+```
+
+`tar xz` extracts **only** `Signal.app` — any other entry in the archive is ignored.
+
+---
+
+## Build
 
 The easiest way to build is with the devcontainer. Everything is pre-installed and isolated — just clone, open, and build. A native build option (without Docker) is available at the bottom.
 
