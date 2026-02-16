@@ -47,11 +47,21 @@ jobs:
         CHECKSUM=$(sha256sum Signal.tar.xz | cut -d' ' -f1)
         JOB_URL=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs --jq '.jobs[0].html_url')
 
+        # Changelog: commits since last release
+        PREV_SHA=$(gh release view latest --json tagName --jq '.tagName' 2>/dev/null && git rev-list -n1 latest 2>/dev/null || echo "")
+        if [ -n "$PREV_SHA" ]; then
+          CHANGELOG=$(git log --oneline "${PREV_SHA}..HEAD" 2>/dev/null || echo "First release")
+        else
+          CHANGELOG="First release"
+        fi
+
         gh release delete latest --yes --cleanup-tag 2>/dev/null || true
         gh release create latest Signal.tar.xz \
           --title "Signal Desktop — macOS arm64" \
           --notes "$(cat <<EOF
         Built from [\`${SHA}\`](${JOB_URL}) on ${DATE}.
+
+        **[Build logs](${JOB_URL})**
 
         ## Install
         \`\`\`bash
@@ -60,7 +70,14 @@ jobs:
           | tar xJ -C /Applications/ Signal.app
         \`\`\`
 
+        ## Changelog
+        \`\`\`
+        ${CHANGELOG}
+        \`\`\`
+
         **SHA-256:** \`${CHECKSUM}\`
+
+        > This is a rolling release — each push to \`main\` replaces the previous build. The checksum above matches the file currently available for download.
         EOF
         )" \
           --latest
