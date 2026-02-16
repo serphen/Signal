@@ -70,6 +70,11 @@ jobs:
           | tar xz -C /Applications/ Signal.app
         \`\`\`
 
+        If macOS says the app is "damaged" or "can't be opened", run:
+        \`\`\`bash
+        xattr -cr /Applications/Signal.app
+        \`\`\`
+
         ## Changelog
         \`\`\`
         ${CHANGELOG}
