@@ -47,4 +47,13 @@ describe('shouldKeepContentAfterDeleteForEveryone', () => {
       shouldKeepContentAfterDeleteForEveryone({ ...received, isViewOnce: true })
     );
   });
+
+  it('erases when our own ACI is unknown', () => {
+    assert.isFalse(
+      shouldKeepContentAfterDeleteForEveryone({
+        ...received,
+        ourAci: undefined,
+      })
+    );
+  });
 });

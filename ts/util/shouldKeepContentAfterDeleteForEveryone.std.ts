@@ -23,6 +23,8 @@ export function shouldKeepContentAfterDeleteForEveryone({
     messageType === 'incoming' &&
     !isStory &&
     !isViewOnce &&
+    // Unknown own ACI: we can't rule out our own delete, so erase
+    ourAci != null &&
     deleteSentByAci !== ourAci
   );
 }
