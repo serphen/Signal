@@ -58,7 +58,7 @@
    Excludes SignalSymbols icon font (.font-symbols) so icons render correctly.
    ========================================================================== */
 body.dark-theme,
-body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]):not(.MessageTextRenderer__formatting--monospace):not([class*="hljs"]) {
+body.dark-theme *:not(.font-symbols):not(.axo-symbol-glyph):not(code):not(pre):not([class*="codeblock"]):not(.MessageTextRenderer__formatting--monospace):not([class*="hljs"]) {
   font-family: var(--midnight-font) !important;
 }
 
@@ -1164,7 +1164,7 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
    ========================================================================== */
 
 /* Container: minimal height, positioned at very bottom of timeline */
-.dark-theme .module-timeline__typing-bubble-container {
+.dark-theme div:has(> .module-message > .module-message__container-outer--typing-bubble) {
   height: 24px !important;
   min-height: 0 !important;
 }
@@ -1174,7 +1174,7 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
 }
 
 /* The typing message row: 24px height, aligned with message content area (right of gutter) */
-.dark-theme .module-message--typing-bubble {
+.dark-theme .module-message:has(> .module-message__container-outer--typing-bubble) {
   height: 24px !important;
   min-height: 0 !important;
   margin-top: 0 !important;
@@ -1183,13 +1183,13 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
   align-items: center !important;
 }
 
-.dark-theme .module-message--typing-bubble .module-message__container--incoming {
+.dark-theme .module-message__container-outer--typing-bubble .module-message__container--incoming {
   background: transparent !important;
   padding: 0 !important;
 }
 
 /* Hide group avatars in typing bubble — dots appear in message content area */
-.dark-theme .module-message--typing-bubble .module-message__author-avatar-container--typing {
+.dark-theme .module-message__author-avatar-container--typing {
   display: none !important;
 }
 
@@ -2255,7 +2255,7 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
 .dark-theme .FunTabs__TabPanelInner {
   background: #1a1b1e !important;
 }
-.dark-theme .FunSearch__Input {
+.dark-theme .FunPopover__Dialog .axo-field-container-search {
   background: #111214 !important;
 }
 /* Scroller fade masks — match darkened picker background */
