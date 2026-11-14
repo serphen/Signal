@@ -60,7 +60,7 @@ if [ "$PLATFORM" = "mac" ]; then
     SIGNAL_ENV=production \
     CSC_IDENTITY_AUTO_DISCOVERY=false \
     SIGN_MACOS_SCRIPT="$SCRIPT_DIR/sign-macos-local.sh" \
-      npx electron-builder --mac --dir $ARCH_FLAG \
+      pnpm exec electron-builder --mac --dir $ARCH_FLAG \
         -c.mac.notarize=false \
         -c.forceCodeSigning=false
   else
@@ -78,7 +78,7 @@ if [ "$PLATFORM" = "mac" ]; then
     SIGNAL_ENV=production \
     CSC_IDENTITY_AUTO_DISCOVERY=false \
     SIGN_MACOS_SCRIPT="$NOSIGN" \
-      npx electron-builder --mac --dir $ARCH_FLAG \
+      pnpm exec electron-builder --mac --dir $ARCH_FLAG \
         -c.mac.icon=build/icons/png/1024x1024.png \
         -c.mac.notarize=false \
         -c.forceCodeSigning=false \
@@ -147,7 +147,7 @@ if [ "$PLATFORM" = "mac" ]; then
 
 elif [ "$PLATFORM" = "linux" ]; then
   SIGNAL_ENV=production \
-    npx electron-builder --linux --dir
+    pnpm exec electron-builder --linux --dir
 
   echo ""
   echo "==> Build complete!"
@@ -168,7 +168,7 @@ elif [ "$PLATFORM" = "windows" ]; then
 
   SIGNAL_ENV=production \
   CSC_IDENTITY_AUTO_DISCOVERY=false \
-    npx electron-builder --win --dir \
+    pnpm exec electron-builder --win --dir \
       -c.forceCodeSigning=false
 
   echo ""
