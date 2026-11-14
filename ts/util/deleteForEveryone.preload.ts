@@ -14,6 +14,7 @@ import { eraseMessageContents } from './cleanup.preload.ts';
 import { notificationService } from '../services/notifications.preload.ts';
 import { DataWriter } from '../sql/Client.preload.ts';
 import { itemStorage } from '../textsecure/Storage.preload.ts';
+import { shouldKeepContentAfterDeleteForEveryone } from './shouldKeepContentAfterDeleteForEveryone.std.ts';
 
 const log = createLogger('deleteForEveryone');
 
@@ -113,11 +114,13 @@ export async function applyDeleteForEveryone(
     deleteServerTimestamp: del.deleteServerTimestamp,
   });
 
-  const shouldKeepContent =
-    message.get('type') === 'incoming' &&
-    !isStory(message.attributes) &&
-    !message.get('isViewOnce') &&
-    del.deleteSentByAci !== itemStorage.user.getAci();
+  const shouldKeepContent = shouldKeepContentAfterDeleteForEveryone({
+    messageType: message.get('type'),
+    isStory: isStory(message.attributes),
+    isViewOnce: Boolean(message.get('isViewOnce')),
+    deleteSentByAci: del.deleteSentByAci,
+    ourAci: itemStorage.user.getAci(),
+  });
 
   try {
     // oxlint-disable-next-line no-param-reassign
