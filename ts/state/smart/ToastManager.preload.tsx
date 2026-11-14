@@ -4,10 +4,14 @@
 import { memo, type JSX } from 'react';
 import { useSelector } from 'react-redux';
 import { getHeapSnapshot } from 'node:v8';
+import type { LanguageTag } from '@signalapp/types';
 
 import type { AnyActionableMegaphone } from '../../types/Megaphone.std.ts';
 import { MegaphoneType } from '../../types/Megaphone.std.ts';
-import { UsernameOnboardingState } from '../../types/globalModals.std.ts';
+import {
+  PinReminderState,
+  UsernameOnboardingState,
+} from '../../types/globalModals.std.ts';
 import OS from '../../util/os/osMain.node.ts';
 import { drop } from '../../util/drop.std.ts';
 import { getIntl } from '../selectors/user.std.ts';
@@ -40,6 +44,7 @@ import { shouldNeverBeCalled } from '../../util/shouldNeverBeCalled.std.ts';
 import { saveAttachmentToDisk } from '../../windows/main/attachments.preload.ts';
 import * as Bytes from '../../Bytes.std.ts';
 import { getIsInFullScreenCall } from '../selectors/isInFullScreenCall.std.ts';
+import { pinReminderService } from '../../services/pinReminder.preload.ts';
 
 export type SmartPropsType = Readonly<{
   disableMegaphone?: boolean;
@@ -61,7 +66,7 @@ async function saveHeapSnapshot() {
   const data = Bytes.concatenate(chunks);
 
   await saveAttachmentToDisk({
-    data,
+    data: { type: 'bytes', bytes: [data] },
     name: `signal-desktop-${Date.now()}.heapsnapshot`,
   });
 }
@@ -104,7 +109,8 @@ export const SmartToastManager = memo(function SmartToastManager({
   const { onUndoArchive } = useConversationsActions();
   const { retryCallQualitySurvey } = useCallingActions();
   const { openFileInFolder, hideToast } = useToastActions();
-  const { toggleUsernameOnboarding } = useGlobalModalActions();
+  const { togglePinReminder, toggleUsernameOnboarding } =
+    useGlobalModalActions();
   const { interactWithMegaphone } = useMegaphonesActions();
 
   let megaphone: AnyActionableMegaphone | undefined;
@@ -128,6 +134,16 @@ export const SmartToastManager = memo(function SmartToastManager({
       type: MegaphoneType.Remote,
       onInteractWithMegaphone: interactWithMegaphone,
     };
+  } else if (globalModals.pinReminderState === PinReminderState.Megaphone) {
+    megaphone = {
+      type: MegaphoneType.PinReminder,
+      onShowModal: () => {
+        togglePinReminder(PinReminderState.Modal);
+      },
+      onDismiss: () => {
+        pinReminderService.handleSkipReminder();
+      },
+    };
   }
 
   const centerToast =
@@ -138,6 +154,9 @@ export const SmartToastManager = memo(function SmartToastManager({
 
   const isCompositionAreaVisible =
     selectedNavTab === NavTab.Chats && Boolean(selectedConversationId);
+
+  const systemPreferredLanguages =
+    window.SignalContext.getPreferredSystemLocales() as Array<LanguageTag>;
 
   return (
     <ToastManager
@@ -158,6 +177,7 @@ export const SmartToastManager = memo(function SmartToastManager({
       expandNarrowLeftPane={expandNarrowLeftPane}
       isCompositionAreaVisible={isCompositionAreaVisible}
       isInFullScreenCall={isInFullScreenCall}
+      systemPreferredLanguages={systemPreferredLanguages}
     />
   );
 });

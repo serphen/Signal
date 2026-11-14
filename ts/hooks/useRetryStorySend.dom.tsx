@@ -34,6 +34,7 @@ export function useRetryStorySend(
       sendStatus === ResolvedSendStatus.Failed ||
       sendStatus === ResolvedSendStatus.PartiallySent
     ) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setHasSendFailedAlert(true);
     }
   }, [previousSendStatus, sendStatus, wasManuallyRetried]);
@@ -47,7 +48,7 @@ export function useRetryStorySend(
         title={null}
         description={i18n('icu:Stories__failed-send')}
       >
-        <AxoConfirmDialog.Cancel>{i18n('icu:ok')}</AxoConfirmDialog.Cancel>
+        <AxoConfirmDialog.Ok />
       </AxoConfirmDialog.Root>
     );
   }

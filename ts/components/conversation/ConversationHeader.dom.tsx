@@ -2,19 +2,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import type { RefObject, JSX, ReactNode } from 'react';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import type { ReadonlyDeep } from 'type-fest';
-import type { BadgeType } from '../../badges/types.std.ts';
 import {
-  useKeyboardShortcuts,
-  useStartCallShortcuts,
-} from '../../hooks/useKeyboardShortcuts.dom.tsx';
+  memo,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { ReadonlyDeep } from 'type-fest';
+import { tinykeys } from 'tinykeys';
+import { MuteExpiration } from '@signalapp/types';
+
+import type { BadgeType } from '../../badges/types.std.ts';
 import type { ConversationTypeType } from '../../state/ducks/conversations.preload.ts';
 import type { HasStories } from '../../types/Stories.std.ts';
 import type { LocalizerType, ThemeType } from '../../types/Util.std.ts';
 import type { DurationInSeconds } from '../../util/durations/index.std.ts';
 import * as expirationTimer from '../../util/expirationTimer.std.ts';
-import { getMuteOptions } from '../../util/getMuteOptions.std.ts';
+import { getConversationMuteMenu } from '../../util/getMuteOptions.std.ts';
 import { isConversationMuted } from '../../util/isConversationMuted.std.ts';
 import { isInSystemContacts } from '../../util/isInSystemContacts.std.ts';
 import { missingCaseError } from '../../util/missingCaseError.std.ts';
@@ -33,7 +40,8 @@ import {
   InAnotherCallTooltip,
 } from './InAnotherCallTooltip.dom.tsx';
 import { DeleteMessagesConfirmationDialog } from '../DeleteMessagesConfirmationDialog.dom.tsx';
-import { AxoDropdownMenu } from '../../axo/AxoDropdownMenu.dom.tsx';
+import { MuteNotificationsSubMenu } from '../MuteNotificationsMenu.dom.tsx';
+import { AxoDropdownMenu } from '../../axo/menus/AxoDropdownMenu.dom.tsx';
 import { strictAssert } from '../../util/assert.std.ts';
 import {
   TimelineWarning,
@@ -57,6 +65,7 @@ import { AxoIconButton } from '../../axo/AxoIconButton.dom.tsx';
 import { AxoButton } from '../../axo/AxoButton.dom.tsx';
 import { AxoConfirmDialog } from '../../axo/AxoConfirmDialog.dom.tsx';
 import { formatDateTimeShort } from '../../util/formatTimestamp.dom.ts';
+import { getControlOrAltKey } from '../../hooks/useKeyboardShortcuts.dom.tsx';
 
 function HeaderInfoTitle({
   name,
@@ -172,7 +181,7 @@ export type PropsActionsType = {
   ) => void;
   onConversationLeaveGroup: () => void;
   onConversationMarkUnread: () => void;
-  onConversationMuteExpirationChange: (seconds: number) => void;
+  onConversationMuteExpirationChange: (muteExpiresAt: MuteExpiration) => void;
   onConversationPin: () => void;
   onConversationUnpin: () => void;
   onConversationReportSpam: () => void;
@@ -267,11 +276,29 @@ export const ConversationHeader = memo(function ConversationHeader({
   const [messageRequestState, setMessageRequestState] = useState(
     MessageRequestState.default
   );
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isTerminated = Boolean(conversation.terminated);
   const areWeMember =
     conversation.type === 'group' && !isTerminated && !conversation.left;
   const isMuted = isConversationMuted(conversation);
+
+  useEffect(() => {
+    return tinykeys(
+      window,
+      {
+        '$mod+Shift+L': event => {
+          event.stopPropagation();
+          event.preventDefault();
+          setMenuOpen(prev => !prev);
+        },
+      },
+      {
+        // Override default ignore so shortcuts work while textboxes are focused
+        ignore: () => false,
+      }
+    );
+  }, []);
 
   if (hasPanelShowing) {
     return null;
@@ -368,11 +395,10 @@ export const ConversationHeader = memo(function ConversationHeader({
                 <AxoIconButton.Root
                   symbol={isMuted ? 'bell-slash' : 'bell'}
                   size="md"
-                  iconWeight={300}
                   variant="implied-secondary"
                   onClick={() =>
                     onConversationMuteExpirationChange(
-                      isMuted ? 0 : Number.MAX_SAFE_INTEGER
+                      isMuted ? MuteExpiration.UNMUTED : MuteExpiration.ALWAYS
                     )
                   }
                   label={isMuted ? i18n('icu:unmute') : i18n('icu:mute')}
@@ -381,17 +407,15 @@ export const ConversationHeader = memo(function ConversationHeader({
               <AxoIconButton.Root
                 symbol="search"
                 size="md"
-                iconWeight={300}
                 onClick={onSearchInConversation}
                 label={i18n('icu:search')}
                 variant="implied-secondary"
               />
 
-              <AxoDropdownMenu.Root>
+              <AxoDropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
                 <AxoDropdownMenu.Trigger disabled={isSelectMode}>
                   <AxoIconButton.Root
                     size="md"
-                    iconWeight={300}
                     onClick={onSearchInConversation}
                     symbol="more"
                     label={i18n('icu:moreInfo')}
@@ -461,6 +485,7 @@ export const ConversationHeader = memo(function ConversationHeader({
           addedByName={addedByName}
           conversationName={conversationName}
           isBlocked={conversation.isBlocked ?? false}
+          isSignalConversation={isSignalConversation ?? false}
           isReported={conversation.isReported ?? false}
           state={messageRequestState}
           acceptConversation={onConversationAccept}
@@ -659,7 +684,7 @@ function HeaderDropdownMenuContent({
   isSignalConversation: boolean;
   isTerminated: boolean;
   onChangeDisappearingMessages: (seconds: DurationInSeconds) => void;
-  onChangeMuteExpiration: (seconds: number) => void;
+  onChangeMuteExpiration: (muteExpiresAt: MuteExpiration) => void;
   onConversationAccept: () => void;
   onConversationArchive: () => void;
   onConversationBlock: () => void;
@@ -678,7 +703,8 @@ function HeaderDropdownMenuContent({
   onViewAllMedia: () => void;
   onViewConversationDetails: () => void;
 }) {
-  const muteOptions = getMuteOptions(conversation.muteExpiresAt, i18n);
+  const muteMenu = getConversationMuteMenu(conversation.muteExpiresAt, i18n);
+  const isMuted = isConversationMuted(conversation);
   const isGroup = conversation.type === 'group';
   const disableTimerChanges =
     !conversation.canChangeTimer ||
@@ -713,11 +739,14 @@ function HeaderDropdownMenuContent({
     [onChangeDisappearingMessages]
   );
 
+  const onUnmute = useCallback(() => {
+    onChangeMuteExpiration(MuteExpiration.UNMUTED);
+  }, [onChangeMuteExpiration]);
+
   if (isSelectMode) {
     return null;
   }
 
-  const muteTitle = <span>{i18n('icu:muteNotificationsTitle')}</span>;
   const disappearingTitle = <span>{i18n('icu:disappearingMessages')}</span>;
 
   if (isSignalConversation) {
@@ -855,24 +884,20 @@ function HeaderDropdownMenuContent({
               </AxoDropdownMenu.SubContent>
             </AxoDropdownMenu.Sub>
           )}
-          <AxoDropdownMenu.Sub>
-            <AxoDropdownMenu.SubTrigger symbol="bell-slash">
-              {muteTitle}
-            </AxoDropdownMenu.SubTrigger>
-            <AxoDropdownMenu.SubContent>
-              {muteOptions.map(item => (
-                <AxoDropdownMenu.Item
-                  key={item.name}
-                  disabled={item.disabled}
-                  onSelect={() => {
-                    onChangeMuteExpiration(item.value);
-                  }}
-                >
-                  {item.name}
-                </AxoDropdownMenu.Item>
-              ))}
-            </AxoDropdownMenu.SubContent>
-          </AxoDropdownMenu.Sub>
+          {isMuted ? (
+            <AxoDropdownMenu.Item symbol="bell" onSelect={onUnmute}>
+              {i18n('icu:unmute')}
+            </AxoDropdownMenu.Item>
+          ) : (
+            <MuteNotificationsSubMenu
+              i18n={i18n}
+              renderer="AxoDropdownMenu"
+              title={i18n('icu:muteNotificationsTitle')}
+              label={muteMenu.label}
+              options={muteMenu.options}
+              onMuteExpiration={onChangeMuteExpiration}
+            />
+          )}
           {!isGroup || hasGV2AdminEnabled ? (
             <AxoDropdownMenu.Item
               symbol="settings"
@@ -998,7 +1023,6 @@ function OutgoingCallButtons({
     >
       <AxoIconButton.Root
         symbol="videocamera"
-        iconWeight={300}
         size="md"
         onClick={onOutgoingVideoCall}
         label={i18n('icu:makeOutgoingVideoCall')}
@@ -1008,11 +1032,36 @@ function OutgoingCallButtons({
     </div>
   );
 
-  const startCallShortcuts = useStartCallShortcuts(
-    onOutgoingAudioCall,
-    onOutgoingVideoCall
+  const onStartOutgoingAudioCallShortcut = useEffectEvent(
+    (event: KeyboardEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+      onOutgoingAudioCall();
+    }
   );
-  useKeyboardShortcuts(startCallShortcuts);
+
+  const onStartOutgoingVideoCallShortcut = useEffectEvent(
+    (event: KeyboardEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+      onOutgoingVideoCall();
+    }
+  );
+
+  useEffect(() => {
+    const ControlOrAlt = getControlOrAltKey();
+    return tinykeys(
+      window,
+      {
+        [`${ControlOrAlt}+Shift+C`]: onStartOutgoingAudioCallShortcut,
+        [`${ControlOrAlt}+Shift+Y`]: onStartOutgoingVideoCallShortcut,
+      },
+      {
+        // Override default ignore so shortcuts work while textboxes are focused
+        ignore: () => false,
+      }
+    );
+  }, []);
 
   switch (outgoingCallButtonStyle) {
     case OutgoingCallButtonStyle.None:
@@ -1029,7 +1078,6 @@ function OutgoingCallButtons({
         >
           <AxoIconButton.Root
             symbol="phone"
-            iconWeight={300}
             size="md"
             onClick={onOutgoingAudioCall}
             label={i18n('icu:makeOutgoingCall')}
@@ -1131,7 +1179,7 @@ export function CannotLeaveGroupBecauseYouAreLastAdminAlert(props: {
         'icu:ConversationHeader__CannotLeaveGroupBecauseYouAreLastAdminAlert__description'
       )}
     >
-      <AxoConfirmDialog.Cancel>{i18n('icu:ok')}</AxoConfirmDialog.Cancel>
+      <AxoConfirmDialog.Ok />
     </AxoConfirmDialog.Root>
   );
 }

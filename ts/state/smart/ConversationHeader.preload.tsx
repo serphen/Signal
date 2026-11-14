@@ -10,6 +10,8 @@ import {
   type JSX,
 } from 'react';
 import { useSelector } from 'react-redux';
+import type { MuteExpiration } from '@signalapp/types';
+
 import { useContactNameData } from '../../components/conversation/ContactName.dom.tsx';
 import { DataReader } from '../../sql/Client.preload.ts';
 import {
@@ -49,7 +51,7 @@ import {
 import { getHasPanelOpen } from '../selectors/nav.std.ts';
 import { getHasStoriesSelector } from '../selectors/stories2.dom.ts';
 import { getIntl, getTheme, getUserACI } from '../selectors/user.std.ts';
-import { isConversationEverUnregistered } from '../../util/isConversationUnregistered.dom.ts';
+import { isConversationEverUnregistered } from '../../util/isConversationEverUnregistered.std.ts';
 import { isDirectConversation } from '../../util/whatTypeOfConversation.dom.ts';
 import type { DurationInSeconds } from '../../util/durations/index.std.ts';
 import { selectAudioPlayerActive } from '../selectors/audioPlayer.preload.ts';
@@ -149,7 +151,7 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
     onMarkUnread,
     onMoveToInbox,
     setDisappearingMessages,
-    setMuteDuration,
+    setMuteExpiration,
     setPinned,
     toggleSelectMode,
     acceptConversation,
@@ -196,7 +198,7 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
     getIsMissingRequiredProfileSharing(conversation);
 
   const onConversationAccept = useCallback(() => {
-    acceptConversation(conversation.id);
+    void acceptConversation(conversation.id);
   }, [acceptConversation, conversation.id]);
 
   const onConversationArchive = useCallback(() => {
@@ -204,30 +206,30 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
   }, [onArchive, conversation.id]);
 
   const onConversationBlock = useCallback(() => {
-    blockConversation(conversation.id);
+    void blockConversation(conversation.id);
   }, [blockConversation, conversation.id]);
 
   const onConversationBlockAndReportSpam = useCallback(() => {
-    blockAndReportSpam(conversation.id);
+    void blockAndReportSpam(conversation.id);
   }, [blockAndReportSpam, conversation.id]);
 
   const onConversationDelete = useCallback(() => {
-    deleteConversation(conversation.id);
+    void deleteConversation(conversation.id);
   }, [deleteConversation, conversation.id]);
 
   const onConversationDeleteMessages = useCallback(() => {
-    destroyMessages(conversation.id);
+    void destroyMessages(conversation.id);
   }, [destroyMessages, conversation.id]);
 
   const onConversationDisappearingMessagesChange = useCallback(
     (seconds: DurationInSeconds) => {
-      setDisappearingMessages(conversation.id, seconds);
+      void setDisappearingMessages(conversation.id, seconds);
     },
     [setDisappearingMessages, conversation.id]
   );
 
   const onConversationLeaveGroup = useCallback(() => {
-    leaveGroup(conversation.id);
+    void leaveGroup(conversation.id);
   }, [leaveGroup, conversation.id]);
 
   const onConversationMarkUnread = useCallback(() => {
@@ -235,10 +237,10 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
   }, [onMarkUnread, conversation.id]);
 
   const onConversationMuteExpirationChange = useCallback(
-    (seconds: number) => {
-      setMuteDuration(conversation.id, seconds);
+    (expiration: MuteExpiration) => {
+      setMuteExpiration(conversation.id, expiration);
     },
-    [setMuteDuration, conversation.id]
+    [setMuteExpiration, conversation.id]
   );
 
   const onConversationPin = useCallback(() => {
@@ -246,7 +248,7 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
   }, [setPinned, conversation.id]);
 
   const onConversationReportSpam = useCallback(() => {
-    reportSpam(conversation.id);
+    void reportSpam(conversation.id);
   }, [reportSpam, conversation.id]);
 
   const onConversationUnarchive = useCallback(() => {
@@ -258,11 +260,11 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
   }, [setPinned, conversation.id]);
 
   const onOutgoingAudioCall = useCallback(() => {
-    onOutgoingAudioCallInConversation(conversation.id);
+    void onOutgoingAudioCallInConversation(conversation.id);
   }, [onOutgoingAudioCallInConversation, conversation.id]);
 
   const onOutgoingVideoCall = useCallback(() => {
-    onOutgoingVideoCallInConversation(conversation.id);
+    void onOutgoingVideoCallInConversation(conversation.id);
   }, [onOutgoingVideoCallInConversation, conversation.id]);
 
   const onSearchInConversation = useCallback(() => {
@@ -274,15 +276,15 @@ export const SmartConversationHeader = memo(function SmartConversationHeader({
   }, [toggleSelectMode]);
 
   const onShowMembers = useCallback(() => {
-    pushPanelForConversation({ type: PanelType.GroupV1Members });
+    void pushPanelForConversation({ type: PanelType.GroupV1Members });
   }, [pushPanelForConversation]);
 
   const onViewConversationDetails = useCallback(() => {
-    pushPanelForConversation({ type: PanelType.ConversationDetails });
+    void pushPanelForConversation({ type: PanelType.ConversationDetails });
   }, [pushPanelForConversation]);
 
   const onViewAllMedia = useCallback(() => {
-    pushPanelForConversation({ type: PanelType.AllMedia });
+    void pushPanelForConversation({ type: PanelType.AllMedia });
   }, [pushPanelForConversation]);
 
   const onViewUserStories = useCallback(() => {

@@ -4,6 +4,7 @@
 import lodash from 'lodash';
 import PQueue from 'p-queue';
 import { v4 as generateUuid } from 'uuid';
+import { MuteExpiration } from '@signalapp/types';
 
 import { DataReader, DataWriter } from './sql/Client.preload.ts';
 import { createLogger } from './logging/log.std.ts';
@@ -40,7 +41,11 @@ import { getTitleNoDefault } from './util/getTitle.preload.ts';
 import * as StorageService from './services/storage.preload.ts';
 import { cdsLookup } from './textsecure/WebAPI.preload.ts';
 import type { ConversationPropsForUnreadStats } from './util/countUnreadStats.std.ts';
-import { countAllConversationsUnreadStats } from './util/countUnreadStats.std.ts';
+import {
+  countAllConversationsUnreadStats,
+  getUnreadCountForBadge,
+} from './util/countUnreadStats.std.ts';
+import { STORAGE_KEY_DEFAULTS } from './types/StorageKeys.std.ts';
 import { isTestOrMockEnvironment } from './environment.std.ts';
 import { isConversationAccepted } from './util/isConversationAccepted.preload.ts';
 import { areWePending } from './util/groupMembershipUtils.preload.ts';
@@ -58,7 +63,7 @@ import type {
   ConversationAttributesTypeType,
   ConversationRenderInfoType,
   SettableConversationAttributesType,
-} from './model-types.d.ts';
+} from './model-types.std.ts';
 import type {
   ServiceIdString,
   AciString,
@@ -67,6 +72,10 @@ import type {
 import { itemStorage } from './textsecure/Storage.preload.ts';
 import { getSelectedConversationId } from './state/selectors/nav.std.ts';
 import { unencodeNumber } from './util/unencodeNumber.std.ts';
+import {
+  getConversationBubbleColor,
+  toConversationBubbleColorAttributes,
+} from './util/conversationBubbleColor.std.ts';
 
 const { debounce, pick, uniq, without } = lodash;
 
@@ -272,9 +281,6 @@ export class ConversationController {
 
     const existing = this.get(conversation.id);
     if (!existing) {
-      log.warn(
-        `conversationChanged: Rejecting change from ${conversation.idForLogging()}, not in lookups`
-      );
       return;
     }
 
@@ -389,6 +395,9 @@ export class ConversationController {
 
     const badgeCountMutedConversationsSetting =
       itemStorage.get('badge-count-muted-conversations') || false;
+    const unreadCountBadgeType =
+      itemStorage.get('unreadCountBadgeType') ??
+      STORAGE_KEY_DEFAULTS.unreadCountBadgeType;
     const { activeProfile } = window.reduxStore.getState().notificationProfiles;
 
     const unreadStats = countAllConversationsUnreadStats(
@@ -419,22 +428,12 @@ export class ConversationController {
 
     drop(itemStorage.put('unreadCount', unreadStats.unreadCount));
 
-    if (unreadStats.unreadCount > 0) {
-      const total =
-        unreadStats.unreadCount + unreadStats.readChatsMarkedUnreadCount;
-      window.IPC.setBadge(total);
-      window.IPC.updateTrayIcon(total);
-      window.document.title = `${window.getTitle()} (${total})`;
-    } else if (unreadStats.readChatsMarkedUnreadCount > 0) {
-      const total = unreadStats.readChatsMarkedUnreadCount;
-      window.IPC.setBadge(total);
-      window.IPC.updateTrayIcon(total);
-      window.document.title = `${window.getTitle()} (${total})`;
-    } else {
-      window.IPC.setBadge(0);
-      window.IPC.updateTrayIcon(0);
-      window.document.title = window.getTitle();
-    }
+    const total = getUnreadCountForBadge(unreadStats, unreadCountBadgeType);
+
+    window.IPC.setBadgeCount(total);
+    window.IPC.updateTrayIcon(total);
+    window.document.title =
+      total > 0 ? `${window.getTitle()} (${total})` : window.getTitle();
   }
 
   onEmpty(): void {
@@ -645,9 +644,9 @@ export class ConversationController {
   }
 
   getOurConversationId(): string | undefined {
-    const e164 = itemStorage.user.getNumber();
+    const e164 = itemStorage.user.getOptionalNumber();
     const aci = itemStorage.user.getAci();
-    const pni = itemStorage.user.getPni();
+    const pni = itemStorage.user.getOptionalPni();
 
     if (!e164 && !aci && !pni) {
       return undefined;
@@ -691,7 +690,7 @@ export class ConversationController {
 
   async getOrCreateSignalConversation(): Promise<ConversationModel> {
     const conversation = await this.getOrCreateAndWait(SIGNAL_ACI, 'private', {
-      muteExpiresAt: Number.MAX_SAFE_INTEGER,
+      muteExpiresAt: MuteExpiration.ALWAYS,
       profileAvatar: { path: SIGNAL_AVATAR_PATH },
       profileName: 'Signal',
       profileSharing: true,
@@ -736,6 +735,7 @@ export class ConversationController {
     reason,
     fromPniSignature = false,
     mergeOldAndNew = safeCombineConversations,
+    additionalInitialProps,
   }: {
     aci?: AciString;
     e164?: string;
@@ -743,10 +743,40 @@ export class ConversationController {
     reason: string;
     fromPniSignature?: boolean;
     mergeOldAndNew?: (options: SafeCombineConversationsParams) => Promise<void>;
+    additionalInitialProps?: Partial<SettableConversationAttributesType>;
   }): {
     conversation: ConversationModel;
     mergePromises: Array<Promise<void>>;
   } {
+    const aci = providedAci
+      ? normalizeAci(providedAci, 'maybeMergeContacts.aci')
+      : undefined;
+    let pni = providedPni
+      ? normalizePni(providedPni, 'maybeMergeContacts.pni')
+      : undefined;
+
+    if (this.areWePrimaryDevice()) {
+      const ourE164 = itemStorage.user.getOptionalNumber();
+      const ourAci = itemStorage.user.getAci();
+      const ourPni = itemStorage.user.getOptionalPni();
+
+      if (aci && ourAci !== aci) {
+        if (e164 && ourE164 === e164) {
+          log.info(
+            `maybeMergeContacts: ACI did not match, but e164 did. Clearing e164 for merge.`
+          );
+          // oxlint-disable-next-line no-param-reassign
+          e164 = undefined;
+        }
+        if (pni && ourPni === pni) {
+          log.info(
+            `maybeMergeContacts: ACI did not match, but PNI did. Clearing PNI for merge.`
+          );
+          pni = undefined;
+        }
+      }
+    }
+
     const dataProvided = [];
     if (providedAci) {
       dataProvided.push(`aci=${providedAci}`);
@@ -754,15 +784,15 @@ export class ConversationController {
       if (e164) {
         dataProvided.push('e164');
       }
-      if (providedPni) {
+      if (pni) {
         dataProvided.push('pni');
       }
     } else {
       if (e164) {
         dataProvided.push(`e164=${e164}`);
       }
-      if (providedPni) {
-        dataProvided.push(`pni=${providedPni}`);
+      if (pni) {
+        dataProvided.push(`pni=${pni}`);
       }
     }
     if (fromPniSignature) {
@@ -770,12 +800,6 @@ export class ConversationController {
     }
     const logId = `maybeMergeContacts/${reason}/${dataProvided.join(',')}`;
 
-    const aci = providedAci
-      ? normalizeAci(providedAci, 'maybeMergeContacts.aci')
-      : undefined;
-    const pni = providedPni
-      ? normalizePni(providedPni, 'maybeMergeContacts.pni')
-      : undefined;
     const mergePromises: Array<Promise<void>> = [];
 
     const pniSignatureVerified = aci != null && pni != null && fromPniSignature;
@@ -1015,7 +1039,11 @@ export class ConversationController {
     strictAssert(identifier, `${logId}: identifier must be truthy!`);
 
     return {
-      conversation: this.getOrCreate(identifier, 'private', { e164, pni }),
+      conversation: this.getOrCreate(identifier, 'private', {
+        ...additionalInitialProps,
+        e164,
+        pni,
+      }),
       mergePromises,
     };
   }
@@ -1294,6 +1322,16 @@ export class ConversationController {
   }: CombineConversationsParams): Promise<void> {
     const logId = `combineConversations/${obsolete.id}->${current.id}`;
 
+    if (this.areWePrimaryDevice()) {
+      const me = this.getOurConversation();
+      if (me && (current === me || obsolete === me)) {
+        log.error(
+          'doCombineConversations: Cannot merge our own conversation when we are primary device'
+        );
+        return;
+      }
+    }
+
     const conversationType = current.get('type');
 
     if (!this.get(obsolete.id)) {
@@ -1359,12 +1397,17 @@ export class ConversationController {
 
     const currentHadMessages = (current.get('messageCount') ?? 0) > 0;
 
+    const obsoleteBubbleColor = getConversationBubbleColor(obsolete.attributes);
+    if (
+      getConversationBubbleColor(current.attributes) == null &&
+      obsoleteBubbleColor != null
+    ) {
+      current.set(toConversationBubbleColorAttributes(obsoleteBubbleColor));
+    }
+
     const dataToCopy: Partial<ConversationAttributesType> = pick(
       obsolete.attributes,
       [
-        'conversationColor',
-        'customColor',
-        'customColorId',
         'draftAttachments',
         'draftBodyRanges',
         'draftTimestamp',

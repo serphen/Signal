@@ -81,6 +81,9 @@ let workerCount = 1;
 
 window.testUtilities = {
   setup,
+  timeout: process.env.TEST_ELECTRON_TIMEOUT
+    ? parseInt(process.env.TEST_ELECTRON_TIMEOUT, 10)
+    : undefined,
 
   onTestEvent(event: unknown) {
     return ipc.invoke('ci:test-electron:event', event);
@@ -102,7 +105,11 @@ window.testUtilities = {
       badgesState: { byId: {} },
       callLinks: [],
       callHistory: [],
-      callHistoryUnreadCount: 0,
+      callHistoryUnreadCountsByConversationId: {},
+      account: {
+        defaultBubbleColor: null,
+      },
+      customChatColors: [],
       chatFolders: [],
       emojis: {
         recentEmojis: [],
@@ -140,6 +147,7 @@ window.testUtilities = {
         installedPack: null,
         packs: {},
         recentStickers: [],
+        favoriteStickers: [],
         blessedPacks: {},
         stickerManagerTab: 'all',
       },

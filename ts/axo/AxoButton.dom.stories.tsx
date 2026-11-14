@@ -1,13 +1,14 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 import type { ReactNode, JSX } from 'react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { AxoButton } from './AxoButton.dom.tsx';
 import { tw } from './tw.dom.tsx';
 import { AxoSwitch } from './AxoSwitch.dom.tsx';
 import { variants } from './_internal/variants.dom.tsx';
+import { Story } from './_storybook-helpers/Story.dom.tsx';
 
 export default {
   title: 'Axo/AxoButton',
@@ -40,7 +41,7 @@ export function Basic(): JSX.Element {
     <div className={tw('grid gap-1 p-4')}>
       {allSizes.map(size => {
         return (
-          <div>
+          <div key={size}>
             <h2 className={tw('p-1 type-title-medium')}>Size: {size}</h2>
             {allVariants.map(variant => {
               return (
@@ -117,6 +118,7 @@ export function Spinner(): JSX.Element {
   const allSizes = AxoButton._getAllSizes();
 
   const [pending, setPending] = useState(true);
+  const labelId = useId();
 
   function handleClick() {
     setPending(true);
@@ -125,8 +127,12 @@ export function Spinner(): JSX.Element {
   return (
     <>
       <div className={tw('mb-4 flex gap-2')}>
-        <AxoSwitch.Root checked={pending} onCheckedChange={setPending} />
-        <span>Loading</span>
+        <AxoSwitch.Root
+          labelledby={labelId}
+          checked={pending}
+          onCheckedChange={setPending}
+        />
+        <span id={labelId}>Loading</span>
       </div>
       <div className={tw('flex flex-col gap-2')}>
         {allSizes.map(size => {
@@ -135,6 +141,7 @@ export function Spinner(): JSX.Element {
               {allVariants.map(variant => {
                 return (
                   <AxoButton.Root
+                    key={variant}
                     variant={variant}
                     size={size}
                     disabled={pending}
@@ -316,5 +323,54 @@ export function WidthsTest(): JSX.Element {
         {items => <div className={tw('grid grid-cols-3')}>{items}</div>}
       </WidthTestTemplate>
     </div>
+  );
+}
+
+export function Arrows(): ReactNode {
+  return (
+    <div className={tw('flex gap-2')}>
+      <AxoButton.Root variant="subtle-primary" size="md" arrow="collapse">
+        Collapse
+      </AxoButton.Root>
+      <AxoButton.Root variant="subtle-primary" size="md" arrow="expand">
+        Expand
+      </AxoButton.Root>
+      <AxoButton.Root variant="subtle-primary" size="md" arrow="next">
+        Next
+      </AxoButton.Root>
+      <AxoButton.Root variant="subtle-primary" size="md" arrow="external-link">
+        External Link
+      </AxoButton.Root>
+    </div>
+  );
+}
+
+export function Group(): ReactNode {
+  return (
+    <Story.Stack>
+      <AxoButton.Group>
+        <AxoButton.Root variant="subtle-secondary" size="md">
+          One
+        </AxoButton.Root>
+        <AxoButton.Root variant="subtle-secondary" size="md">
+          Two
+        </AxoButton.Root>
+        <AxoButton.Root variant="subtle-primary" size="md">
+          Three
+        </AxoButton.Root>
+      </AxoButton.Group>
+
+      <AxoButton.Group>
+        <AxoButton.Root width="grow" variant="subtle-secondary" size="md">
+          One
+        </AxoButton.Root>
+        <AxoButton.Root width="grow" variant="subtle-secondary" size="md">
+          Two
+        </AxoButton.Root>
+        <AxoButton.Root width="grow" variant="subtle-primary" size="md">
+          Three
+        </AxoButton.Root>
+      </AxoButton.Group>
+    </Story.Stack>
   );
 }

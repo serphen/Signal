@@ -45,7 +45,7 @@ import { incrementMessageCounter } from './incrementMessageCounter.preload.ts';
 import { ReadStatus } from '../messages/MessageReadStatus.std.ts';
 import { SeenStatus, maxSeenStatus } from '../MessageSeenStatus.std.ts';
 import { canConversationBeUnarchived } from './canConversationBeUnarchived.preload.ts';
-import type { ConversationAttributesType } from '../model-types.d.ts';
+import type { ConversationAttributesType } from '../model-types.std.ts';
 import { singleProtoJobQueue } from '../jobs/singleProtoJobQueue.preload.ts';
 import { MessageSender } from '../textsecure/SendMessage.preload.ts';
 import * as Bytes from '../Bytes.std.ts';
@@ -64,7 +64,6 @@ import type { ConversationModel } from '../models/conversations.preload.ts';
 import { drop } from './drop.std.ts';
 import { sendCallLinkUpdateSync } from './sendCallLinkUpdateSync.preload.ts';
 import { runStorageServiceUploadJob } from '../services/storage.preload.ts';
-import { CallLinkFinalizeDeleteManager } from '../jobs/CallLinkFinalizeDeleteManager.preload.ts';
 import { parseLoose, parseStrict } from './schemas.std.ts';
 import { calling } from '../services/calling.preload.ts';
 import { cleanupMessages } from './cleanup.preload.ts';
@@ -74,6 +73,7 @@ import { update as updateExpiringMessagesService } from '../services/expiringMes
 import type { DurationInSeconds } from './durations/duration-in-seconds.std.ts';
 import { isFeaturedEnabledNoRedux } from './isFeatureEnabled.dom.ts';
 import type { GetUnreadCallMessagesAndMarkReadResult } from '../sql/Interface.std.ts';
+import { callLinkCleanupService } from '../services/expiring/callLinkCleanupService.preload.ts';
 
 const { isEqual } = lodash;
 
@@ -327,9 +327,9 @@ const statusToProto: Record<
   [CallStatusValue.GenericGroupCall]: null,
   [CallStatusValue.GenericAdhocCall]:
     Proto.SyncMessage.CallEvent.Event.OBSERVED,
-  [CallStatusValue.OutgoingRing]: null,
+  [CallStatusValue.OutgoingRing]: Proto.SyncMessage.CallEvent.Event.ACCEPTED,
   [CallStatusValue.Ringing]: null,
-  [CallStatusValue.Joined]: null,
+  [CallStatusValue.Joined]: Proto.SyncMessage.CallEvent.Event.ACCEPTED,
   [CallStatusValue.JoinedAdhoc]: Proto.SyncMessage.CallEvent.Event.ACCEPTED,
   [CallStatusValue.Unknown]: Proto.SyncMessage.CallEvent.Event.UNKNOWN_EVENT,
 };
@@ -732,6 +732,7 @@ function transitionTimestamp(
     callHistory.status === DirectCallStatus.Accepted ||
     callHistory.status === GroupCallStatus.Accepted ||
     callHistory.status === GroupCallStatus.Joined ||
+    callHistory.status === GroupCallStatus.OutgoingRing ||
     callHistory.status === AdhocCallStatus.Joined
   ) {
     if (callEvent.event === RemoteCallEvent.Accepted) {
@@ -767,7 +768,6 @@ function transitionTimestamp(
     callHistory.status === DirectCallStatus.Pending ||
     callHistory.status === DirectCallStatus.Unknown ||
     callHistory.status === GroupCallStatus.GenericGroupCall ||
-    callHistory.status === GroupCallStatus.OutgoingRing ||
     callHistory.status === GroupCallStatus.Ringing ||
     callHistory.status === DirectCallStatus.Missed ||
     callHistory.status === DirectCallStatus.MissedNotificationProfile ||
@@ -911,6 +911,9 @@ function transitionGroupCallStatus(
   }
 
   if (event === LocalCallEvent.Ringing) {
+    if (direction === CallDirection.Outgoing) {
+      return GroupCallStatus.OutgoingRing;
+    }
     return GroupCallStatus.Ringing;
   }
 
@@ -999,6 +1002,11 @@ function transitionAdhocCallStatus(
 // actions
 // -------
 
+type CallHistoryUpdateResult = Readonly<{
+  prevCallHistory: CallHistoryDetails | null;
+  updatedCallHistory: CallHistoryDetails;
+}>;
+
 async function updateLocalCallHistory({
   callEvent,
   receivedAtCounter,
@@ -1009,7 +1017,7 @@ async function updateLocalCallHistory({
   receivedAtCounter: number | null;
   receivedAtMS: number | null;
   serverGuid: string | null;
-}): Promise<CallHistoryDetails | null> {
+}): Promise<CallHistoryUpdateResult | null> {
   const conversation = window.ConversationController.get(callEvent.peerId);
   strictAssert(
     conversation != null,
@@ -1017,7 +1025,7 @@ async function updateLocalCallHistory({
       callEvent
     )}`
   );
-  return conversation.queueJob<CallHistoryDetails | null>(
+  return conversation.queueJob<CallHistoryUpdateResult | null>(
     'updateLocalCallHistory',
     async () => {
       log.info(
@@ -1058,7 +1066,7 @@ async function updateLocalCallHistory({
         serverGuid,
         eventTimestamp: callEvent.eventTimestamp,
       });
-      return updatedCallHistory;
+      return { prevCallHistory, updatedCallHistory };
     }
   );
 }
@@ -1424,13 +1432,22 @@ export async function updateCallHistoryFromLocalEvent({
   receivedAtMS?: number | null;
   serverGuid?: string | null;
 }): Promise<void> {
-  const updatedCallHistory = await updateLocalCallHistory({
+  const result = await updateLocalCallHistory({
     callEvent,
     receivedAtCounter: receivedAtCounter ?? null,
     receivedAtMS: receivedAtMS ?? null,
     serverGuid: serverGuid ?? null,
   });
-  if (updatedCallHistory == null) {
+  if (result == null) {
+    return;
+  }
+  const { prevCallHistory, updatedCallHistory } = result;
+
+  if (prevCallHistory?.status === updatedCallHistory.status) {
+    log.info(
+      'updateCallHistoryFromLocalEvent: Status unchanged, not syncing:',
+      formatCallHistory(updatedCallHistory)
+    );
     return;
   }
   await updateRemoteCallHistory(updatedCallHistory);
@@ -1463,7 +1480,7 @@ export async function clearCallHistoryDataAndSync(
     );
     // This skips call history for admin call links.
     const messageIds = await DataWriter.clearCallHistory(latestCall);
-    const isStorageSyncNeeded = await DataWriter.beginDeleteAllCallLinks();
+    const isStorageSyncNeeded = await DataWriter.markAllCallLinksDeleted();
     if (isStorageSyncNeeded) {
       runStorageServiceUploadJob({ reason: 'clearCallHistoryDataAndSync' });
     }
@@ -1489,19 +1506,13 @@ export async function clearCallHistoryDataAndSync(
           await calling.deleteCallLink(callLink);
           // oxlint-disable-next-line no-await-in-loop
           await DataWriter.deleteCallHistoryByRoomId(callLink.roomId);
-          // Wait for storage service sync before finalizing delete.
-          drop(
-            CallLinkFinalizeDeleteManager.addJob(
-              { roomId: callLink.roomId },
-              { delay: 10000 }
-            )
-          );
           successCount += 1;
         } catch (error) {
           log.warn('clearCallHistory: Failed to delete admin call link', error);
           failCount += 1;
         }
       }
+      drop(callLinkCleanupService.trigger('deleted all call links'));
       log.info(
         `clearCallHistory: Deleted admin call links, success=${successCount} failed=${failCount}`
       );

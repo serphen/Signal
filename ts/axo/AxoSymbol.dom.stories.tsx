@@ -48,7 +48,10 @@ const SymbolInfo = memo(function SymbolInfo(props: {
       <div className={tw('flex w-full flex-1 flex-row justify-between')}>
         {variants.map(variant => {
           return (
-            <div className={tw('flex flex-1 flex-col items-center gap-2')}>
+            <div
+              key={variant.title}
+              className={tw('flex flex-1 flex-col items-center gap-2')}
+            >
               <span className={tw('type-caption text-secondary')}>
                 {variant.title}
               </span>
@@ -100,8 +103,6 @@ export function All(): JSX.Element {
           'sticky top-4 mb-3 bg-material-primary p-4 shadow-elevation-2'
         )}
       >
-        {/* FIXME */}
-        {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label */}
         <input
           type="search"
           value={input}

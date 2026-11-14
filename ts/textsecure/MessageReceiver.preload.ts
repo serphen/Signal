@@ -112,6 +112,7 @@ import type {
   ViewSyncEventData,
 } from './messageReceiverEvents.std.ts';
 import {
+  AttachmentBackfillRequestSyncEvent,
   AttachmentBackfillResponseSyncEvent,
   CallEventSyncEvent,
   CallLinkUpdateSyncEvent,
@@ -182,7 +183,7 @@ import {
   SentTimestampMs,
   ServerTimestampMs,
 } from '@signalapp/types';
-import type { ConversationAttributesTypeType } from '../model-types.d.ts';
+import type { ConversationAttributesTypeType } from '../model-types.std.ts';
 
 const { isBoolean, isNumber, isString, noop } = lodash;
 
@@ -260,6 +261,8 @@ const MUST_BE_URGENT_TYPES: Array<SendTypesType> = [
   'readSync',
 ];
 const CAN_BE_URGENT_TYPES: Array<SendTypesType> = [
+  'attachmentBackfillRequestSync',
+  'attachmentBackfillResponseSync',
   'callingMessage',
   'senderKeyDistributionMessage',
 
@@ -324,7 +327,7 @@ export default class MessageReceiver
   readonly #decryptedQueue: PQueue;
   #retryCachedTimeout: NodeJS.Timeout | undefined;
   readonly #serverTrustRoots: Array<PublicKey>;
-  #stoppingProcessing?: boolean;
+  #stoppingProcessing?: string;
   #pniIdentityKeyCheckRequired?: boolean;
 
   constructor({ storage, serverTrustRoots }: MessageReceiverOptions) {
@@ -497,7 +500,7 @@ export default class MessageReceiver
 
   public startProcessingQueue(): void {
     log.info('startProcessingQueue');
-    this.#stoppingProcessing = false;
+    this.#stoppingProcessing = undefined;
 
     drop(this.#addCachedMessagesToQueue());
   }
@@ -513,9 +516,13 @@ export default class MessageReceiver
     );
   }
 
-  public stopProcessing(): void {
-    log.info('stopProcessing');
-    this.#stoppingProcessing = true;
+  public stopProcessing(reason: string): void {
+    log.info(`stopProcessing: ${reason}`);
+    this.#stoppingProcessing = reason;
+  }
+
+  public getStoppingProcessing(): string | undefined {
+    return this.#stoppingProcessing;
   }
 
   public hasEmptied(): boolean {
@@ -695,6 +702,11 @@ export default class MessageReceiver
   public override addEventListener(
     name: 'deleteForMeSync',
     handler: (ev: DeleteForMeSyncEvent) => void
+  ): void;
+
+  public override addEventListener(
+    name: 'attachmentBackfillRequestSync',
+    handler: (ev: AttachmentBackfillRequestSyncEvent) => void
   ): void;
 
   public override addEventListener(
@@ -2205,6 +2217,14 @@ export default class MessageReceiver
       });
     }
 
+    if (attachments.length > 1) {
+      log.warn(
+        `${logId}: story has ${attachments.length} attachments; ` +
+          'dropping all but the first'
+      );
+      attachments.splice(1);
+    }
+
     const groupV2 = msg.group ? processGroupV2Context(msg.group) : undefined;
     if (groupV2 && this.#isGroupBlocked(groupV2.id)) {
       log.warn(`${logId}: ignored; destined for blocked group`);
@@ -3135,6 +3155,12 @@ export default class MessageReceiver
         syncMessage.content.deviceNameChange
       );
     }
+    if (syncMessage.content?.attachmentBackfillRequest) {
+      return this.#handleAttachmentBackfillRequest(
+        envelope,
+        syncMessage.content.attachmentBackfillRequest
+      );
+    }
     if (syncMessage.content?.attachmentBackfillResponse) {
       return this.#handleAttachmentBackfillResponse(
         envelope,
@@ -3558,6 +3584,7 @@ export default class MessageReceiver
         type: callLinkUpdateSyncType,
         rootKey,
         adminKey,
+        timestamp: envelope.timestamp,
       },
       this.#removeFromCache.bind(this, envelope)
     );
@@ -3794,6 +3821,44 @@ export default class MessageReceiver
     log.info('handleDeleteForMeSync: finished');
   }
 
+  async #handleAttachmentBackfillRequest(
+    envelope: ProcessedEnvelope,
+    request: Proto.SyncMessage.AttachmentBackfillRequest
+  ): Promise<void> {
+    const logId = getEnvelopeId(envelope);
+    log.info('handleAttachmentBackfillRequest', logId);
+
+    logUnexpectedUrgentValue(envelope, 'attachmentBackfillRequestSync');
+
+    const targetMessage =
+      request.targetMessage == null
+        ? undefined
+        : processAddressableMessage(request.targetMessage, logId);
+    const targetConversation =
+      request.targetConversation == null
+        ? undefined
+        : processConversationIdentifier(request.targetConversation, logId);
+
+    if (targetMessage == null || targetConversation == null) {
+      log.warn(
+        `handleAttachmentBackfillRequest(${logId}): ` +
+          'missing or invalid target, dropping'
+      );
+      this.#removeFromCache(envelope);
+      return;
+    }
+
+    const attachmentBackfillRequestSync =
+      new AttachmentBackfillRequestSyncEvent(
+        { targetMessage, targetConversation },
+        envelope.timestamp,
+        envelope.id,
+        this.#removeFromCache.bind(this, envelope)
+      );
+
+    await this.#dispatchAndWait(logId, attachmentBackfillRequestSync);
+  }
+
   async #handleAttachmentBackfillResponse(
     envelope: ProcessedEnvelope,
     response: Proto.SyncMessage.AttachmentBackfillResponse
@@ -3971,7 +4036,10 @@ export default class MessageReceiver
       blocked.blockedAcis.length ||
       blocked.blockedGroups.length;
     const areLegacyFieldsUsed =
-      blocked.numbers.length || blocked.acis.length || blocked.groupIds.length;
+      blocked.numbers.length ||
+      blocked.acisBinary.length ||
+      blocked.acis.length ||
+      blocked.groupIds.length;
 
     if (areModernFieldsUsed || !areLegacyFieldsUsed) {
       log.info(`${logId}: Using modern fields`);
@@ -4171,6 +4239,7 @@ export default class MessageReceiver
         itemStorage.blocked.setBlockedGroups();
       }
 
+      this.#removeFromCache(envelope);
       return;
     }
 

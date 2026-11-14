@@ -178,6 +178,7 @@ export const ReactionViewer = forwardRef<HTMLDivElement, Props>(
         !reactionCategories.find(({ id }) => id === selectedReactionCategory)
       ) {
         if (reactionsWithEmojiData.length > 0) {
+          // oxlint-disable-next-line react/set-state-in-effect
           setSelectedReactionCategory('all');
         } else if (onClose) {
           onClose();
@@ -264,10 +265,7 @@ export const ReactionViewer = forwardRef<HTMLDivElement, Props>(
                 {from.isMe ? (
                   i18n('icu:you')
                 ) : (
-                  <ContactName
-                    module="module-reaction-viewer__body__row__name__contact-name"
-                    title={from.title}
-                  />
+                  <ContactName title={from.title} />
                 )}
               </div>
               <div className="module-reaction-viewer__body__row__emoji">

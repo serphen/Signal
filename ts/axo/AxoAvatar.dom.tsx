@@ -154,7 +154,8 @@ export namespace AxoAvatar {
             RootSizes.get(props.size),
             props.ring != null && RingSizes.get(props.size),
             props.ring === 'unread' && 'border-selected',
-            props.ring === 'read' && 'border-(--axo-color-label-secondary)'
+            props.ring === 'read' && 'border-(--axo-color-label-secondary)',
+            'forced-color-adjust-none'
           )}
         >
           {props.children}
@@ -180,7 +181,9 @@ export namespace AxoAvatar {
     label: string | null;
     /**
      * When provided, renders the content as a `<button>` with this click handler.
-     * Without it, renders as a `<div role="img">`.
+     * Without it, renders as a `<div role="img">`
+     *
+     * If you provide an `onClick` handler, you must also provide a `label`.
      */
     onClick?: ((event: MouseEvent<HTMLButtonElement>) => void) | null;
     /**
@@ -207,21 +210,28 @@ export namespace AxoAvatar {
    * Renders as a button when `onClick` is provided, otherwise as an image.
    */
   export const Content: FC<ContentProps> = memo(props => {
-    if (props.onClick != null) {
+    const { label, onClick, children } = props;
+
+    if (onClick != null) {
+      assert(label != null, 'Must provide a label when passing onClick');
       return (
-        <ContentButton label={props.label} onClick={props.onClick}>
-          {props.children}
+        <ContentButton label={label} onClick={onClick}>
+          {children}
         </ContentButton>
       );
     }
 
+    if (label == null) {
+      return (
+        <div aria-hidden className={baseContentStyles}>
+          {children}
+        </div>
+      );
+    }
+
     return (
-      <div
-        role="img"
-        aria-label={props.label ?? undefined}
-        className={baseContentStyles}
-      >
-        {props.children}
+      <div role="img" aria-label={label} className={baseContentStyles}>
+        {children}
       </div>
     );
   });
@@ -256,10 +266,7 @@ export namespace AxoAvatar {
       <button
         type="button"
         aria-label={props.label ?? undefined}
-        className={tw(
-          baseContentStyles,
-          'outline-none keyboard-mode:focus:axo-focus-ring'
-        )}
+        className={tw(baseContentStyles, 'focus-visible:axo-focus-ring')}
         onClick={handleClick}
       >
         {props.children}
@@ -279,20 +286,40 @@ export namespace AxoAvatar {
      * The icon to display. Sized proportionally to the avatar.
      */
     symbol: AxoSymbol.Name;
+    /**
+     * Color theme for background.
+     */
+    color?: AxoTokens.Avatar.ColorName | null;
   }>;
 
   /**
    * Displays a centered icon on a secondary fill background.
    */
   export const Icon: FC<IconProps> = memo(props => {
+    const { color } = props;
     const size = useStrictContext(SizeContext);
+
+    const style = useMemo((): CSSProperties => {
+      const values =
+        color != null ? AxoTokens.Avatar.getColorValues(color) : null;
+      return {
+        fontSize: size * 0.55,
+        background: values?.bg,
+        color: values?.fg,
+      };
+    }, [size, color]);
+
     return (
       <span
         className={tw(
           'flex size-full items-center justify-center',
-          DefaultColor
+          'rounded-full',
+          'forced-colors:bg-[Canvas]',
+          'forced-colors:text-[CanvasText]',
+          'forced-colors:border',
+          color == null && DefaultColor
         )}
-        style={{ fontSize: size * 0.55 }}
+        style={style}
       >
         <AxoSymbol.InlineGlyph symbol={props.symbol} label={null} />
       </span>
@@ -367,10 +394,11 @@ export namespace AxoAvatar {
     }
 
     return (
-      // oxlint-disable-next-line jsx-a11y/alt-text
       <img
         ref={ref}
         src={props.src}
+        // Decorative, the avatar is labelled by `Content`
+        alt=""
         width={props.srcWidth}
         height={props.srcHeight}
         decoding="async"
@@ -381,6 +409,7 @@ export namespace AxoAvatar {
         onLoad={handleLoad}
         className={tw(
           'size-full object-cover object-center',
+          'rounded-full',
           props.blur && 'scale-110 blur-thin',
           'transition-[filter] duration-100 ease-out-cubic',
           !isLoaded && 'opacity-0'
@@ -420,12 +449,17 @@ export namespace AxoAvatar {
     }, [preset]);
 
     return (
-      // oxlint-disable-next-line jsx-a11y/alt-text
       <img
         src={src}
+        // Decorative, the avatar is labelled by `Content`
+        alt=""
         width={1024}
         height={1024}
-        className={tw('size-full object-cover object-center')}
+        className={tw(
+          'size-full object-cover object-center',
+          'rounded-full',
+          'forced-color-adjust-none'
+        )}
         style={style}
       />
     );
@@ -468,7 +502,7 @@ export namespace AxoAvatar {
           'flex flex-col items-center-safe justify-center-safe gap-2',
           // oxlint-disable-next-line better-tailwindcss/no-restricted-classes
           'bg-[#000]/20 text-[#fff] hover:bg-[#000]/40',
-          'outline-none keyboard-mode:focus:axo-focus-ring'
+          'focus-visible:axo-focus-ring'
         )}
       >
         <AxoSymbol.Icon size={24} symbol="press" label={null} />
@@ -496,32 +530,36 @@ export namespace AxoAvatar {
   }>;
 
   /**
-   * Renders initials as an SVG on a colored background.
+   * Renders initials on a colored background.
    */
   export const Initials: FC<InitialsProps> = memo(props => {
     const style = useMemo((): CSSProperties => {
       const color = AxoTokens.Avatar.getColorValues(props.color);
-      return { fill: color.fg, background: color.bg };
+      return {
+        '--axo-avatar-initials-fg': color.fg,
+        '--axo-avatar-initials-bg': color.bg,
+      } as CSSProperties;
     }, [props.color]);
 
     return (
-      <svg
-        width={256}
-        height={256}
-        viewBox="0 0 256 256"
-        className={tw('size-full fill-current')}
+      <span
+        // Decorative, the avatar is labelled by `Content`. A pseudo-element
+        // keeps them out of the button's visible text, which must match its
+        // label.
+        aria-hidden
+        data-initials={props.initials}
+        className={tw(
+          'flex size-full items-center justify-center rounded-full',
+          '@container',
+          'bg-(--axo-avatar-initials-bg) text-(--axo-avatar-initials-fg)',
+          'before:content-[attr(data-initials)]',
+          // 120/256 of the avatar's width
+          'before:text-[46.875cqi] before:leading-none',
+          'forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]',
+          'forced-colors:border forced-colors:border-[CanvasText]'
+        )}
         style={style}
-      >
-        <text
-          x="50%"
-          y="50%"
-          dominantBaseline="central"
-          textAnchor="middle"
-          fontSize={120}
-        >
-          {props.initials}
-        </text>
-      </svg>
+      />
     );
   });
 
@@ -660,17 +698,18 @@ export namespace AxoAvatar {
       draggable: false,
     };
 
+    // Decorative, clickable badges are labelled by their button
     const children = (
       <>
-        {/* oxlint-disable-next-line jsx-a11y/alt-text */}
         <img
           {...baseImageProps}
+          alt=""
           src={badge.light}
           className={tw('size-full dark:hidden')}
         />
-        {/* oxlint-disable-next-line jsx-a11y/alt-text */}
         <img
           {...baseImageProps}
+          alt=""
           src={badge.dark}
           className={tw('size-full not-dark:hidden')}
         />
@@ -723,10 +762,7 @@ export namespace AxoAvatar {
         type="button"
         aria-label={props.label}
         onClick={handleClick}
-        className={tw(
-          baseBadgeStyles,
-          'outline-none keyboard-mode:focus:axo-focus-ring'
-        )}
+        className={tw(baseBadgeStyles, 'focus-visible:axo-focus-ring')}
       >
         {props.children}
       </button>

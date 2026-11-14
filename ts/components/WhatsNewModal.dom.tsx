@@ -19,6 +19,24 @@ type ReleaseNotesType = {
   features: Array<JSX.Element>;
 };
 
+function ExternalLink(props: {
+  href: string;
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <a href={props.href} target="_blank" rel="noreferrer">
+      {props.children}
+    </a>
+  );
+}
+
+/** @knipignore Exported so it doesn't get marked unused */
+export function GithubUser({ handle }: { handle: string }): React.JSX.Element {
+  return (
+    <ExternalLink href={`https://github.com/${handle}`}>@{handle}</ExternalLink>
+  );
+}
+
 export function WhatsNewModal({
   i18n,
   hideWhatsNewModal,
@@ -26,9 +44,10 @@ export function WhatsNewModal({
   let contentNode: ReactNode;
 
   const releaseNotes: ReleaseNotesType = {
+    // oxlint-disable-next-line react/purity
     date: new Date(window.getBuildCreation?.() || Date.now()),
     version: window.getVersion?.(),
-    features: [<I18n i18n={i18n} id="icu:WhatsNew__8.24--1" />],
+    features: [<I18n i18n={i18n} id="icu:WhatsNew__8.36--0" />],
   };
 
   if (releaseNotes.features.length === 1 && !releaseNotes.header) {
@@ -59,14 +78,13 @@ export function WhatsNewModal({
         </AxoDialog.Header>
         <AxoDialog.Body>
           <AxoDialog.Description>
-            <h3>
+            <h3 className={tw('text-primary')}>
               {moment(releaseNotes.date).format('LL')} &middot;{' '}
               {releaseNotes.version}
             </h3>
-            {contentNode}
+            <div className={tw('text-primary')}>{contentNode}</div>
           </AxoDialog.Description>
         </AxoDialog.Body>
-        <AxoDialog.Footer />
       </AxoDialog.Content>
     </AxoDialog.Root>
   );

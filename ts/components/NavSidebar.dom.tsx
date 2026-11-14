@@ -1,14 +1,8 @@
 // Copyright 2023 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import type { ButtonHTMLAttributes, ReactNode, JSX } from 'react';
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useState,
-  forwardRef,
-} from 'react';
+import type { ReactNode, JSX } from 'react';
+import { createContext, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { useMove } from 'react-aria';
 import { NavTabsToggle } from './NavTabs.dom.tsx';
@@ -20,38 +14,12 @@ import {
   getWidthFromPreferredWidth,
 } from '../util/leftPaneWidth.std.ts';
 import { WidthBreakpoint, getNavSidebarWidthBreakpoint } from './_util.std.ts';
-import type { UnreadStats } from '../util/countUnreadStats.std.ts';
 import type { SmartPropsType as SmartToastManagerPropsType } from '../state/smart/ToastManager.preload.tsx';
 import { AxoDragRegion } from '../axo/AxoDragRegion.dom.tsx';
+import { AxoIconButton } from '../axo/AxoIconButton.dom.tsx';
 
 export const NavSidebarWidthBreakpointContext =
   createContext<WidthBreakpoint | null>(null);
-
-type NavSidebarActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
-  Readonly<{
-    icon: ReactNode;
-    label: ReactNode;
-  }>;
-
-export const NavSidebarActionButton = forwardRef<
-  HTMLButtonElement,
-  NavSidebarActionButtonProps
->(function NavSidebarActionButtonInner(
-  { icon, label, ...rest },
-  ref
-): JSX.Element {
-  return (
-    <button
-      {...rest}
-      ref={ref}
-      type="button"
-      className="NavSidebar__ActionButton"
-    >
-      {icon}
-      <span className="NavSidebar__ActionButtonLabel">{label}</span>
-    </button>
-  );
-});
 
 export type NavSidebarProps = Readonly<{
   actions?: ReactNode;
@@ -67,7 +35,7 @@ export type NavSidebarProps = Readonly<{
   requiresFullWidth: boolean;
   savePreferredLeftPaneWidth: (width: number) => void;
   title: string;
-  otherTabsUnreadStats: UnreadStats;
+  otherTabsUnreadCount: number;
   renderToastManager: (_: SmartToastManagerPropsType) => JSX.Element;
 }>;
 
@@ -91,7 +59,7 @@ export function NavSidebar({
   requiresFullWidth,
   savePreferredLeftPaneWidth,
   title,
-  otherTabsUnreadStats,
+  otherTabsUnreadCount,
   renderToastManager,
 }: NavSidebarProps): JSX.Element {
   const isRTL = i18n.getLocaleDirection() === 'rtl';
@@ -160,12 +128,14 @@ export function NavSidebar({
     // Save the preferred width when the drag ends. We can't do this in onMoveEnd
     // because the width is not updated yet.
     if (dragState === DragState.DRAGEND) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setPreferredWidth(width);
       savePreferredLeftPaneWidth(width);
       setDragState(DragState.INITIAL);
     }
   }, [
     dragState,
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
     preferredLeftPaneWidth,
     preferredWidth,
     savePreferredLeftPaneWidth,
@@ -203,7 +173,7 @@ export function NavSidebar({
                   onToggleNavTabsCollapse={onToggleNavTabsCollapse}
                   hasFailedStorySends={hasFailedStorySends}
                   hasPendingUpdate={hasPendingUpdate}
-                  otherTabsUnreadStats={otherTabsUnreadStats}
+                  otherTabsUnreadCount={otherTabsUnreadCount}
                 />
               )}
               <div
@@ -214,16 +184,12 @@ export function NavSidebar({
                 })}
               >
                 {onBack != null && (
-                  <button
-                    type="button"
-                    role="link"
-                    onClick={onBack}
-                    className="NavSidebar__BackButton"
-                  >
-                    <span className="NavSidebar__BackButtonLabel">
-                      {i18n('icu:NavSidebar__BackButtonLabel')}
-                    </span>
-                  </button>
+                  <div className="NavSidebar__BackButton">
+                    <NavSidebarBackButton
+                      label={i18n('icu:NavSidebar__BackButtonLabel')}
+                      onClick={onBack}
+                    />
+                  </div>
                 )}
                 <h1
                   className={classNames('NavSidebar__HeaderTitle', {
@@ -273,6 +239,27 @@ export function NavSidebar({
         })}
       </div>
     </NavSidebarWidthBreakpointContext.Provider>
+  );
+}
+
+export type NavSidebarBackButtonProps = Readonly<{
+  label: string;
+  disabled?: boolean;
+  onClick?: () => void;
+}>;
+
+export function NavSidebarBackButton(
+  props: NavSidebarBackButtonProps
+): ReactNode {
+  return (
+    <AxoIconButton.Root
+      variant="implied-secondary"
+      size="sm"
+      symbol="chevron-[start]"
+      label={props.label}
+      disabled={props.disabled}
+      onClick={props.onClick}
+    />
   );
 }
 

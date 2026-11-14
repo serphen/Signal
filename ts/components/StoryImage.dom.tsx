@@ -19,7 +19,6 @@ import {
   isDownloading,
   isGIF,
 } from '../util/Attachment.std.ts';
-import { getClassNamesFor } from '../util/getClassNamesFor.std.ts';
 import { isVideoTypeSupported } from '../util/GoogleChrome.std.ts';
 import { createLogger } from '../logging/log.std.ts';
 import * as Errors from '../types/errors.std.ts';
@@ -37,7 +36,8 @@ export type PropsType = {
   readonly isPaused?: boolean;
   readonly isThumbnail?: boolean;
   readonly label: string;
-  readonly moduleClassName?: string;
+  /** @deprecated */
+  readonly className?: string;
   readonly queueStoryDownload: (storyId: string) => unknown;
   readonly storyId: string;
   readonly onMediaPlaybackStart: () => void;
@@ -53,7 +53,7 @@ export function StoryImage({
   isPaused,
   isThumbnail,
   label,
-  moduleClassName,
+  className,
   queueStoryDownload,
   storyId,
   onMediaPlaybackStart,
@@ -90,8 +90,13 @@ export function StoryImage({
   }, [isPaused, onMediaPlaybackStart]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setHasImgError(false);
-  }, [attachment?.url, attachment?.thumbnail?.url]);
+  }, [
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    attachment?.url,
+    attachment?.thumbnail?.url,
+  ]);
 
   if (!attachment) {
     return null;
@@ -102,8 +107,6 @@ export function StoryImage({
     Boolean(attachment.pending) && !attachment.textAttachment && !hasError;
   const isNotReadyToShow = hasNotResolved(attachment) || isPending || hasError;
   const isSupportedVideo = isVideoTypeSupported(attachment.contentType);
-
-  const getClassName = getClassNamesFor('StoryImage', moduleClassName);
 
   let storyElement: JSX.Element;
   if (attachment.textAttachment) {
@@ -123,14 +126,12 @@ export function StoryImage({
       />
     );
   } else if (!isThumbnail && isSupportedVideo) {
-    const shouldLoop = isGIF(attachment ? [attachment] : undefined);
+    const shouldLoop = isGIF(attachment);
 
     storyElement = (
-      // FIXME
-      // oxlint-disable-next-line jsx-a11y/control-has-associated-label
       <video
         autoPlay={!isPaused}
-        className={getClassName('__image')}
+        className="StoryImage__image"
         controls={false}
         key={attachment.url}
         loop={shouldLoop}
@@ -144,7 +145,7 @@ export function StoryImage({
     storyElement = (
       <img
         alt={label}
-        className={getClassName('__image')}
+        className="StoryImage__image"
         onError={() => setHasImgError(true)}
         src={
           isThumbnail && attachment.thumbnail
@@ -160,7 +161,7 @@ export function StoryImage({
     overlay = (
       <div className="StoryImage__overlay-container">
         <div className="StoryImage__spinner-bubble" title={i18n('icu:loading')}>
-          <Spinner moduleClassName="StoryImage__spinner" svgSize="small" />
+          <Spinner className="StoryImage__spinner" svgSize="small" />
         </div>
       </div>
     );
@@ -186,8 +187,9 @@ export function StoryImage({
   return (
     <div
       className={classNames(
-        getClassName(''),
-        isThumbnail ? getClassName('--thumbnail') : undefined
+        'StoryImage',
+        isThumbnail ? 'StoryImage--thumbnail' : undefined,
+        className
       )}
     >
       {storyElement}

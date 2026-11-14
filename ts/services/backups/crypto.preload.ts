@@ -61,27 +61,14 @@ export function getBackupMediaSignatureKey(): PrivateKey {
   return getMemoizedBackupMediaSignatureKey(rootKey, aci);
 }
 
-const getMemoizedKeyMaterial = memoizee(
-  (backupKey: BackupKey, aci: AciString) => {
-    const messageKey = new MessageBackupKey({
-      backupKey,
-      backupId: backupKey.deriveBackupId(toAciObject(aci)),
-    });
-
-    return { macKey: messageKey.hmacKey, aesKey: messageKey.aesKey };
-  }
-);
-
-export type BackupKeyMaterialType = Readonly<{
-  macKey: Uint8Array<ArrayBuffer>;
-  aesKey: Uint8Array<ArrayBuffer>;
-}>;
-
-export function getKeyMaterial(
-  backupKey = getBackupKey()
-): BackupKeyMaterialType {
-  const aci = itemStorage.user.getCheckedAci();
-  return getMemoizedKeyMaterial(backupKey, aci);
+export function getMessageBackupKey(
+  backupKey: BackupKey,
+  aci: AciString
+): MessageBackupKey {
+  return new MessageBackupKey({
+    backupKey,
+    backupId: backupKey.deriveBackupId(toAciObject(aci)),
+  });
 }
 
 export type BackupMediaKeyMaterialType = Readonly<{
@@ -92,15 +79,23 @@ export type BackupMediaKeyMaterialType = Readonly<{
 const BACKUP_MEDIA_AES_KEY_LEN = 32;
 const BACKUP_MEDIA_MAC_KEY_LEN = 32;
 
+// Combined HMAC + AES key
+export function deriveBackupMediaEncryptionKey(
+  mediaRootKey: BackupKey,
+  mediaId: Uint8Array<ArrayBuffer>
+): Uint8Array<ArrayBuffer> {
+  if (!mediaId.length) {
+    throw new Error('deriveBackupMediaEncryptionKey: mediaId missing');
+  }
+
+  return mediaRootKey.deriveMediaEncryptionKey(mediaId);
+}
+
 export function deriveBackupMediaKeyMaterial(
   mediaRootKey: BackupKey,
   mediaId: Uint8Array<ArrayBuffer>
 ): BackupMediaKeyMaterialType {
-  if (!mediaId.length) {
-    throw new Error('deriveBackupMediaKeyMaterial: mediaId missing');
-  }
-
-  const material = mediaRootKey.deriveMediaEncryptionKey(mediaId);
+  const material = deriveBackupMediaEncryptionKey(mediaRootKey, mediaId);
 
   return {
     macKey: material.subarray(0, BACKUP_MEDIA_MAC_KEY_LEN),

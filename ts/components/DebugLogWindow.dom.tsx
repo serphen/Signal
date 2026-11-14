@@ -53,6 +53,7 @@ export function DebugLogWindow({
   useEscapeHandling(closeWindow);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoadState(LoadState.Started);
 
     let shouldCancel = false;
@@ -134,8 +135,6 @@ export function DebugLogWindow({
           </p>
         </div>
         <div className="DebugLogWindow__container">
-          {/* FIXME */}
-          {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label */}
           <input
             className="DebugLogWindow__link"
             readOnly
@@ -168,6 +167,7 @@ export function DebugLogWindow({
           containerWidthBreakpoint={null}
           expandNarrowLeftPane={shouldNeverBeCalled}
           isInFullScreenCall={false}
+          systemPreferredLanguages={[]}
         />
       </div>
     );
@@ -236,6 +236,7 @@ export function DebugLogWindow({
         containerWidthBreakpoint={null}
         expandNarrowLeftPane={shouldNeverBeCalled}
         isInFullScreenCall={false}
+        systemPreferredLanguages={[]}
       />
     </div>
   );

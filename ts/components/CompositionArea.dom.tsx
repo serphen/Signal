@@ -5,6 +5,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
 } from 'react';
 import classNames from 'classnames';
 import type { ReadonlyDeep } from 'type-fest';
+import { tinykeys } from 'tinykeys';
 import type {
   DraftBodyRanges,
   HydratedBodyRangesType,
@@ -39,7 +41,7 @@ import type {
   AttachmentDraftType,
   InMemoryAttachmentDraftType,
 } from '../types/Attachment.std.ts';
-import { isImageAttachment, isVoiceMessage } from '../util/Attachment.std.ts';
+import { isVoiceMessage } from '../util/Attachment.std.ts';
 import { isViewOnceEligible } from '../util/viewOnceEligibility.std.ts';
 import type { AciString } from '../types/ServiceId.std.ts';
 import { AudioCapture } from './conversation/AudioCapture.dom.tsx';
@@ -59,20 +61,16 @@ import { MandatoryProfileSharingActions } from './conversation/MandatoryProfileS
 import { MediaQualitySelector } from './MediaQualitySelector.dom.tsx';
 import type { Props as QuoteProps } from './conversation/Quote.dom.tsx';
 import { Quote } from './conversation/Quote.dom.tsx';
-import {
-  useAttachFileShortcut,
-  useEditLastMessageSent,
-} from '../hooks/useKeyboardShortcuts.dom.tsx';
+import { useHasAnyOverlay } from '../hooks/useKeyboardShortcuts.dom.tsx';
 import { MediaEditor } from './MediaEditor.dom.tsx';
 import { isImageTypeSupported } from '../util/GoogleChrome.std.ts';
-import * as KeyboardLayout from '../services/keyboardLayout.dom.ts';
 import { PanelType } from '../types/Panels.std.ts';
 import type { SmartCompositionRecordingDraftProps } from '../state/smart/CompositionRecordingDraft.preload.tsx';
 import { useEscapeHandling } from '../hooks/useEscapeHandling.dom.ts';
 import SelectModeActions from './conversation/SelectModeActions.dom.tsx';
 import type { ShowToastAction } from '../state/ducks/toast.preload.ts';
 import { ToastType } from '../types/Toast.dom.tsx';
-import type { DraftEditMessageType } from '../model-types.d.ts';
+import type { DraftEditMessageType } from '../model-types.std.ts';
 import type { ForwardMessagesPayload } from '../state/ducks/globalModals.preload.ts';
 import { ForwardMessagesModalType } from './ForwardMessagesModal.dom.tsx';
 import { FunPicker } from './fun/FunPicker.dom.tsx';
@@ -84,16 +82,16 @@ import type { FunGifSelection } from './fun/panels/FunPanelGifs.dom.tsx';
 import type { SmartDraftGifMessageSendModalProps } from '../state/smart/DraftGifMessageSendModal.preload.tsx';
 import { strictAssert } from '../util/assert.std.ts';
 import { FunPickerButton } from './fun/FunButton.dom.tsx';
-import { AxoDropdownMenu } from '../axo/AxoDropdownMenu.dom.tsx';
+import { AxoDropdownMenu } from '../axo/menus/AxoDropdownMenu.dom.tsx';
 import { AxoIconButton } from '../axo/AxoIconButton.dom.tsx';
 import { tw } from '../axo/tw.dom.tsx';
 import type { PollCreateType } from '../types/Polls.dom.ts';
 import { PollCreateModal } from './PollCreateModal.dom.tsx';
-import { useDocumentKeyDown } from '../hooks/useDocumentKeyDown.dom.ts';
 import { hasDraft } from '../util/hasDraft.std.ts';
-import type { ContactNameColorType } from '../types/Colors.std.ts';
+import type { ContactNameColorType } from '../types/ContactNameColor.std.ts';
 import type { Emoji } from '../axo/emoji.std.ts';
 import { AxoConfirmDialog } from '../axo/AxoConfirmDialog.dom.tsx';
+import type { StickerReferenceType } from '../types/Stickers.preload.ts';
 
 export type OwnProps = Readonly<{
   acceptedMessageRequest: boolean | null;
@@ -137,6 +135,7 @@ export type OwnProps = Readonly<{
   isGroupV1AndDisabled: boolean | null;
   isMissingMandatoryProfileSharing: boolean | null;
   isPollSend1to1Enabled: boolean;
+  isShareContactEnabled: boolean;
   isSignalConversation: boolean;
   isActive: boolean;
   lastEditableMessageId: string | null;
@@ -193,6 +192,7 @@ export type OwnProps = Readonly<{
   >;
   quotedMessageAuthorAci: AciString | null;
   quotedMessageSentAt: number | null;
+  showMediaQualitySelector: boolean;
 
   removeAttachment: (
     conversationId: string,
@@ -221,6 +221,10 @@ export type OwnProps = Readonly<{
   renderSmartCompositionRecordingDraft: (
     props: SmartCompositionRecordingDraftProps
   ) => JSX.Element | null;
+  renderShareContactDialog: (props: {
+    conversationId: string;
+    onClose: () => void;
+  }) => JSX.Element;
   selectedMessageIds: ReadonlyArray<string> | undefined;
   areSelectedMessagesForwardable: boolean | undefined;
   toggleSelectMode: (on: boolean) => void;
@@ -232,6 +236,10 @@ export type OwnProps = Readonly<{
     props: SmartDraftGifMessageSendModalProps | null
   ) => void;
 
+  onMarkStickerAsFavorite: (
+    stickerRef: StickerReferenceType,
+    markAsFavorite: boolean
+  ) => void;
   onSelectEmoji: (emojiSelection: FunEmojiSelection) => void;
   emojiSkinToneDefault: Emoji.SkinTone | null;
 }>;
@@ -266,6 +274,7 @@ export const CompositionArea = memo(function CompositionArea({
   imageToBlurHash,
   isDisabled,
   isPollSend1to1Enabled,
+  isShareContactEnabled,
   isSignalConversation,
   isActive,
   lastEditableMessageId,
@@ -307,6 +316,7 @@ export const CompositionArea = memo(function CompositionArea({
   // MediaQualitySelector
   setMediaQualitySetting,
   shouldSendHighQualityAttachments,
+  showMediaQualitySelector,
   // CompositionInput
   draftBodyRanges,
   draftText,
@@ -318,6 +328,7 @@ export const CompositionArea = memo(function CompositionArea({
   sendCounter,
   sortedGroupMembers,
   // FunPicker
+  onMarkStickerAsFavorite,
   onSelectEmoji,
   emojiSkinToneDefault,
   sendStickerMessage,
@@ -357,6 +368,7 @@ export const CompositionArea = memo(function CompositionArea({
   isFetchingUUID,
   renderSmartCompositionRecording,
   renderSmartCompositionRecordingDraft,
+  renderShareContactDialog,
   // Selected messages
   selectedMessageIds,
   areSelectedMessagesForwardable,
@@ -371,6 +383,8 @@ export const CompositionArea = memo(function CompositionArea({
     AttachmentDraftType | undefined
   >();
   const [isPollModalOpen, setIsPollModalOpen] = useState(false);
+  const [isShareContactDialogOpen, setIsShareContactDialogOpen] =
+    useState(false);
   const inputApiRef = useRef<InputApi | null>(null);
   const fileInputRef = useRef<null | HTMLInputElement>(null);
   const photoVideoInputRef = useRef<null | HTMLInputElement>(null);
@@ -488,6 +502,26 @@ export const CompositionArea = memo(function CompositionArea({
     [conversationId, sendPoll, handleClosePollModal]
   );
 
+  // Wait for the menu to finish closing before opening the dialog, so the
+  // menu's focus handling doesn't steal focus from the dialog
+  const isShareContactDialogPending = useRef(false);
+
+  const handleAddMenuCloseAutoFocus = useCallback((event: Event) => {
+    if (isShareContactDialogPending.current) {
+      isShareContactDialogPending.current = false;
+      event.preventDefault();
+      setIsShareContactDialogOpen(true);
+    }
+  }, []);
+
+  const handleOpenShareContactDialog = useCallback(() => {
+    isShareContactDialogPending.current = true;
+  }, []);
+
+  const handleCloseShareContactDialog = useCallback(() => {
+    setIsShareContactDialogOpen(false);
+  }, []);
+
   function maybeEditAttachment(attachment: AttachmentDraftType) {
     if (!isImageTypeSupported(attachment.contentType)) {
       return;
@@ -521,16 +555,6 @@ export const CompositionArea = memo(function CompositionArea({
     lastEditableMessageId,
     setMessageToEdit,
   ]);
-
-  const attachFileShortcut = useAttachFileShortcut(launchFilePicker);
-  const editLastMessageSent = useEditLastMessageSent(maybeEditMessage);
-  useDocumentKeyDown(event => {
-    const hasFocus = inputApiRef.current?.hasFocus() ?? false;
-    if (hasFocus) {
-      attachFileShortcut(event);
-      editLastMessageSent(event);
-    }
-  });
 
   // Focus input on first mount
   useEffect(() => {
@@ -620,6 +644,7 @@ export const CompositionArea = memo(function CompositionArea({
     if (setDraftTextRef.current?.conversationId === conversationId) {
       return;
     }
+    // oxlint-disable-next-line react/todo
     try {
       if (!draftText) {
         inputApiRef.current?.setContents('');
@@ -634,7 +659,12 @@ export const CompositionArea = memo(function CompositionArea({
     } finally {
       setDraftTextRef.current = { conversationId };
     }
-  }, [conversationId, draftBodyRanges, draftText]);
+  }, [
+    conversationId,
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    draftBodyRanges,
+    draftText,
+  ]);
 
   const handleToggleLarge = useCallback(() => {
     setLarge(l => !l);
@@ -649,8 +679,6 @@ export const CompositionArea = memo(function CompositionArea({
       // ignore quotes, can be sent with voice message
       quotedMessageId: null,
     });
-
-  const showMediaQualitySelector = draftAttachments.some(isImageAttachment);
 
   const showViewOnceToggle = isViewOnceEligible(
     draftAttachments,
@@ -712,6 +740,18 @@ export const CompositionArea = memo(function CompositionArea({
       });
     },
     [sendStickerMessage, conversationId]
+  );
+  const handleFunPickerMarkStickerAsFavorite = useCallback(
+    (stickerSelection: FunStickerSelection, markAsFavorite: boolean) => {
+      onMarkStickerAsFavorite(
+        {
+          packId: stickerSelection.stickerPackId,
+          stickerId: stickerSelection.stickerId,
+        },
+        markAsFavorite
+      );
+    },
+    [onMarkStickerAsFavorite]
   );
 
   const [confirmGifSelection, setConfirmGifSelection] =
@@ -823,7 +863,6 @@ export const CompositionArea = memo(function CompositionArea({
         )}
       >
         <FunPicker
-          isReply={Boolean(quotedMessageId)}
           placement="top start"
           open={funPickerOpen}
           onOpenChange={handleFunPickerOpenChange}
@@ -831,6 +870,7 @@ export const CompositionArea = memo(function CompositionArea({
           onSelectSticker={handleFunPickerSelectSticker}
           onSelectGif={handleFunPickerSelectGif}
           onAddStickerPack={handleFunPickerAddStickerPack}
+          onMarkStickerAsFavorite={handleFunPickerMarkStickerAsFavorite}
         >
           <FunPickerButton i18n={i18n} />
         </FunPicker>
@@ -921,7 +961,9 @@ export const CompositionArea = memo(function CompositionArea({
               />
             </AxoDropdownMenu.Trigger>
           </div>
-          <AxoDropdownMenu.Content>
+          <AxoDropdownMenu.Content
+            onCloseAutoFocus={handleAddMenuCloseAutoFocus}
+          >
             <AxoDropdownMenu.Item symbol="photo" onSelect={launchMediaPicker}>
               {i18n('icu:CompositionArea__AttachMenu__PhotosAndVideos')}
             </AxoDropdownMenu.Item>
@@ -942,6 +984,14 @@ export const CompositionArea = memo(function CompositionArea({
             >
               {i18n('icu:voiceRecording--start')}
             </AxoDropdownMenu.Item>
+            {isShareContactEnabled && (
+              <AxoDropdownMenu.Item
+                symbol="person-circle"
+                onSelect={handleOpenShareContactDialog}
+              >
+                {i18n('icu:CompositionArea__AttachMenu__Contact')}
+              </AxoDropdownMenu.Item>
+            )}
           </AxoDropdownMenu.Content>
         </AxoDropdownMenu.Root>
       </div>
@@ -964,30 +1014,68 @@ export const CompositionArea = memo(function CompositionArea({
     </>
   ) : null;
 
-  // Listen for cmd/ctrl-shift-x to toggle large composition mode
+  const hasOverlay = useHasAnyOverlay();
+
+  function isComposerFocused() {
+    return inputApiRef.current?.hasFocus() ?? false;
+  }
+
+  const onToggleLargeShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (hasOverlay) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    setLarge(x => !x);
+  });
+
+  const onEditLastMessageShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (hasOverlay) {
+      return;
+    }
+    // Ignore keys that are part of an active IME composition (e.g. when
+    // navigating the Japanese transliteration candidate menu with ArrowUp).
+    if (event.isComposing) {
+      return;
+    }
+
+    if (!isComposerFocused()) {
+      return;
+    }
+
+    const didStartEditing = maybeEditMessage();
+    if (didStartEditing) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  const onAttachFileShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (hasOverlay) {
+      return;
+    }
+    if (!isComposerFocused()) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    launchFilePicker();
+  });
+
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const { shiftKey, ctrlKey, metaKey } = e;
-      const key = KeyboardLayout.lookup(e);
-      // When using the ctrl key, `key` is `'K'`. When using the cmd key, `key` is `'k'`
-      const targetKey = key === 'k' || key === 'K';
-      const commandKey = platform === 'darwin' && metaKey;
-      const controlKey = platform !== 'darwin' && ctrlKey;
-      const commandOrCtrl = commandKey || controlKey;
-
-      // cmd/ctrl-shift-k
-      if (targetKey && shiftKey && commandOrCtrl) {
-        e.preventDefault();
-        setLarge(x => !x);
+    return tinykeys(
+      window,
+      {
+        ArrowUp: onEditLastMessageShortcut,
+        '$mod+U': onAttachFileShortcut,
+        '$mod+Shift+K': onToggleLargeShortcut,
+      },
+      {
+        // Override default ignore so shortcuts work while textboxes are focused
+        ignore: () => false,
       }
-    };
-
-    document.addEventListener('keydown', handler);
-
-    return () => {
-      document.removeEventListener('keydown', handler);
-    };
-  }, [platform, setLarge]);
+    );
+  }, []);
 
   const handleEscape = useCallback(() => {
     if (linkPreviewResult) {
@@ -1079,6 +1167,7 @@ export const CompositionArea = memo(function CompositionArea({
         isBlocked={isBlocked}
         isHidden={isHidden}
         isReported={isReported}
+        isSignalConversation={isSignalConversation}
         acceptConversation={acceptConversation}
         reportSpam={reportSpam}
         blockAndReportSpam={blockAndReportSpam}
@@ -1091,17 +1180,12 @@ export const CompositionArea = memo(function CompositionArea({
   if (conversationType === 'direct' && isSmsOnlyOrUnregistered) {
     return (
       <div
-        className={classNames([
-          'CompositionArea',
-          'CompositionArea--sms-only',
-          isFetchingUUID ? 'CompositionArea--pending' : null,
-        ])}
+        className={classNames(['CompositionArea', 'CompositionArea--sms-only'])}
       >
         {isFetchingUUID ? (
           <Spinner
             ariaLabel={i18n('icu:CompositionArea--sms-only__spinner-label')}
             role="presentation"
-            moduleClassName="module-image-spinner"
             svgSize="small"
           />
         ) : (
@@ -1134,6 +1218,7 @@ export const CompositionArea = memo(function CompositionArea({
         i18n={i18n}
         isBlocked={isBlocked}
         isReported={isReported}
+        isSignalConversation={isSignalConversation}
         acceptConversation={acceptConversation}
         reportSpam={reportSpam}
         blockAndReportSpam={blockAndReportSpam}
@@ -1271,6 +1356,7 @@ export const CompositionArea = memo(function CompositionArea({
               inputApiRef.current?.focus();
             }}
             onSelectEmoji={onSelectEmoji}
+            onMarkStickerAsFavorite={onMarkStickerAsFavorite}
             onTextTooLong={onTextTooLong}
             ourConversationId={ourConversationId}
             platform={platform}
@@ -1340,11 +1426,7 @@ export const CompositionArea = memo(function CompositionArea({
         })}
       >
         {!large ? leftHandSideButtonsFragment : null}
-        <div
-          className={classNames('CompositionArea__input', {
-            'CompositionArea__input--padded': !isViewOnceActive && large,
-          })}
-        >
+        <div className="CompositionArea__input">
           <CompositionInput
             conversationId={conversationId}
             disabled={isDisabled}
@@ -1368,7 +1450,11 @@ export const CompositionArea = memo(function CompositionArea({
             onSubmit={handleSubmit}
             onTextTooLong={onTextTooLong}
             ourConversationId={ourConversationId}
-            placeholder={`Message @${conversationName.title}`}
+            placeholder={
+              conversationName
+                ? `Message @${conversationName.title}`
+                : undefined
+            }
             platform={platform}
             sendCounter={sendCounter}
             shouldHidePopovers={shouldHidePopovers}
@@ -1438,6 +1524,11 @@ export const CompositionArea = memo(function CompositionArea({
           onSendPoll={handleSendPoll}
         />
       )}
+      {isShareContactDialogOpen &&
+        renderShareContactDialog({
+          conversationId,
+          onClose: handleCloseShareContactDialog,
+        })}
     </div>
   );
 });

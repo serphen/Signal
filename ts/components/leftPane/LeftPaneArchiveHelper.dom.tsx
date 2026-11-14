@@ -18,7 +18,7 @@ import type {
 import { LeftPaneSearchInput } from '../LeftPaneSearchInput.dom.tsx';
 import type { LeftPaneSearchPropsType } from './LeftPaneSearchHelper.dom.tsx';
 import { LeftPaneSearchHelper } from './LeftPaneSearchHelper.dom.tsx';
-import * as KeyboardLayout from '../../services/keyboardLayout.dom.ts';
+import { NavSidebarBackButton } from '../NavSidebar.dom.tsx';
 
 const { last } = lodash;
 
@@ -66,13 +66,12 @@ export class LeftPaneArchiveHelper extends LeftPaneHelper<LeftPaneArchivePropsTy
   }>): ReactNode {
     return (
       <div className="module-left-pane__header__contents">
-        <button
-          onClick={this.getBackAction({ showInbox })}
-          className="module-left-pane__header__contents__back-button"
-          title={i18n('icu:backToInbox')}
-          aria-label={i18n('icu:backToInbox')}
-          type="button"
-        />
+        <div className="module-left-pane__header__contents__back-button">
+          <NavSidebarBackButton
+            label={i18n('icu:backToInbox')}
+            onClick={this.getBackAction({ showInbox })}
+          />
+        </div>
         <div className="module-left-pane__header__contents__text">
           {i18n('icu:archivedConversations')}
         </div>
@@ -124,9 +123,16 @@ export class LeftPaneArchiveHelper extends LeftPaneHelper<LeftPaneArchivePropsTy
 
   override getPreRowsNode({
     i18n,
-  }: Readonly<{ i18n: LocalizerType }>): ReactNode | null {
+    renderLeftPaneChatFolders,
+  }: Readonly<{
+    i18n: LocalizerType;
+    renderLeftPaneChatFolders: () => ReactNode;
+  }>): ReactNode | null {
     if (this.#searchHelper) {
-      return this.#searchHelper.getPreRowsNode({ i18n });
+      return this.#searchHelper.getPreRowsNode({
+        i18n,
+        renderLeftPaneChatFolders,
+      });
     }
 
     return (
@@ -242,12 +248,11 @@ export class LeftPaneArchiveHelper extends LeftPaneHelper<LeftPaneArchivePropsTy
       return;
     }
 
-    const { ctrlKey, metaKey, shiftKey } = event;
+    const { key, ctrlKey, metaKey, shiftKey } = event;
     const commandKey = window.platform === 'darwin' && metaKey;
     const controlKey = window.platform !== 'darwin' && ctrlKey;
     const commandOrCtrl = commandKey || controlKey;
     const commandAndCtrl = commandKey && ctrlKey;
-    const key = KeyboardLayout.lookup(event);
 
     if (
       commandOrCtrl &&

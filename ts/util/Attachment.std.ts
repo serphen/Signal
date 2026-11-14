@@ -6,9 +6,7 @@ import lodash from 'lodash';
 
 import type {
   AttachmentType,
-  AddressableAttachmentType,
   AttachmentForUIType,
-  AttachmentWithHydratedData,
   BackupableAttachmentType,
   AttachmentDownloadableFromTransitTier,
   AttachmentReadyForLocalBackup,
@@ -34,11 +32,11 @@ import type { MessageAttachmentType } from '../types/AttachmentDownload.std.ts';
 const {
   isNumber,
   padStart,
-  isFunction,
   isUndefined,
   isString,
   omit,
   partition,
+  takeWhile,
 } = lodash;
 
 const logging = createLogger('Attachment');
@@ -55,7 +53,6 @@ const MAX_DISPLAYABLE_IMAGE_HEIGHT = 8192;
 // {
 //   id: string
 //   contentType: MIMEType
-//   data: Uint8Array
 //   digest: Uint8Array
 //   fileName?: string
 //   flags: null
@@ -67,7 +64,6 @@ const MAX_DISPLAYABLE_IMAGE_HEIGHT = 8192;
 // // Outgoing message attachment fields
 // {
 //   contentType: MIMEType
-//   data: Uint8Array
 //   fileName: string
 //   size: integer
 // }
@@ -76,7 +72,7 @@ const MAX_DISPLAYABLE_IMAGE_HEIGHT = 8192;
 // Over time, we can expand this definition to become more narrow, e.g. require certain
 // fields, etc.
 function isValid(
-  rawAttachment?: Pick<AttachmentType, 'data' | 'path'>
+  rawAttachment?: Pick<AttachmentType, 'path'>
 ): rawAttachment is AttachmentType {
   // NOTE: We cannot use `_.isPlainObject` because `rawAttachment` is
   // deserialized by protobuf:
@@ -163,36 +159,6 @@ export function removeSchemaVersion({
   return omit(attachment, 'schemaVersion');
 }
 
-export function loadData(
-  readAttachmentV2Data: (
-    attachment: Partial<AddressableAttachmentType>
-  ) => Promise<Uint8Array<ArrayBuffer>>
-): (
-  attachment: Partial<AttachmentType>
-) => Promise<AttachmentWithHydratedData> {
-  if (!isFunction(readAttachmentV2Data)) {
-    throw new TypeError("'readAttachmentData' must be a function");
-  }
-
-  return async attachment => {
-    if (!isValid(attachment)) {
-      throw new TypeError("'attachment' is not valid");
-    }
-
-    const isAlreadyLoaded = Boolean(attachment.data);
-    if (isAlreadyLoaded) {
-      return attachment as AttachmentWithHydratedData;
-    }
-
-    if (!isString(attachment.path)) {
-      throw new TypeError("'attachment.path' is required");
-    }
-
-    const data = await readAttachmentV2Data(attachment);
-    return { ...attachment, data, size: data.byteLength };
-  };
-}
-
 // UI-focused functions
 
 export function getExtensionForDisplay({
@@ -232,19 +198,12 @@ export function isAudio(attachments?: ReadonlyArray<AttachmentType>): boolean {
   );
 }
 
-export function canDisplayImage(
-  attachments?: ReadonlyArray<AttachmentType>
-): boolean {
-  const { height, width } =
-    attachments && attachments[0] ? attachments[0] : { height: 0, width: 0 };
+export function areDimensionsDisplayable(attachment: AttachmentType): boolean {
+  const { height, width } = attachment;
 
-  return Boolean(
-    height &&
-    height > 0 &&
-    height <= MAX_DISPLAYABLE_IMAGE_HEIGHT &&
-    width &&
-    width > 0 &&
-    width <= MAX_DISPLAYABLE_IMAGE_WIDTH
+  return (
+    (!height || height <= MAX_DISPLAYABLE_IMAGE_HEIGHT) &&
+    (!width || width <= MAX_DISPLAYABLE_IMAGE_WIDTH)
   );
 }
 
@@ -325,12 +284,10 @@ export function isVideoAttachment(
   return isVideoTypeSupported(attachment.contentType);
 }
 
-export function isGIF(attachments?: ReadonlyArray<AttachmentType>): boolean {
-  if (!attachments || attachments.length !== 1) {
+export function isGIF(attachment?: AttachmentType): boolean {
+  if (!attachment) {
     return false;
   }
-
-  const [attachment] = attachments;
 
   const flag = SignalService.AttachmentPointer.Flags.GIF;
   const hasFlag =
@@ -577,70 +534,6 @@ export const isVoiceMessage = (
   }
 
   return false;
-};
-
-export const save = async ({
-  attachment,
-  index,
-  getUnusedFilename,
-  readAttachmentData,
-  saveAttachmentToDisk,
-  timestamp,
-  baseDir,
-}: {
-  attachment: AttachmentType;
-  index?: number;
-  getUnusedFilename: (options: {
-    filename: string;
-    baseDir?: string;
-  }) => string;
-  readAttachmentData: (
-    attachment: Partial<AddressableAttachmentType>
-  ) => Promise<Uint8Array<ArrayBuffer>>;
-  saveAttachmentToDisk: (options: {
-    data: Uint8Array<ArrayBuffer>;
-    name: string;
-    baseDir?: string;
-  }) => Promise<{ name: string; fullPath: string } | null>;
-  timestamp?: number;
-  /**
-   * Base directory for saving the attachment.
-   * If omitted, a dialog will be opened to let the user choose a directory
-   */
-  baseDir?: string;
-}): Promise<string | null> => {
-  let data: Uint8Array<ArrayBuffer>;
-  if (attachment.path) {
-    data = await readAttachmentData(attachment);
-  } else if (attachment.data) {
-    data = attachment.data;
-  } else {
-    throw new Error('Attachment had neither path nor data');
-  }
-
-  const suggestedFilename = getSuggestedFilename({
-    attachment,
-    timestamp,
-    index,
-  });
-
-  /**
-   * When baseDir is provided, saveAttachmentToDisk() will save without prompting
-   * and may overwrite existing files, so we need to append a suffix
-   */
-  const name = getUnusedFilename({ filename: suggestedFilename, baseDir });
-
-  const result = await saveAttachmentToDisk({
-    data,
-    name,
-    baseDir,
-  });
-
-  if (!result) {
-    return null;
-  }
-
-  return result.fullPath;
 };
 
 export const getSuggestedFilename = ({
@@ -897,6 +790,51 @@ export function partitionBodyAndNormalAttachments<
     bodyAttachment: existingBodyAttachment ?? bodyAttachments[0],
     attachments: normalAttachments,
   };
+}
+
+export function getMessageAttachmentClass(
+  attachments: ReadonlyArray<AttachmentType>
+): 'file' | 'visual-media' | 'gif' | 'audio' | 'voice' | 'unknown' {
+  const first = attachments[0];
+  if (!first) {
+    return 'unknown';
+  }
+  if (isVoiceMessage(first)) {
+    return 'voice';
+  }
+  if (isGIF(first)) {
+    return 'gif';
+  }
+  if (isAudio(attachments)) {
+    return 'audio';
+  }
+  if (isImageAttachment(first) || isVideoAttachment(first)) {
+    return 'visual-media';
+  }
+  return 'file';
+}
+
+export function getValidMessageAttachments(
+  attachments: ReadonlyArray<AttachmentType>
+): ReadonlyArray<AttachmentType> {
+  if (attachments.length <= 1) {
+    return attachments;
+  }
+  const [first] = attachments;
+  if (first == null) {
+    return [];
+  }
+
+  if (getMessageAttachmentClass(attachments) === 'visual-media') {
+    return takeWhile(
+      attachments,
+      attachment =>
+        isImageAttachment(attachment) || isVideoAttachment(attachment)
+    );
+  }
+
+  // For all non-visual-media attachments, we only show the first attachment
+  return [first];
 }
 
 const MESSAGE_ATTACHMENT_TYPES_NEEDING_THUMBNAILS =

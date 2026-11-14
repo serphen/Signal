@@ -52,9 +52,10 @@ function mockMessageTimelineItem(
       conversationId: 'conversation-id',
       conversationTitle: 'Conversation Title',
       conversationType: 'group',
-      conversationColor: 'crimson',
+      bubbleColor: { bubbleColorPreset: 'crimson' },
       direction: 'incoming',
       status: 'sent',
+      stickerRef: undefined,
       text: 'Hello there from the new world!',
       isBlocked: false,
       isMessageRequestAccepted: true,
@@ -64,6 +65,10 @@ function mockMessageTimelineItem(
       isSignalConversation: false,
       isSMS: false,
       isSpoilerExpanded: {},
+      isFavoriteSticker: false,
+      isTargeted: false,
+      isTargetedCounter: null,
+      isTargetedSource: null,
       isVoiceMessagePlayed: false,
       previews: [],
       readStatus: ReadStatus.Read,
@@ -81,11 +86,11 @@ const items: Record<string, TimelineItemType> = {
     author: getDefaultConversation({
       phoneNumber: '(202) 555-2001',
     }),
-    conversationColor: 'forest',
+    bubbleColor: { bubbleColorPreset: 'forest' },
     text: '🔥',
   }),
   'id-2': mockMessageTimelineItem('id-2', {
-    conversationColor: 'forest',
+    bubbleColor: { bubbleColorPreset: 'forest' },
     direction: 'incoming',
     text: 'Hello there from the new world! http://somewhere.com',
   }),
@@ -179,7 +184,7 @@ const items: Record<string, TimelineItemType> = {
     timestamp: Date.now(),
   },
   'id-10': mockMessageTimelineItem('id-10', {
-    conversationColor: 'plum',
+    bubbleColor: { bubbleColorPreset: 'plum' },
     direction: 'outgoing',
     text: '🔥',
   }),
@@ -264,7 +269,6 @@ const actions = () => ({
     'acknowledgeGroupMemberNameCollisions'
   ),
   blockGroupLinkRequests: action('blockGroupLinkRequests'),
-  checkForAccount: action('checkForAccount'),
   clearInvitedServiceIdsForNewlyCreatedGroup: action(
     'clearInvitedServiceIdsForNewlyCreatedGroup'
   ),
@@ -297,11 +301,13 @@ const actions = () => ({
   cancelAttachmentDownload: action('cancelAttachmentDownload'),
   kickOffAttachmentDownload: action('kickOffAttachmentDownload'),
   markAttachmentAsCorrupted: action('markAttachmentAsCorrupted'),
+  markStickerAsFavorite: action('markStickerAsFavorite'),
   messageExpanded: action('messageExpanded'),
   showSpoiler: action('showSpoiler'),
   showLightbox: action('showLightbox'),
   showLightboxForViewOnceMedia: action('showLightboxForViewOnceMedia'),
   doubleCheckMissingQuoteReference: action('doubleCheckMissingQuoteReference'),
+  handleClickCtaButton: action('handleClickCtaButton'),
 
   openGiftBadge: action('openGiftBadge'),
   showPinMessageDialog: action('showPinMessageDialog'),
@@ -367,7 +373,6 @@ const renderItem = ({
     isSignalConversation={false}
     i18n={i18n}
     interactivity={MessageInteractivity.Normal}
-    interactionMode="keyboard"
     isNextItemCallingNotification={false}
     theme={ThemeType.light}
     platform="darwin"
@@ -387,7 +392,8 @@ const renderItem = ({
     shouldCollapseBelow={false}
     shouldHideMetadata={false}
     shouldRenderDateHeader={false}
-    targetedMessage={undefined}
+    startConversationWithSharedContact={() => null}
+    targetedMessage={null}
     {...actions()}
   />
 );

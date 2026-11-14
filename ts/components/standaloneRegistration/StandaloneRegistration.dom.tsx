@@ -22,9 +22,10 @@ import { VerifyPINScreen } from './stages/VerifyPIN.dom.tsx';
 import { CreatePINScreen } from './stages/CreatePIN.dom.tsx';
 import { CreatePINConfirmScreen } from './stages/CreatePINConfirm.dom.tsx';
 import { AccountLockedScreen } from './stages/AccountLocked.dom.tsx';
-import { Spacer } from './util/StepComponents.dom.tsx';
 import { CONTACT_SUPPORT_URL } from '../../util/contactSupport.dom.tsx';
 import { openLinkInWebBrowser } from '../../util/openLinkInWebBrowser.dom.ts';
+import { InstallScreenUpdateDialog } from '../installScreen/InstallScreenUpdateDialog.dom.tsx';
+import { ThemeType } from '../../types/Util.std.ts';
 
 import type { LocalizerType } from '../../types/I18N.std.ts';
 import type { ActionCreator } from '../../state/types.std.ts';
@@ -54,6 +55,7 @@ import type {
   verifyPIN as doVerifyPIN,
 } from '../../state/ducks/standaloneInstaller.preload.ts';
 import type { CountryDataType } from '../../util/getCountryData.dom.ts';
+import type { UpdatesStateType } from '../../state/ducks/updates.preload.ts';
 
 const SPRING = {
   type: 'spring' as const,
@@ -69,6 +71,7 @@ export type PropsType = Readonly<{
   countries: ReadonlyArray<CountryDataType>;
   i18n: LocalizerType;
   readyForUpdates: () => void;
+  theme: ThemeType;
 
   // The workflow
   cancelRegistration: () => unknown;
@@ -89,6 +92,14 @@ export type PropsType = Readonly<{
   verifyPIN: ActionCreator<typeof doVerifyPIN>;
   workflow: RegistrationWorkflow;
 
+  // Updates
+  currentVersion: string;
+  forceCheck: () => unknown;
+  kickOffForcedUpgrade: () => unknown;
+  OS: string;
+  startUpdate: () => unknown;
+  updates: UpdatesStateType;
+
   // AvatarEditor support
   deleteAvatarFromDisk: DeleteAvatarFromDiskActionType;
   replaceAvatar: ReplaceAvatarActionType;
@@ -102,6 +113,7 @@ export function StandaloneRegistration({
   countries,
   i18n,
   readyForUpdates,
+  theme,
 
   // The workflow
   cancelRegistration,
@@ -122,6 +134,14 @@ export function StandaloneRegistration({
   verifyPIN,
   workflow,
 
+  // Updates
+  currentVersion,
+  forceCheck,
+  kickOffForcedUpgrade,
+  OS,
+  startUpdate,
+  updates,
+
   // AvatarEditor support
   deleteAvatarFromDisk,
   replaceAvatar,
@@ -140,7 +160,9 @@ export function StandaloneRegistration({
     useState(false);
 
   const previousFatalError = useRef<FatalErrorType>(undefined);
+  // oxlint-disable-next-line react/refs
   if (fatalError !== previousFatalError.current) {
+    // oxlint-disable-next-line react/refs
     previousFatalError.current = fatalError;
 
     if (!fatalError) {
@@ -236,6 +258,17 @@ export function StandaloneRegistration({
     body = (
       <AccountLockedScreen i18n={i18n} startRegistration={startRegistration} />
     );
+  } else if (workflow.stage === RegistrationStage.UPDATE_REQUIRED) {
+    return (
+      <InstallScreenUpdateDialog
+        i18n={i18n}
+        currentVersion={currentVersion}
+        forceCheck={forceCheck}
+        OS={OS}
+        startUpdate={startUpdate}
+        {...updates}
+      />
+    );
   } else {
     throw missingCaseError(workflow);
   }
@@ -243,38 +276,48 @@ export function StandaloneRegistration({
   return (
     <div
       className={tw(
-        'flex size-full flex-col overflow-hidden bg-[url("../images/registration-background.png")] bg-cover bg-center'
+        'flex size-full flex-col overflow-hidden bg-surface-secondary'
       )}
     >
       <TitlebarDragArea />
       <img
         className="StandaloneRegistration--SignalLogo"
-        src="images/signal-logo-with-text.svg"
+        src={
+          theme === ThemeType.light
+            ? 'images/signal-logo-with-text--light.svg'
+            : 'images/signal-logo-with-text--dark.svg'
+        }
         alt={i18n('icu:StandaloneRegistration--signal-logo')}
       />
-      <Spacer className={tw('h-8')} />
-      <div className={tw('relative grow')}>
-        <div
-          className={tw(
-            'absolute inset-s-1/2 top-1/2 flex max-h-[calc(100%-32px)] w-143 max-w-[calc(100%-32px)] -translate-1/2 transform flex-col overflow-hidden rounded-[26px] bg-surface-primary'
-          )}
-        >
-          <AnimatePresence>
-            <motion.div
-              initial={{
-                x: ANIMATION_X_OFFSET * direction,
-                opacity: 0,
-              }}
-              animate={{ x: 0, opacity: 1 }}
-              key={workflow.stage}
-              transition={SPRING}
-              className={tw(
-                'flex size-full grow flex-col overflow-x-hidden overflow-y-scroll p-6'
-              )}
-            >
-              {body}
-            </motion.div>
-          </AnimatePresence>
+      <div className={tw('min-h-10')} />
+      <div className={tw('grow p-4')}>
+        <div className={tw('relative size-full')}>
+          <div
+            className={tw(
+              // oxlint-disable-next-line better-tailwindcss/no-restricted-classes
+              'left-1/2',
+              'absolute top-1/2 flex max-h-full w-143 max-w-full -translate-1/2 transform flex-col',
+              'overflow-hidden rounded-[26px] border-[0.5px] border-secondary bg-material-dialog p-6',
+              'shadow-elevation-1 shadow-no-outline'
+            )}
+          >
+            <AnimatePresence>
+              <motion.div
+                initial={{
+                  x: ANIMATION_X_OFFSET * direction,
+                  opacity: 0,
+                }}
+                animate={{ x: 0, opacity: 1 }}
+                key={workflow.stage}
+                transition={SPRING}
+                className={tw(
+                  'flex size-full grow flex-col overflow-x-hidden overflow-y-auto'
+                )}
+              >
+                {body}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
       <AxoConfirmDialog.Root
@@ -290,16 +333,14 @@ export function StandaloneRegistration({
         )}
       >
         <AxoConfirmDialog.Action
-          variant="strong-secondary"
+          variant="subtle-secondary"
           onClick={() => cancelRegistration()}
         >
           {i18n('icu:StandaloneRegistration--UpdateRequired--cancel')}
         </AxoConfirmDialog.Action>
         <AxoConfirmDialog.Action
           variant="strong-primary"
-          onClick={() => {
-            // TODO: kick off update process - how to represent this during updates?
-          }}
+          onClick={() => kickOffForcedUpgrade()}
         >
           {i18n('icu:StandaloneRegistration--UpdateRequired--update')}
         </AxoConfirmDialog.Action>
@@ -339,7 +380,7 @@ export function StandaloneRegistration({
         )}
       >
         <AxoConfirmDialog.Action
-          variant="strong-secondary"
+          variant="subtle-secondary"
           onClick={() => {
             openLinkInWebBrowser(CONTACT_SUPPORT_URL);
           }}

@@ -7,7 +7,7 @@ import type { LocalizerType } from '../types/Util.std.ts';
 import * as expirationTimer from '../util/expirationTimer.std.ts';
 import { DurationInSeconds } from '../util/durations/index.std.ts';
 import { DisappearingTimeDialog } from './DisappearingTimeDialog.dom.tsx';
-import { AxoSelect } from '../axo/AxoSelect.dom.tsx';
+import { AxoSelect } from '../axo/menus/AxoSelect.dom.tsx';
 import { tw } from '../axo/tw.dom.tsx';
 
 export type Props = {
@@ -86,16 +86,14 @@ export function DisappearingTimerSelect(props: Props): JSX.Element {
   let info: ReactNode;
   if (isCustomTimeSelected) {
     info = (
-      <div
-        className={tw('absolute mt-1 ps-3.5', 'type-body-small text-secondary')}
-      >
+      <div className={tw('mt-1 ps-3.5', 'type-body-small text-secondary')}>
         {expirationTimer.format(i18n, value)}
       </div>
     );
   }
 
   return (
-    <div className={tw('relative')}>
+    <div className={tw('inline-flex flex-col')}>
       <AxoSelect.Root
         disabled={disabled}
         value={String(isCustomTimeSelected ? -1 : value)}

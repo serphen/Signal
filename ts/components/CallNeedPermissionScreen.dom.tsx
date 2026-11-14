@@ -3,7 +3,7 @@
 
 import { useRef, useEffect, type JSX } from 'react';
 import type { LocalizerType } from '../types/Util.std.ts';
-import { AvatarColors } from '../types/Colors.std.ts';
+import { AvatarColors } from '../types/Avatar.std.ts';
 import { Avatar, AvatarSize } from './Avatar.dom.tsx';
 import { I18n } from './I18n.dom.tsx';
 import { ContactName } from './conversation/ContactName.dom.tsx';
@@ -36,6 +36,7 @@ export function CallNeedPermissionScreen({
 }: Props): JSX.Element {
   const title = conversation.title || i18n('icu:unknownContact');
 
+  // oxlint-disable-next-line react/purity
   const autoCloseAtRef = useRef<number>(Date.now() + AUTO_CLOSE_MS);
   useEffect(() => {
     const timeout = setTimeout(close, autoCloseAtRef.current - Date.now());

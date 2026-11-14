@@ -1,15 +1,23 @@
 // Copyright 2022 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-import { useCallback, useEffect, useRef, useState, type JSX } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type JSX,
+} from 'react';
 import classNames from 'classnames';
 import lodash from 'lodash';
 import { usePopper } from 'react-popper';
 import { FocusScope } from 'react-aria';
+import { tinykeys } from 'tinykeys';
 import type { LinkPreviewForUIType } from '../types/message/LinkPreviews.std.ts';
 import { ThemeType, type LocalizerType } from '../types/Util.std.ts';
 import type { TextAttachmentType } from '../types/Attachment.std.ts';
 import { Button, ButtonVariant } from './Button.dom.tsx';
-import { ContextMenu } from './ContextMenu.dom.tsx';
+import { AxoDropdownMenu } from '../axo/menus/AxoDropdownMenu.dom.tsx';
 import { LinkPreviewSourceType, findLinks } from '../types/LinkPreview.std.ts';
 import type { MaybeGrabLinkPreviewOptionsType } from '../types/LinkPreview.std.ts';
 import { Input } from './Input.dom.tsx';
@@ -31,6 +39,7 @@ import type { FunEmojiSelection } from './fun/panels/FunPanelEmojis.dom.tsx';
 import { FunEmojiPickerButton } from './fun/FunButton.dom.tsx';
 import { useConfirmDiscard } from '../hooks/useConfirmDiscard.dom.tsx';
 import { AxoTheme } from '../axo/AxoTheme.dom.tsx';
+import { missingCaseError } from '../util/missingCaseError.std.ts';
 
 const { noop } = lodash;
 
@@ -130,6 +139,24 @@ function getBgButtonAriaLabel(
   return i18n('icu:StoryCreator__text-bg--none');
 }
 
+function getTextStyleLabel(i18n: LocalizerType, textStyle: TextStyle): string {
+  switch (textStyle) {
+    case TextStyle.Bold:
+      return i18n('icu:StoryCreator__text--bold');
+    case TextStyle.Serif:
+      return i18n('icu:StoryCreator__text--serif');
+    case TextStyle.Script:
+      return i18n('icu:StoryCreator__text--script');
+    case TextStyle.Condensed:
+      return i18n('icu:StoryCreator__text--condensed');
+    case TextStyle.Default:
+    case TextStyle.Regular:
+      return i18n('icu:StoryCreator__text--regular');
+    default:
+      throw missingCaseError(textStyle);
+  }
+}
+
 export function TextStoryCreator({
   debouncedMaybeGrabLinkPreview,
   i18n,
@@ -152,6 +179,7 @@ export function TextStoryCreator({
   const onTryClose = useCallback(() => {
     confirmDiscardIf(true, onClose);
   }, [confirmDiscardIf, onClose]);
+  // oxlint-disable-next-line react/refs
   tryClose.current = onTryClose;
 
   const [isEditingText, setIsEditingText] = useState(false);
@@ -228,6 +256,7 @@ export function TextStoryCreator({
     const links = findLinks(text);
 
     const shouldApplyLinkPreview = links.includes(linkPreview.url);
+    // oxlint-disable-next-line react/set-state-in-effect
     setLinkPreviewApplied(oldValue => {
       if (oldValue === LinkPreviewApplied.Manual) {
         return oldValue;
@@ -260,38 +289,39 @@ export function TextStoryCreator({
     }
   );
 
+  const onEscapeShortcut = useEffectEvent((event: KeyboardEvent) => {
+    // This listener runs in the capture phase before the menu's own Escape
+    // handling, so let open menus (portaled outside of this component) close
+    if (
+      event.target instanceof Element &&
+      event.target.closest('[role=menu]') != null
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (isColorPickerShowing || isEditingText || isLinkPreviewInputShowing) {
+      setIsColorPickerShowing(false);
+      setIsEditingText(false);
+      setIsLinkPreviewInputShowing(false);
+    } else {
+      onTryClose();
+    }
+  });
+
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (
-          isColorPickerShowing ||
-          isEditingText ||
-          isLinkPreviewInputShowing
-        ) {
-          setIsColorPickerShowing(false);
-          setIsEditingText(false);
-          setIsLinkPreviewInputShowing(false);
-        } else {
-          onTryClose();
-        }
-        event.preventDefault();
-        event.stopPropagation();
+    return tinykeys(
+      document,
+      {
+        Escape: onEscapeShortcut,
+      },
+      {
+        capture: true,
+        // Override default ignore so shortcuts work while textboxes are focused
+        ignore: () => false,
       }
-    };
-
-    const useCapture = true;
-    document.addEventListener('keydown', handleEscape, useCapture);
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape, useCapture);
-    };
-  }, [
-    isColorPickerShowing,
-    isEditingText,
-    isLinkPreviewInputShowing,
-    colorPickerPopperButtonRef,
-    onTryClose,
-  ]);
+    );
+  }, []);
 
   useEffect(() => {
     if (!isColorPickerShowing) {
@@ -390,69 +420,65 @@ export function TextStoryCreator({
                 <Slider
                   handleStyle={{ backgroundColor: getRGBA(sliderValue) }}
                   label={getRGBA(sliderValue)}
-                  moduleClassName="HueSlider StoryCreator__tools__tool"
+                  className="HueSlider StoryCreator__tools__tool"
                   onChange={setSliderValue}
                   value={sliderValue}
                 />
-                <ContextMenu
-                  i18n={i18n}
-                  menuOptions={[
-                    {
-                      icon: 'StoryCreator__icon--font-regular',
-                      label: i18n('icu:StoryCreator__text--regular'),
-                      onClick: () => setTextStyle(TextStyle.Regular),
-                      value: TextStyle.Regular,
-                    },
-                    {
-                      icon: 'StoryCreator__icon--font-bold',
-                      label: i18n('icu:StoryCreator__text--bold'),
-                      onClick: () => setTextStyle(TextStyle.Bold),
-                      value: TextStyle.Bold,
-                    },
-                    {
-                      icon: 'StoryCreator__icon--font-serif',
-                      label: i18n('icu:StoryCreator__text--serif'),
-                      onClick: () => setTextStyle(TextStyle.Serif),
-                      value: TextStyle.Serif,
-                    },
-                    {
-                      icon: 'StoryCreator__icon--font-script',
-                      label: i18n('icu:StoryCreator__text--script'),
-                      onClick: () => setTextStyle(TextStyle.Script),
-                      value: TextStyle.Script,
-                    },
-                    {
-                      icon: 'StoryCreator__icon--font-condensed',
-                      label: i18n('icu:StoryCreator__text--condensed'),
-                      onClick: () => setTextStyle(TextStyle.Condensed),
-                      value: TextStyle.Condensed,
-                    },
-                  ]}
-                  moduleClassName={classNames('StoryCreator__tools__tool', {
-                    'StoryCreator__tools__button--font-regular':
-                      textStyle === TextStyle.Regular,
-                    'StoryCreator__tools__button--font-bold':
-                      textStyle === TextStyle.Bold,
-                    'StoryCreator__tools__button--font-serif':
-                      textStyle === TextStyle.Serif,
-                    'StoryCreator__tools__button--font-script':
-                      textStyle === TextStyle.Script,
-                    'StoryCreator__tools__button--font-condensed':
-                      textStyle === TextStyle.Condensed,
-                  })}
-                  theme={Theme.Dark}
-                  value={textStyle}
-                />
+                <AxoDropdownMenu.Root>
+                  <AxoDropdownMenu.Trigger>
+                    <button
+                      type="button"
+                      aria-label={getTextStyleLabel(i18n, textStyle)}
+                      className="StoryCreator__tools__icon-button"
+                    >
+                      <span
+                        aria-hidden
+                        className={classNames(
+                          'StoryCreator__tools__icon-button-icon',
+                          {
+                            'StoryCreator__tools__button--font-regular':
+                              textStyle === TextStyle.Regular,
+                            'StoryCreator__tools__button--font-bold':
+                              textStyle === TextStyle.Bold,
+                            'StoryCreator__tools__button--font-serif':
+                              textStyle === TextStyle.Serif,
+                            'StoryCreator__tools__button--font-script':
+                              textStyle === TextStyle.Script,
+                            'StoryCreator__tools__button--font-condensed':
+                              textStyle === TextStyle.Condensed,
+                          }
+                        )}
+                      />
+                    </button>
+                  </AxoDropdownMenu.Trigger>
+                  <AxoDropdownMenu.Content>
+                    <AxoDropdownMenu.RadioGroup
+                      value={`${textStyle}`}
+                      onValueChange={value => setTextStyle(parseInt(value, 10))}
+                    >
+                      <AxoDropdownMenu.RadioItem value={`${TextStyle.Regular}`}>
+                        {i18n('icu:StoryCreator__text--regular')}
+                      </AxoDropdownMenu.RadioItem>
+                      <AxoDropdownMenu.RadioItem value={`${TextStyle.Bold}`}>
+                        {i18n('icu:StoryCreator__text--bold')}
+                      </AxoDropdownMenu.RadioItem>
+                      <AxoDropdownMenu.RadioItem value={`${TextStyle.Serif}`}>
+                        {i18n('icu:StoryCreator__text--serif')}
+                      </AxoDropdownMenu.RadioItem>
+                      <AxoDropdownMenu.RadioItem value={`${TextStyle.Script}`}>
+                        {i18n('icu:StoryCreator__text--script')}
+                      </AxoDropdownMenu.RadioItem>
+                      <AxoDropdownMenu.RadioItem
+                        value={`${TextStyle.Condensed}`}
+                      >
+                        {i18n('icu:StoryCreator__text--condensed')}
+                      </AxoDropdownMenu.RadioItem>
+                    </AxoDropdownMenu.RadioGroup>
+                  </AxoDropdownMenu.Content>
+                </AxoDropdownMenu.Root>
                 <button
                   aria-label={getBgButtonAriaLabel(i18n, textBackground)}
-                  className={classNames('StoryCreator__tools__tool', {
-                    'StoryCreator__tools__button--bg-none':
-                      textBackground === TextBackground.None,
-                    'StoryCreator__tools__button--bg':
-                      textBackground === TextBackground.Background,
-                    'StoryCreator__tools__button--bg-inverse':
-                      textBackground === TextBackground.Inverse,
-                  })}
+                  className="StoryCreator__tools__icon-button"
                   onClick={() => {
                     if (textBackground === TextBackground.None) {
                       setTextBackground(TextBackground.Background);
@@ -463,7 +489,22 @@ export function TextStoryCreator({
                     }
                   }}
                   type="button"
-                />
+                >
+                  <span
+                    aria-hidden
+                    className={classNames(
+                      'StoryCreator__tools__icon-button-icon',
+                      {
+                        'StoryCreator__tools__button--bg-none':
+                          textBackground === TextBackground.None,
+                        'StoryCreator__tools__button--bg':
+                          textBackground === TextBackground.Background,
+                        'StoryCreator__tools__button--bg-inverse':
+                          textBackground === TextBackground.Inverse,
+                      }
+                    )}
+                  />
+                </button>
                 <FunEmojiPicker
                   open={emojiPickerOpen}
                   onOpenChange={handleEmojiPickerOpenChange}
@@ -575,7 +616,7 @@ export function TextStoryCreator({
                     <Input
                       disableSpellcheck
                       i18n={i18n}
-                      moduleClassName="StoryCreator__link-preview-input"
+                      className="StoryCreator__link-preview-input"
                       onChange={setLinkPreviewInputValue}
                       placeholder={i18n(
                         'icu:StoryCreator__link-preview-placeholder'

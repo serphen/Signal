@@ -3,10 +3,11 @@
 
 import type { JSX } from 'react';
 
+import type { LanguageTag } from '@signalapp/types';
 import classNames from 'classnames';
 import { createPortal } from 'react-dom';
 
-import { SECOND } from '../util/durations/index.std.ts';
+import { SECOND, MINUTE } from '../util/durations/index.std.ts';
 import { Toast } from './Toast.dom.tsx';
 import { WidthBreakpoint } from './_util.std.ts';
 import { UsernameMegaphone } from './UsernameMegaphone.dom.tsx';
@@ -25,6 +26,8 @@ import type { Location } from '../types/Nav.std.ts';
 import { I18n } from './I18n.dom.tsx';
 import { UserText } from './UserText.dom.tsx';
 import { RemoteMegaphone } from './RemoteMegaphone.dom.tsx';
+import { PinReminderMegaphone } from './PinReminderMegaphone.dom.tsx';
+import { MAX_FAVORITE_STICKERS } from '../util/Stickers.std.ts';
 
 export type PropsType = {
   changeLocation: (newLocation: Location) => unknown;
@@ -47,6 +50,7 @@ export type PropsType = {
   containerWidthBreakpoint: WidthBreakpoint | null;
   isCompositionAreaVisible?: boolean;
   isInFullScreenCall: boolean;
+  systemPreferredLanguages: Array<LanguageTag>;
 };
 
 const SHORT_TIMEOUT = 3 * SECOND;
@@ -63,6 +67,7 @@ function renderToast({
   setDidResumeDonation,
   OS,
   toast,
+  systemPreferredLanguages,
 }: PropsType): JSX.Element | null {
   if (toast === undefined) {
     return null;
@@ -167,15 +172,6 @@ function renderToast({
       </Toast>
     );
   }
-
-  if (toastType === ToastType.CannotAddMemberLabel) {
-    return (
-      <Toast onClose={hideToast}>
-        {i18n('icu:ToastManager__CannotAddMemberLabel')}
-      </Toast>
-    );
-  }
-
   if (toastType === ToastType.CannotEditMessage) {
     return (
       <Toast onClose={hideToast}>
@@ -618,6 +614,20 @@ function renderToast({
       </Toast>
     );
   }
+  if (toastType === ToastType.VideoFileDuration) {
+    const maxDuration = new Intl.DurationFormat(systemPreferredLanguages, {
+      style: 'long',
+    }).format({
+      minutes: Math.floor(toast.parameters.maxDuration / (MINUTE / SECOND)),
+    });
+    return (
+      <Toast onClose={hideToast}>
+        {i18n('icu:videoFileTooLongWarning', {
+          maxDuration,
+        })}
+      </Toast>
+    );
+  }
 
   if (toastType === ToastType.GroupLinkCopied) {
     return (
@@ -638,7 +648,6 @@ function renderToast({
     return (
       <Toast
         autoDismissDisabled
-        className="internal-error-toast"
         onClose={hideToast}
         style={{ maxWidth: '500px' }}
         toastAction={{
@@ -797,6 +806,18 @@ function renderToast({
     );
   }
 
+  if (toastType === ToastType.PinChangeCompleted) {
+    return (
+      <Toast onClose={hideToast}>{i18n('icu:PinChangeCompletedToast')}</Toast>
+    );
+  }
+
+  if (toastType === ToastType.PinReminderCompleted) {
+    return (
+      <Toast onClose={hideToast}>{i18n('icu:PinReminderCompletedToast')}</Toast>
+    );
+  }
+
   if (toastType === ToastType.ReactionFailed) {
     return <Toast onClose={hideToast}>{i18n('icu:Reactions--error')}</Toast>;
   }
@@ -863,6 +884,32 @@ function renderToast({
     );
   }
 
+  if (toastType === ToastType.StickerFavoriteAdded) {
+    return (
+      <Toast onClose={hideToast}>
+        {i18n('icu:stickers--Toast--StickerFavoriteAdded')}
+      </Toast>
+    );
+  }
+
+  if (toastType === ToastType.StickerFavoriteRemoved) {
+    return (
+      <Toast onClose={hideToast}>
+        {i18n('icu:stickers--Toast--StickerFavoriteRemoved')}
+      </Toast>
+    );
+  }
+
+  if (toastType === ToastType.StickerFavoritesTooMany) {
+    return (
+      <Toast onClose={hideToast}>
+        {i18n('icu:stickers--Toast--StickerFavoritesTooMany', {
+          count: MAX_FAVORITE_STICKERS,
+        })}
+      </Toast>
+    );
+  }
+
   if (toastType === ToastType.StickerPackInstallFailed) {
     return (
       <Toast onClose={hideToast}>
@@ -870,6 +917,7 @@ function renderToast({
       </Toast>
     );
   }
+
   if (toastType === ToastType.SQLError) {
     return (
       <Toast
@@ -1058,12 +1106,25 @@ function renderMegaphone({
     return <UsernameMegaphone i18n={i18n} {...megaphone} />;
   }
 
+  const isFullSize = containerWidthBreakpoint !== WidthBreakpoint.Narrow;
+
   if (megaphone.type === MegaphoneType.Remote) {
     return (
       <RemoteMegaphone
         {...megaphone}
         i18n={i18n}
-        isFullSize={containerWidthBreakpoint !== WidthBreakpoint.Narrow}
+        isFullSize={isFullSize}
+        onClickNarrowMegaphone={expandNarrowLeftPane}
+      />
+    );
+  }
+
+  if (megaphone.type === MegaphoneType.PinReminder) {
+    return (
+      <PinReminderMegaphone
+        {...megaphone}
+        i18n={i18n}
+        isFullSize={isFullSize}
         onClickNarrowMegaphone={expandNarrowLeftPane}
       />
     );

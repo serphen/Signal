@@ -68,6 +68,10 @@ function getCacheKey(
 
 const formatterCache = new Map<string, Intl.DateTimeFormat>();
 
+export function clearDateTimeFormatterCache(): void {
+  formatterCache.clear();
+}
+
 export function getDateTimeFormatter(
   options: Intl.DateTimeFormatOptions
 ): Intl.DateTimeFormat {
@@ -103,11 +107,11 @@ export function formatTimestamp(
 
 export function formatDateTimeShort(
   i18n: LocalizerType,
-  rawTimestamp: RawTimestamp
+  rawTimestamp: RawTimestamp,
+  now = Date.now()
 ): string {
   const timestamp = rawTimestamp.valueOf();
 
-  const now = Date.now();
   const diff = now - timestamp;
 
   if (diff < HOUR || isToday(timestamp)) {
@@ -120,7 +124,7 @@ export function formatDateTimeShort(
     return formatTimestamp(timestamp, { weekday: 'short' });
   }
 
-  if (Math.abs(m.diff(Date.now())) < 6 * MONTH) {
+  if (Math.abs(m.diff(now)) < 6 * MONTH) {
     return formatTimestamp(timestamp, {
       day: 'numeric',
       month: 'short',

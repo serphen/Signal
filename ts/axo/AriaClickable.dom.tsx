@@ -1,8 +1,15 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+} from 'react';
 import type { ReactNode, MouseEvent, FC, Ref, CSSProperties } from 'react';
-import { useLayoutEffect, mergeRefs } from '@react-aria/utils';
+import { mergeRefs } from '@react-aria/utils';
 import { computeAccessibleName } from 'dom-accessibility-api';
 import { Slot } from 'radix-ui';
 import { tw } from './tw.dom.tsx';
@@ -11,8 +18,11 @@ import {
   createStrictContext,
   useStrictContext,
 } from './_internal/StrictContext.dom.tsx';
-import { isTestOrMockEnvironment } from '../environment.std.ts';
-import { forwardExtraPropsForRadix } from './_internal/props.dom.tsx';
+import { useAxoEnv } from './_internal/AxoEnv.dom.tsx';
+import {
+  concatIds,
+  forwardExtraPropsForRadix,
+} from './_internal/props.dom.tsx';
 
 /**
  * Makes an arbitrary region clickable as a single accessible button, while
@@ -209,6 +219,13 @@ export namespace AriaClickable {
      * ```
      */
     labelledby?: string;
+    /**
+     * Reference the elements that describe the clickable root (like a
+     * description), so they're read when the trigger is focused.
+     */
+    describedby?: string;
+
+    disabled?: boolean;
 
     /** Called when the button is clicked. */
     onClick: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -224,8 +241,10 @@ export namespace AriaClickable {
    *   before any <AriaClickable.SubWidget>.
    */
   export const HiddenTrigger: FC<HiddenTriggerProps> = memo(props => {
-    const { onClick } = props;
+    const { ref, label, labelledby, describedby, disabled, onClick, ...rest } =
+      props;
 
+    const env = useAxoEnv();
     const innerRef = useRef<HTMLButtonElement>(null);
     const onTriggerStateUpdate = useStrictContext(TriggerStateUpdateContext);
 
@@ -240,9 +259,11 @@ export namespace AriaClickable {
 
       function update() {
         onTriggerStateUpdateRef.current({
-          hovered: button.matches(':hover:not(:disabled)'),
-          pressed: button.matches(':active:not(:disabled)'),
-          focused: button.matches('.keyboard-mode :focus'),
+          hovered: button.matches(':hover:not(:disabled,[aria-disabled=true])'),
+          pressed: button.matches(
+            ':active:not(:disabled,[aria-disabled=true])'
+          ),
+          focused: button.matches(':focus-visible'),
         });
       }
 
@@ -278,7 +299,7 @@ export namespace AriaClickable {
     }, []);
 
     useEffect(() => {
-      if (isTestOrMockEnvironment()) {
+      if (env === 'test') {
         assert(
           computeAccessibleName(assert(innerRef.current)) !== '',
           'AriaClickable.HiddenTrigger child must have an accessible name'
@@ -289,19 +310,34 @@ export namespace AriaClickable {
     const handleClick = useCallback(
       (event: MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
+        if (disabled) {
+          event.preventDefault();
+          return;
+        }
         onClick(event);
       },
-      [onClick]
+      [disabled, onClick]
+    );
+
+    // Keep any `aria-describedby` from a parent with `asChild` (like a
+    // tooltip trigger)
+    const parentProps: Readonly<{ 'aria-describedby'?: string }> = rest;
+    const ariaDescribedBy = concatIds(
+      describedby,
+      parentProps['aria-describedby']
     );
 
     return (
       <button
-        ref={mergeRefs(props.ref, innerRef)}
+        ref={mergeRefs(ref, innerRef)}
         type="button"
-        aria-label={props.label}
-        aria-labelledby={props.labelledby}
+        aria-label={label}
+        aria-labelledby={labelledby}
+        aria-disabled={disabled}
         onClick={handleClick}
-        className={tw('absolute inset-0 z-10 outline-none')}
+        className={tw('absolute inset-0 z-10', 'focus-visible:outline-none')}
+        {...forwardExtraPropsForRadix(rest)}
+        aria-describedby={ariaDescribedBy ?? undefined}
       />
     );
   });

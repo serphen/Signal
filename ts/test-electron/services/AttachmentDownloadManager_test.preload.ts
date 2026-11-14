@@ -31,7 +31,11 @@ import type { downloadAttachment as downloadAttachmentUtil } from '../../util/do
 import { AttachmentDownloadSource } from '../../sql/Interface.std.ts';
 import { generateAttachmentKeys } from '../../AttachmentCrypto.node.ts';
 import { getAttachmentCiphertextSize } from '../../util/AttachmentCrypto.std.ts';
-import { KIBIBYTE, MEBIBYTE } from '../../types/AttachmentSize.std.ts';
+import {
+  KIBIBYTE,
+  MAX_STICKER_CIPHERTEXT_BYTE_LENGTH,
+  MEBIBYTE,
+} from '../../types/AttachmentSize.std.ts';
 import { toBase64 } from '../../Bytes.std.ts';
 import { JobCancelReason } from '../../jobs/types.std.ts';
 import {
@@ -48,15 +52,15 @@ import {
   testAttachmentLocalKey,
   testPlaintextHash,
 } from '../../test-helpers/attachments.node.ts';
-import type { MessageAttributesType } from '../../model-types.d.ts';
+import type { MessageAttributesType } from '../../model-types.std.ts';
 import { getAttachmentsPath } from '../../../app/attachments.node.ts';
 import { getAbsoluteAttachmentPath } from '../../util/migrations.preload.ts';
 import { generateAci } from '../../test-helpers/serviceIdUtils.std.ts';
 
 const { omit } = lodash;
 
-const maxAttachmentSize = 100 * MEBIBYTE;
-const maxTextAttachmentSize = 5 * KIBIBYTE;
+const maxCiphertextAttachmentSize = 100 * MEBIBYTE;
+const maxPlaintextTextAttachmentSize = 5 * KIBIBYTE;
 const minimumFreeDiskSpace = 500 * MEBIBYTE;
 
 function composeJob({
@@ -172,8 +176,8 @@ describe('AttachmentDownloadManager', () => {
       }),
       onLowDiskSpaceBackupImport,
       hasMediaBackups,
-      maxAttachmentSize,
-      maxTextAttachmentSize,
+      maxCiphertextAttachmentSize,
+      maxPlaintextTextAttachmentSize,
       minimumFreeDiskSpace,
       getMessageQueueTime: () => 45 * DAY,
       statfs,
@@ -1019,8 +1023,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJob', () => {
       options: {
         isForCurrentlyVisibleMessage: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         hasMediaBackups,
       },
       dependencies: {
@@ -1079,8 +1083,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJob', () => {
       options: {
         isForCurrentlyVisibleMessage: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         hasMediaBackups: false,
       },
       dependencies: {
@@ -1397,12 +1401,12 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
   });
 
   describe('attachment size errors', () => {
-    it('throws AttachmentSizeError if attachment > maxAttachmentSize', async () => {
+    it('throws AttachmentSizeError if attachment > maxCiphertextAttachmentSize', async () => {
       const job = composeJob({
         messageId: '1',
         receivedAt: 1,
         attachmentOverrides: {
-          size: maxAttachmentSize + 1,
+          size: maxCiphertextAttachmentSize + 1,
         },
       });
 
@@ -1412,8 +1416,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
           isForCurrentlyVisibleMessage: false,
           hasMediaBackups: true,
           abortSignal: abortController.signal,
-          maxAttachmentSize,
-          maxTextAttachmentSize,
+          maxCiphertextAttachmentSize,
+          maxPlaintextTextAttachmentSize,
           messageExpiresAt: null,
           dependencies: {
             cleanupAttachmentFiles,
@@ -1426,12 +1430,12 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         'AttachmentSizeError'
       );
     });
-    it('throws AttachmentSizeError if longText attachment > maxTextAttachmentSize', async () => {
+    it('throws AttachmentSizeError if longText attachment > maxPlaintextTextAttachmentSize', async () => {
       const job = composeJob({
         messageId: '1',
         receivedAt: 1,
         attachmentOverrides: {
-          size: maxTextAttachmentSize + 1,
+          size: maxPlaintextTextAttachmentSize + 1,
         },
         jobOverrides: {
           attachmentType: 'long-message',
@@ -1444,8 +1448,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
           isForCurrentlyVisibleMessage: false,
           hasMediaBackups: true,
           abortSignal: abortController.signal,
-          maxAttachmentSize,
-          maxTextAttachmentSize,
+          maxCiphertextAttachmentSize,
+          maxPlaintextTextAttachmentSize,
           messageExpiresAt: null,
           dependencies: {
             cleanupAttachmentFiles,
@@ -1457,6 +1461,39 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         }),
         'AttachmentSizeError'
       );
+    });
+    it('throws AttachmentSizeError if sticker attachment ciphertext > MAX_STICKER_CIPHERTEXT_BYTE_LENGTH', async () => {
+      const job = composeJob({
+        messageId: '1',
+        receivedAt: 1,
+        attachmentOverrides: {
+          size: MAX_STICKER_CIPHERTEXT_BYTE_LENGTH,
+        },
+        jobOverrides: {
+          attachmentType: 'sticker',
+        },
+      });
+
+      await assert.isRejected(
+        runDownloadAttachmentJobInner({
+          job,
+          isForCurrentlyVisibleMessage: false,
+          hasMediaBackups: true,
+          abortSignal: abortController.signal,
+          maxCiphertextAttachmentSize,
+          maxPlaintextTextAttachmentSize,
+          messageExpiresAt: null,
+          dependencies: {
+            cleanupAttachmentFiles,
+            maybeDeleteAttachmentFile,
+            deleteDownloadFile,
+            downloadAttachment,
+            processNewAttachment,
+          },
+        }),
+        'AttachmentSizeError'
+      );
+      assert.strictEqual(downloadAttachment.callCount, 0);
     });
   });
 
@@ -1475,8 +1512,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: true,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1516,8 +1553,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: true,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1574,8 +1611,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: true,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1614,8 +1651,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: true,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1655,8 +1692,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1694,8 +1731,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: true,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1752,8 +1789,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
           isForCurrentlyVisibleMessage: false,
           hasMediaBackups: true,
           abortSignal: abortController.signal,
-          maxAttachmentSize,
-          maxTextAttachmentSize,
+          maxCiphertextAttachmentSize,
+          maxPlaintextTextAttachmentSize,
           messageExpiresAt: null,
           dependencies: {
             cleanupAttachmentFiles,
@@ -1883,8 +1920,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1958,8 +1995,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -1975,7 +2012,7 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
       const updatedMessage = window.MessageCache.getById(newMessage.id);
       const attachment = updatedMessage?.attributes.attachments?.[0];
 
-      assert.strictEqual(attachment.contentType, MIME.VIDEO_QUICKTIME);
+      assert.strictEqual(attachment?.contentType, MIME.VIDEO_QUICKTIME);
       assert.strictEqual(attachment.path, 'newlyDownloadedPath');
     });
 
@@ -2018,8 +2055,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -2035,7 +2072,7 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
       const updatedMessage = window.MessageCache.getById(newMessage.id);
       const attachment = updatedMessage?.attributes.attachments?.[0];
 
-      assert.strictEqual(attachment.path, 'newlyDownloadedPath');
+      assert.strictEqual(attachment?.path, 'newlyDownloadedPath');
     });
 
     it('does not reuse attachment if it does not exist on disk', async () => {
@@ -2060,8 +2097,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,
@@ -2103,8 +2140,8 @@ describe('AttachmentDownloadManager.runDownloadAttachmentJobInner', () => {
         isForCurrentlyVisibleMessage: false,
         hasMediaBackups: false,
         abortSignal: abortController.signal,
-        maxAttachmentSize,
-        maxTextAttachmentSize,
+        maxCiphertextAttachmentSize,
+        maxPlaintextTextAttachmentSize,
         messageExpiresAt: null,
         dependencies: {
           cleanupAttachmentFiles,

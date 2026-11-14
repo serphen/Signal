@@ -4,10 +4,15 @@
 import { memo } from 'react';
 import { useSelector } from 'react-redux';
 
+import OS from '../../util/os/osMain.node.ts';
 import { getDefaultAvatars } from '../../types/Avatar.std.ts';
 import { useConversationsActions } from '../ducks/conversations.preload.ts';
 import { useStandaloneInstallerActions } from '../ducks/standaloneInstaller.preload.ts';
-import { getIntl, getUserConversationId } from '../selectors/user.std.ts';
+import {
+  getIntl,
+  getTheme,
+  getUserConversationId,
+} from '../selectors/user.std.ts';
 import { getMe } from '../selectors/conversations.dom.ts';
 import {
   getDirection,
@@ -15,9 +20,11 @@ import {
   getWorkflow,
 } from '../selectors/standaloneInstaller.std.ts';
 import { StandaloneRegistration } from '../../components/standaloneRegistration/StandaloneRegistration.dom.tsx';
-import { trigger } from '../../shims/events.dom.ts';
 import { getCountryDataForLocale } from '../../util/getCountryData.dom.ts';
 import { RegistrationStage } from '../../types/StandaloneRegistration.std.ts';
+import { getUpdatesState } from '../selectors/updates.std.ts';
+import { useUpdatesActions } from '../ducks/updates.preload.ts';
+import { useAppActions } from '../ducks/app.preload.ts';
 
 export const SmartStandaloneRegistration = memo(
   function SmartStandaloneRegistration() {
@@ -29,6 +36,7 @@ export const SmartStandaloneRegistration = memo(
       finishProfileEntryStage,
       goToAccountLockedStage,
       goToCreatePINStage,
+      goToUpdateRequiredStage,
       moveToCaptchaStage,
       moveToVerificationStage,
       openBrowserForCaptcha,
@@ -42,6 +50,15 @@ export const SmartStandaloneRegistration = memo(
       replaceAvatar: cachedReplaceAvatar,
       saveAvatarToDisk: cachedSaveAvatarToDisk,
     } = useStandaloneInstallerActions();
+    const updates = useSelector(getUpdatesState);
+    const { forceCheck, startUpdate } = useUpdatesActions();
+    const { openEntryPoint } = useAppActions();
+
+    const currentVersion = window.getVersion();
+    const kickOffForcedUpgrade = () => {
+      void forceCheck();
+      goToUpdateRequiredStage();
+    };
 
     const i18n = useSelector(getIntl);
     const countries = getCountryDataForLocale(i18n.getLocale());
@@ -52,6 +69,7 @@ export const SmartStandaloneRegistration = memo(
     const workflow = useSelector(getWorkflow);
     const fatalError = useSelector(getFatalError);
     const direction = useSelector(getDirection);
+    const theme = useSelector(getTheme);
 
     if (!workflow) {
       return undefined;
@@ -74,8 +92,9 @@ export const SmartStandaloneRegistration = memo(
         countries={countries}
         i18n={i18n}
         readyForUpdates={readyForUpdates}
+        theme={theme}
         // The workflow
-        cancelRegistration={() => trigger('setupAsNewDevice')}
+        cancelRegistration={() => openEntryPoint()}
         completeRegistration={completeRegistration}
         createPIN={createPIN}
         direction={direction}
@@ -92,6 +111,13 @@ export const SmartStandaloneRegistration = memo(
         submitVerificationCode={submitVerificationCode}
         verifyPIN={verifyPIN}
         workflow={workflow}
+        // Updates
+        currentVersion={currentVersion}
+        forceCheck={forceCheck}
+        kickOffForcedUpgrade={kickOffForcedUpgrade}
+        OS={OS.getName()}
+        startUpdate={startUpdate}
+        updates={updates}
         // AvatarEditor support
         deleteAvatarFromDisk={
           useCachedAvatarFunctions

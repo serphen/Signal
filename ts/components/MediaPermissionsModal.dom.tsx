@@ -11,6 +11,7 @@ export type PropsType = {
   i18n: LocalizerType;
   mediaType: 'camera' | 'microphone';
   requestor: 'call' | 'voiceNote';
+  osName: 'macos' | 'windows';
   openSystemMediaPermissions: (mediaType: 'camera' | 'microphone') => void;
   onClose: () => void;
 };
@@ -19,6 +20,7 @@ export function MediaPermissionsModal({
   i18n,
   mediaType,
   requestor,
+  osName,
   openSystemMediaPermissions,
   onClose,
 }: PropsType): JSX.Element {
@@ -45,6 +47,21 @@ export function MediaPermissionsModal({
     throw missingCaseError(requestor);
   }
 
+  let stepTwo: string;
+  if (osName === 'macos') {
+    stepTwo = i18n('icu:MediaPermissionsModal__step-2');
+  } else if (osName === 'windows') {
+    if (mediaType === 'camera') {
+      stepTwo = i18n('icu:MediaPermissionsModal__step-2--windows--camera');
+    } else if (mediaType === 'microphone') {
+      stepTwo = i18n('icu:MediaPermissionsModal__step-2--windows--microphone');
+    } else {
+      throw missingCaseError(mediaType);
+    }
+  } else {
+    throw missingCaseError(osName);
+  }
+
   const onClick = useCallback(
     () => openSystemMediaPermissions(mediaType),
     [openSystemMediaPermissions, mediaType]
@@ -56,22 +73,28 @@ export function MediaPermissionsModal({
         <AxoAlertDialog.Body>
           <AxoAlertDialog.Title>{title}</AxoAlertDialog.Title>
           <AxoAlertDialog.Description>
-            <p className={tw('mb-2')}>{subtitle}</p>
-            <ol className={tw('flex list-inside list-decimal flex-col gap-1')}>
+            <p className={tw('mb-2 text-primary')}>{subtitle}</p>
+            <ol
+              className={tw(
+                'flex list-inside list-decimal flex-col gap-1 text-primary'
+              )}
+            >
               <li>
                 {i18n('icu:MediaPermissionsModal__step-1', {
                   buttonName: i18n('icu:MediaPermissionsModal__open'),
                 })}
               </li>
               <li>
-                <img
-                  className={tw('me-1 inline-block')}
-                  alt=""
-                  src="images/macos-switch.svg"
-                  width={30}
-                  height={20}
-                />
-                {i18n('icu:MediaPermissionsModal__step-2')}
+                {osName === 'macos' && (
+                  <img
+                    className={tw('me-1 inline-block')}
+                    alt=""
+                    src="images/macos-switch.svg"
+                    width={30}
+                    height={20}
+                  />
+                )}
+                {stepTwo}
               </li>
             </ol>
           </AxoAlertDialog.Description>

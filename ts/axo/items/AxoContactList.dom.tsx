@@ -8,6 +8,7 @@ import { AxoList } from './AxoList.dom.tsx';
 import type { AxoIconButton } from '../AxoIconButton.dom.tsx';
 import { forwardExtraPropsForRadix } from '../_internal/props.dom.tsx';
 import { tw } from '../tw.dom.tsx';
+import { AriaList } from '../aria/AriaList.dom.tsx';
 
 export namespace AxoContactList {
   /**
@@ -23,11 +24,15 @@ export namespace AxoContactList {
   export const Root: FC<RootProps> = memo(props => {
     return (
       <AxoList.Root>
-        <AxoList.Header>
-          <AxoList.Title>{props.title}</AxoList.Title>
-        </AxoList.Header>
+        {props.title != null && (
+          <AxoList.Header>
+            <AxoList.Label>{props.title}</AxoList.Label>
+          </AxoList.Header>
+        )}
         <AxoList.Body>
-          <AxoBaseItem.Group spacing="sm">{props.children}</AxoBaseItem.Group>
+          <AriaList.Root asChild>
+            <AxoBaseItem.Group spacing="sm">{props.children}</AxoBaseItem.Group>
+          </AriaList.Root>
         </AxoList.Body>
       </AxoList.Root>
     );
@@ -43,6 +48,7 @@ export namespace AxoContactList {
     avatar: ReactNode;
     title: ReactNode;
     description?: ReactNode;
+    allowDescriptionOverflow?: boolean;
     value?: ReactNode;
     accessory?: ReactNode;
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -51,20 +57,26 @@ export namespace AxoContactList {
   export const Item: FC<ItemProps> = memo(props => {
     const id = useId();
     return (
-      <AxoBaseItem.Root>
-        <AxoBaseItem.LegacyAvatarSlot>
-          {props.avatar}
-        </AxoBaseItem.LegacyAvatarSlot>
-        <AxoBaseItem.Content>
-          <AxoBaseItem.Body>
-            <AxoBaseItem.Title id={id}>{props.title}</AxoBaseItem.Title>
+      <AriaList.Item asChild>
+        <AxoBaseItem.Root>
+          <AxoBaseItem.Leading>{props.avatar}</AxoBaseItem.Leading>
+          <AxoBaseItem.Content>
+            <AriaList.Label asChild id={id}>
+              <AxoBaseItem.Label>{props.title}</AxoBaseItem.Label>
+            </AriaList.Label>
             {props.value != null && (
-              <AxoBaseItem.Value>{props.value}</AxoBaseItem.Value>
+              <AriaList.Label asChild>
+                <AxoBaseItem.Value>{props.value}</AxoBaseItem.Value>
+              </AriaList.Label>
             )}
             {props.description != null && (
-              <AxoBaseItem.Description truncate>
-                {props.description}
-              </AxoBaseItem.Description>
+              <AriaList.Description asChild>
+                <AxoBaseItem.Description
+                  truncate={!props.allowDescriptionOverflow}
+                >
+                  {props.description}
+                </AxoBaseItem.Description>
+              </AriaList.Description>
             )}
             {props.onClick != null && (
               <AxoBaseItem.HiddenTrigger
@@ -72,12 +84,12 @@ export namespace AxoContactList {
                 onClick={props.onClick}
               />
             )}
-          </AxoBaseItem.Body>
-          {props.accessory != null && (
-            <AxoBaseItem.Accessory>{props.accessory}</AxoBaseItem.Accessory>
-          )}
-        </AxoBaseItem.Content>
-      </AxoBaseItem.Root>
+            {props.accessory != null && (
+              <AxoBaseItem.Accessory>{props.accessory}</AxoBaseItem.Accessory>
+            )}
+          </AxoBaseItem.Content>
+        </AxoBaseItem.Root>
+      </AriaList.Item>
     );
   });
 
@@ -91,7 +103,7 @@ export namespace AxoContactList {
   export type ItemActionVariant = 'subtle-secondary';
 
   export type ItemActionProps = Readonly<{
-    ref?: Ref<HTMLButtonElement | null>;
+    ref?: Ref<HTMLButtonElement>;
     variant: ItemActionVariant;
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
     children: ReactNode;
@@ -121,7 +133,7 @@ export namespace AxoContactList {
   export type ItemIconActionVariant = 'implied-secondary';
 
   export type ItemIconActionProps = Readonly<{
-    ref?: Ref<HTMLButtonElement | null>;
+    ref?: Ref<HTMLButtonElement>;
     variant: ItemIconActionVariant;
     label: string;
     symbol: AxoSymbol.Name;
@@ -160,20 +172,24 @@ export namespace AxoContactList {
   export const ActionItem: FC<ActionItemProps> = memo(props => {
     const id = useId();
     return (
-      <AxoBaseItem.Root>
-        <AxoBaseItem.IconAvatar size={32} symbol={props.symbol} />
-        <AxoBaseItem.Content>
-          <AxoBaseItem.Body>
-            <AxoBaseItem.Title id={id}>{props.title}</AxoBaseItem.Title>
+      <AriaList.Item asChild>
+        <AxoBaseItem.Root>
+          <AxoBaseItem.Leading>
+            <AxoBaseItem.IconAvatar size={32} symbol={props.symbol} />
+          </AxoBaseItem.Leading>
+          <AxoBaseItem.Content>
+            <AriaList.Label asChild id={id}>
+              <AxoBaseItem.Label>{props.title}</AxoBaseItem.Label>
+            </AriaList.Label>
             {props.onClick != null && (
               <AxoBaseItem.HiddenTrigger
                 labelledby={id}
                 onClick={props.onClick}
               />
             )}
-          </AxoBaseItem.Body>
-        </AxoBaseItem.Content>
-      </AxoBaseItem.Root>
+          </AxoBaseItem.Content>
+        </AxoBaseItem.Root>
+      </AriaList.Item>
     );
   });
 
@@ -190,15 +206,17 @@ export namespace AxoContactList {
 
   export const EmptyStateItem: FC<EmptyStateItemProps> = memo(props => {
     return (
-      <AxoBaseItem.Root>
-        <AxoBaseItem.Content>
-          <AxoBaseItem.Body>
-            <AxoBaseItem.Title truncate>
-              <span className={tw('text-secondary')}>{props.title}</span>
-            </AxoBaseItem.Title>
-          </AxoBaseItem.Body>
-        </AxoBaseItem.Content>
-      </AxoBaseItem.Root>
+      <AriaList.Item asChild>
+        <AxoBaseItem.Root>
+          <AxoBaseItem.Content>
+            <AriaList.Label asChild>
+              <AxoBaseItem.Label truncate>
+                <span className={tw('text-secondary')}>{props.title}</span>
+              </AxoBaseItem.Label>
+            </AriaList.Label>
+          </AxoBaseItem.Content>
+        </AxoBaseItem.Root>
+      </AriaList.Item>
     );
   });
 

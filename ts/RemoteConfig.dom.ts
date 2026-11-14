@@ -44,8 +44,6 @@ const SemverKeys = [
   'desktop.groupTerminate.send.prod',
   'desktop.keyTransparency.beta',
   'desktop.keyTransparency.prod',
-  'desktop.localBackups.beta',
-  'desktop.localBackups.prod',
   'desktop.pollSend1to1.beta',
   'desktop.pollSend1to1.prod',
   'desktop.remoteMute.send.beta',
@@ -54,6 +52,10 @@ const SemverKeys = [
   'desktop.retireAccessKeyGroupSend.prod',
   'desktop.sendMessageViaLibsignal.beta',
   'desktop.sendMessageViaLibsignal.prod',
+  'desktop.shareContact.beta',
+  'desktop.shareContact.prod',
+  'desktop.stickerFavorites.beta',
+  'desktop.stickerFavorites.prod',
   'desktop.stickerReply.send.beta',
   'desktop.stickerReply.send.prod',
 ] as const;
@@ -62,18 +64,21 @@ export type SemverKeyType = ArrayValues<typeof SemverKeys>;
 
 const ScalarKeys = [
   'client.maxAllowedClockSkewSeconds',
+  'client.attachments.videoTranscodingConfiguration',
   'desktop.callQualitySurveyPPM',
   'desktop.calling.dredDuration.alpha',
   'desktop.calling.dredDuration.beta',
   'desktop.calling.dredDuration.prod',
+  'desktop.calling.enableSvc',
+  'desktop.calling.svcMode',
+  'desktop.calling.svcModeForScreenshare',
+  'desktop.calling.svcMaxBitrateBps',
   'desktop.clientExpiration',
   'desktop.heapSizeWarning',
   'desktop.internalUser',
   'desktop.loggingErrorToasts',
   'desktop.mediaQuality.levels',
   'desktop.messageCleanup',
-  'desktop.recentGifs.allowLegacyTenorCdnUrls',
-  'desktop.requirePqRatio',
   'desktop.retryRespondMaxAge',
   'desktop.senderKey.retry',
   'desktop.senderKeyMaxAge',
@@ -111,12 +116,16 @@ const KnownDesktopLibsignalNetKeys = [
   'desktop.libsignalNet.grpc.AttachmentsGetUploadForm.beta',
   'desktop.libsignalNet.grpc.BackupsAnonymousGetUploadForm',
   'desktop.libsignalNet.grpc.BackupsAnonymousGetUploadForm.beta',
+  'desktop.libsignalNet.grpc.KeyTransparencyQueryServiceSearchV2',
+  'desktop.libsignalNet.grpc.KeyTransparencyQueryServiceSearchV2.beta',
   'desktop.libsignalNet.grpc.MessagesAnonymousSendMultiRecipientMessage.2',
   'desktop.libsignalNet.grpc.MessagesAnonymousSendMultiRecipientMessage.2.beta',
   'desktop.libsignalNet.grpc.MessagesAnonymousSendSingleRecipientMessage',
   'desktop.libsignalNet.grpc.MessagesAnonymousSendSingleRecipientMessage.beta',
   'desktop.libsignalNet.grpc.MessagesSendMessage',
   'desktop.libsignalNet.grpc.MessagesSendMessage.beta',
+  'desktop.libsignalNet.offerCompressionForKeyTransparency',
+  'desktop.libsignalNet.offerCompressionForKeyTransparency.beta',
 ] as const;
 
 type KnownLibsignalKeysType = StripPrefix<
@@ -397,7 +406,7 @@ export function isCountryPpmCsvBucketEnabled(
   e164: string | undefined,
   aci: AciString | undefined
 ): boolean {
-  if (e164 == null || aci == null) {
+  if (aci == null) {
     return false;
   }
 

@@ -22,7 +22,7 @@ import { getHasAnyFailedStorySends } from '../selectors/stories.preload.ts';
 import { getHasPendingUpdate } from '../selectors/updates.std.ts';
 import { getSelectedConversationId } from '../selectors/nav.std.ts';
 import {
-  getOtherTabsUnreadStats,
+  getOtherTabsUnreadCount,
   getTargetedMessage,
   getTargetedMessageSource,
   getLeftPaneLists,
@@ -47,7 +47,7 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
   const navTabsCollapsed = useSelector(getNavTabsCollapsed);
   const hasFailedStorySends = useSelector(getHasAnyFailedStorySends);
   const hasPendingUpdate = useSelector(getHasPendingUpdate);
-  const otherTabsUnreadStats = useSelector(getOtherTabsUnreadStats);
+  const otherTabsUnreadCount = useSelector(getOtherTabsUnreadCount);
   const selectedConversationId = useSelector(getSelectedConversationId);
   const targetedMessageId = useSelector(getTargetedMessage)?.id;
   const targetedMessageSource = useSelector(getTargetedMessageSource);
@@ -72,16 +72,18 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
     if (selectedConversationId !== lastOpenedConversationId.current) {
       if (lastOpenedConversationId.current) {
         saveDraftRecordingIfNeeded(lastOpenedConversationId.current);
-        onConversationClosed(
+        void onConversationClosed(
           lastOpenedConversationId.current,
           'ChatsTab opened another chat'
         );
       }
-      updateChatFolderStateOnTargetConversationChanged(selectedConversationId);
+      void updateChatFolderStateOnTargetConversationChanged(
+        selectedConversationId
+      );
 
       lastOpenedConversationId.current = selectedConversationId;
       if (selectedConversationId) {
-        onConversationOpened(
+        void onConversationOpened(
           selectedConversationId,
           targetedMessageId,
           targetedMessageSource
@@ -92,7 +94,7 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
       targetedMessageId &&
       targetedMessageSource === TargetedMessageSource.NavigateToMessage
     ) {
-      scrollToMessage(selectedConversationId, targetedMessageId);
+      void scrollToMessage(selectedConversationId, targetedMessageId);
     }
   }, [
     onConversationClosed,
@@ -111,7 +113,7 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
       if (!lastOpenedConversationId.current) {
         return;
       }
-      onConversationClosed(
+      void onConversationClosed(
         lastOpenedConversationId.current,
         'force unload requested'
       );
@@ -152,7 +154,7 @@ export const SmartChatsTab = memo(function SmartChatsTab() {
 
   return (
     <ChatsTab
-      otherTabsUnreadStats={otherTabsUnreadStats}
+      otherTabsUnreadCount={otherTabsUnreadCount}
       i18n={i18n}
       isStaging={isStagingServer()}
       hasFailedStorySends={hasFailedStorySends}

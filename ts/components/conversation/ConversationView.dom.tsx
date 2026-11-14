@@ -196,7 +196,7 @@ export function ConversationView({
   const isSignalConvo = isSignalConversation({ id: conversationId });
   return (
     <div
-      className="ConversationView ConversationPanel"
+      className="ConversationPanel"
       onDrop={onDrop}
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}

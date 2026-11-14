@@ -7,7 +7,6 @@ import { memo } from 'react';
 import type { LocalizerType, ThemeType } from '../../types/Util.std.ts';
 import type { GetSharedGroupNamesType } from '../../util/sharedGroupNames.dom.ts';
 
-import type { InteractionModeType } from '../../state/ducks/conversations.preload.ts';
 import { TimelineDateHeader } from './TimelineDateHeader.dom.tsx';
 import type {
   Props as AllMessageProps,
@@ -69,12 +68,13 @@ import {
 } from './MessageRequestResponseNotification.dom.tsx';
 import type { MessageRequestState } from './MessageRequestActionsConfirmation.dom.tsx';
 import type { MessageInteractivity } from './Message.dom.tsx';
-import type { PinMessageData } from '../../model-types.d.ts';
+import type { PinMessageData } from '../../model-types.std.ts';
 import type { AciString } from '../../types/ServiceId.std.ts';
 import type { RenderItemProps } from '../../state/smart/TimelineItem.preload.tsx';
 import type { CollapseSet } from '../../util/CollapseSet.std.ts';
 import { CollapseSetViewer } from './CollapseSet.dom.tsx';
 import type { TargetedMessageType } from '../../state/selectors/conversations.dom.ts';
+import type { TargetedMessageSource } from '../../state/ducks/conversationsEnums.std.ts';
 
 type CallHistoryType = {
   type: 'callHistory';
@@ -225,7 +225,11 @@ type PropsLocalType = {
     pollTimestamp: number,
     conversationId: string
   ) => unknown;
-  targetMessage: (messageId: string, conversationId: string) => unknown;
+  targetMessage: (
+    messageId: string,
+    conversationId: string,
+    targetedMessageSource: TargetedMessageSource
+  ) => void;
   toggleSelectMessage: (
     conversationId: string,
     messageId: string,
@@ -240,8 +244,7 @@ type PropsLocalType = {
   renderUniversalTimerNotification: () => JSX.Element;
   renderItem: (props: RenderItemProps) => JSX.Element;
   i18n: LocalizerType;
-  interactionMode: InteractionModeType;
-  targetedMessage: TargetedMessageType | undefined;
+  targetedMessage: TargetedMessageType | null;
   theme: ThemeType;
 };
 

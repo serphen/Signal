@@ -28,14 +28,15 @@ import { Tabs } from './Tabs.dom.tsx';
 import { Theme } from '../util/theme.std.ts';
 import { ThemeType } from '../types/Util.std.ts';
 import { WidthBreakpoint } from './_util.std.ts';
-import { getAvatarColor } from '../types/Colors.std.ts';
+import { DEFAULT_BUBBLE_COLOR } from '../types/ChatStyle.std.ts';
+import { getAvatarColor } from '../types/Avatar.std.ts';
 import { shouldNeverBeCalled } from '../util/shouldNeverBeCalled.std.ts';
 import { FunEmojiPicker } from './fun/FunEmojiPicker.dom.tsx';
 import { FunEmojiPickerButton } from './fun/FunButton.dom.tsx';
 import type { FunEmojiSelection } from './fun/panels/FunPanelEmojis.dom.tsx';
 import { useConfirmDiscard } from '../hooks/useConfirmDiscard.dom.tsx';
-import { AxoContextMenu } from '../axo/AxoContextMenu.dom.tsx';
-import type { AxoMenuBuilder } from '../axo/AxoMenuBuilder.dom.tsx';
+import { AxoContextMenu } from '../axo/menus/AxoContextMenu.dom.tsx';
+import type { AxoMenuBuilder } from '../axo/menus/AxoMenuBuilder.dom.tsx';
 import { drop } from '../util/drop.std.ts';
 import type { ContactModalStateType } from '../types/globalModals.std.ts';
 import type { Emoji } from '../axo/emoji.std.ts';
@@ -52,7 +53,6 @@ const MESSAGE_DEFAULT_PROPS = {
   canRetryDeleteForEveryone: false,
   canSendPollVote: false,
   retryDeleteForEveryone: shouldNeverBeCalled,
-  checkForAccount: shouldNeverBeCalled,
   clearTargetedMessage: shouldNeverBeCalled,
   containerWidthBreakpoint: WidthBreakpoint.Medium,
   doubleCheckMissingQuoteReference: shouldNeverBeCalled,
@@ -62,6 +62,7 @@ const MESSAGE_DEFAULT_PROPS = {
   isSelected: false,
   isSelectMode: false,
   isSMS: false,
+  handleClickCtaButton: shouldNeverBeCalled,
   onToggleSelect: shouldNeverBeCalled,
   onReplyToMessage: shouldNeverBeCalled,
   kickOffAttachmentDownload: shouldNeverBeCalled,
@@ -87,7 +88,7 @@ const MESSAGE_DEFAULT_PROPS = {
   showLightboxForViewOnceMedia: shouldNeverBeCalled,
   showMediaNoLongerAvailableToast: shouldNeverBeCalled,
   showTapToViewNotAvailableModal: shouldNeverBeCalled,
-  startConversation: shouldNeverBeCalled,
+  startConversationWithSharedContact: shouldNeverBeCalled,
   theme: ThemeType.dark,
   viewStory: shouldNeverBeCalled,
 };
@@ -234,6 +235,7 @@ export function StoryViewsNRepliesModal({
   const onTryClose = useCallback(() => {
     confirmDiscardIf(emojiPickerOpen || messageBodyText.length > 0, onClose);
   }, [confirmDiscardIf, emojiPickerOpen, messageBodyText, onClose]);
+  // oxlint-disable-next-line react/refs
   tryClose.current = onTryClose;
 
   if (group && group.left) {
@@ -265,7 +267,7 @@ export function StoryViewsNRepliesModal({
               inputApi={inputApiRef}
               isActive
               isFormattingEnabled={isFormattingEnabled}
-              moduleClassName="StoryViewsNRepliesModal__input"
+              className="StoryViewsNRepliesModal__input"
               onCloseLinkPreview={noop}
               showRecoveryKeyPasteWarning={false}
               onEditorStateChange={({ messageText }) => {
@@ -392,7 +394,7 @@ export function StoryViewsNRepliesModal({
     );
   } else if (sortedViews.length) {
     viewsElement = (
-      <div className="StoryViewsNRepliesModal__views">
+      <div>
         {sortedViews.map(view => (
           <div
             className="StoryViewsNRepliesModal__view"
@@ -416,7 +418,7 @@ export function StoryViewsNRepliesModal({
             {view.updatedAt && (
               <MessageTimestamp
                 i18n={i18n}
-                module="StoryViewsNRepliesModal__view--timestamp"
+                className="StoryViewsNRepliesModal__view--timestamp"
                 timestamp={view.updatedAt}
               />
             )}
@@ -437,7 +439,7 @@ export function StoryViewsNRepliesModal({
       <Tabs
         selectedTab={currentTab}
         onTabChange={onTabChange}
-        moduleClassName="StoryViewsNRepliesModal__tabs"
+        className="StoryViewsNRepliesModal__tabs"
         tabs={[
           {
             id: StoryViewsNRepliesTab.Views,
@@ -476,7 +478,7 @@ export function StoryViewsNRepliesModal({
       <Modal
         modalName="StoryViewsNRepliesModal"
         i18n={i18n}
-        moduleClassName={classNames({
+        className={classNames({
           StoryViewsNRepliesModal: true,
           'StoryViewsNRepliesModal--group': Boolean(group),
         })}
@@ -655,7 +657,7 @@ function ReplyOrReactionMessage({
             <MessageTimestamp
               i18n={i18n}
               isRelativeTime
-              module="StoryViewsNRepliesModal__reply--timestamp"
+              className="StoryViewsNRepliesModal__reply--timestamp"
               timestamp={reply.timestamp}
             />
           </div>
@@ -673,7 +675,7 @@ function ReplyOrReactionMessage({
         bodyRanges={reply.bodyRanges}
         contactNameColor={reply.contactNameColor}
         containerElementRef={containerElementRef}
-        conversationColor="ultramarine"
+        bubbleColor={DEFAULT_BUBBLE_COLOR}
         conversationId={reply.conversationId}
         conversationTitle={reply.author.title}
         conversationType="group"
@@ -685,7 +687,6 @@ function ReplyOrReactionMessage({
         platform={platform}
         id={reply.id}
         interactivity={MessageInteractivity.Normal}
-        interactionMode="mouse"
         isSpoilerExpanded={isSpoilerExpanded}
         isSignalConversation={false}
         isVoiceMessagePlayed={false}
@@ -700,6 +701,9 @@ function ReplyOrReactionMessage({
         showContactModal={showContactModal}
         showSpoiler={showSpoiler}
         text={reply.body}
+        isTargeted={false}
+        isTargetedCounter={null}
+        isTargetedSource={null}
         textDirection={TextDirection.Default}
         timestamp={reply.timestamp}
       />

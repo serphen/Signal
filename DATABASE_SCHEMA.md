@@ -4,6 +4,21 @@
 # Database Schema
 
 <details>
+<summary>Table: account</summary>
+
+```sql
+CREATE TABLE account (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  defaultBubbleColorPreset TEXT,
+  defaultCustomChatColorId INTEGER REFERENCES customChatColors (id) ON DELETE SET NULL
+) STRICT
+```
+
+---
+
+</details>
+
+<details>
 <summary>Table: attachment_backup_jobs</summary>
 
 ```sql
@@ -349,6 +364,15 @@ CREATE INDEX callLinks_deleted ON callLinks (deleted, roomId)
 </details>
 
 <details>
+<summary>Index: callLinks → callLinks_expiring</summary>
+
+```sql
+CREATE INDEX callLinks_expiring ON callLinks (deletedAt)
+```
+
+</details>
+
+<details>
 <summary>Index: callLinks → sqlite_autoindex_callLinks_1</summary>
 
 ```text
@@ -524,7 +548,9 @@ CREATE TABLE conversations (
   serviceId TEXT,
   groupId TEXT,
   profileLastFetchedAt INTEGER,
-  expireTimerVersion INTEGER NOT NULL DEFAULT 1
+  expireTimerVersion INTEGER NOT NULL DEFAULT 1,
+  bubbleColorPreset TEXT,
+  customChatColorId INTEGER REFERENCES customChatColors (id) ON DELETE SET NULL
 )
 ```
 
@@ -535,6 +561,15 @@ CREATE TABLE conversations (
 CREATE INDEX conversations_active ON conversations (active_at)
 WHERE
   active_at IS NOT NULL
+```
+
+</details>
+
+<details>
+<summary>Index: conversations → conversations_customChatColorId</summary>
+
+```sql
+CREATE INDEX conversations_customChatColorId ON conversations (customChatColorId)
 ```
 
 </details>
@@ -591,6 +626,23 @@ WHERE
 </details>
 
 <details>
+<summary>Table: customChatColors</summary>
+
+```sql
+CREATE TABLE customChatColors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  solid INTEGER,
+  gradientStart INTEGER,
+  gradientEnd INTEGER,
+  gradientAngle INTEGER
+) STRICT
+```
+
+---
+
+</details>
+
+<details>
 <summary>Table: defunctCallLinks</summary>
 
 ```sql
@@ -601,9 +653,19 @@ CREATE TABLE defunctCallLinks (
   storageID TEXT,
   storageVersion INTEGER,
   storageUnknownFields BLOB,
-  storageNeedsSync INTEGER NOT NULL DEFAULT 0
+  storageNeedsSync INTEGER NOT NULL DEFAULT 0,
+  addedAt INTEGER NOT NULL
 ) STRICT
 ```
+
+<details>
+<summary>Index: defunctCallLinks → defunctCallLinks_expiring</summary>
+
+```sql
+CREATE INDEX defunctCallLinks_expiring ON defunctCallLinks (addedAt)
+```
+
+</details>
 
 <details>
 <summary>Index: defunctCallLinks → sqlite_autoindex_defunctCallLinks_1</summary>
@@ -690,6 +752,49 @@ CREATE INDEX edited_messages_unread ON edited_messages (
   readStatus,
   conversationId
 )
+```
+
+</details>
+
+---
+
+</details>
+
+<details>
+<summary>Table: favorite_stickers</summary>
+
+```sql
+CREATE TABLE favorite_stickers (
+  packId TEXT NOT NULL,
+  stickerId INTEGER NOT NULL,
+  packKey TEXT,
+  favoritedAtTimestampMs INTEGER,
+  deletedAtTimestampMs INTEGER,
+  status TEXT NOT NULL,
+  storageID TEXT,
+  storageVersion INTEGER,
+  storageUnknownFields BLOB,
+  storageNeedsSync INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (packId, stickerId)
+) STRICT
+```
+
+<details>
+<summary>Index: favorite_stickers → favorite_stickers_by_favoritedAtTimestampMs</summary>
+
+```sql
+CREATE INDEX favorite_stickers_by_favoritedAtTimestampMs on favorite_stickers (
+  favoritedAtTimestampMs
+)
+```
+
+</details>
+
+<details>
+<summary>Index: favorite_stickers → sqlite_autoindex_favorite_stickers_1</summary>
+
+```text
+(404: SQL Not Found)
 ```
 
 </details>
@@ -1072,6 +1177,8 @@ CREATE TABLE message_attachments (
   receivedAtMs INTEGER,
   isViewOnce INTEGER,
   duration REAL,
+  audioWaveform BLOB,
+  transcodingTargetQuality INTEGER,
   PRIMARY KEY (
     messageId,
     editHistoryIndex,

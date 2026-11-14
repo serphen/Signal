@@ -17,6 +17,7 @@ import type {
 import type { LocalizerType, ThemeType } from '../types/Util.std.ts';
 import {
   type ContactModalStateType,
+  PinReminderState,
   UsernameOnboardingState,
 } from '../types/globalModals.std.ts';
 import { missingCaseError } from '../util/missingCaseError.std.ts';
@@ -103,6 +104,7 @@ export type PropsType = {
     | {
         mediaType: 'camera' | 'microphone';
         requestor: 'call' | 'voiceNote';
+        osName: 'macos' | 'windows';
       }
     | undefined;
   closeMediaPermissionsModal: () => void;
@@ -180,6 +182,15 @@ export type PropsType = {
   // TerminateGroupFailedModal
   terminateGroupFailedModal: { conversationId: string } | null;
   renderTerminateGroupFailedModal: () => JSX.Element | null;
+  // GroupV2JoinDialog
+  groupV2JoinDialogOpen: boolean;
+  renderGroupV2JoinDialog: () => JSX.Element;
+  // PinChangeModal
+  isPinChangeModalVisible: boolean;
+  renderPinChangeModal: () => JSX.Element | null;
+  // PinReminderModal
+  pinReminderState: PinReminderState;
+  renderPinReminderModal: () => JSX.Element | null;
 };
 
 export function GlobalModalContainer({
@@ -245,6 +256,12 @@ export function GlobalModalContainer({
   // PinMessageDialog
   pinMessageDialogData,
   renderPinMessageDialog,
+  // PinChangeModal
+  isPinChangeModalVisible,
+  renderPinChangeModal,
+  // PinReminderModal
+  pinReminderState,
+  renderPinReminderModal,
   // SafetyNumberModal
   safetyNumberModalContactId,
   renderSafetyNumber,
@@ -307,6 +324,9 @@ export function GlobalModalContainer({
   // TerminateGroupFailedModal
   terminateGroupFailedModal,
   renderTerminateGroupFailedModal,
+  // GroupV2JoinDialog
+  groupV2JoinDialogOpen,
+  renderGroupV2JoinDialog,
 }: PropsType): JSX.Element | null {
   // We want the following dialogs to show in this order:
   // 0. Stateful multi-modal workflows
@@ -340,6 +360,10 @@ export function GlobalModalContainer({
   // Safety Number
   if (hasSafetyNumberChangeModal || safetyNumberChangedBlockingData) {
     return renderSendAnywayDialog();
+  }
+
+  if (groupV2JoinDialogOpen) {
+    return renderGroupV2JoinDialog();
   }
 
   // Forward Modal
@@ -411,6 +435,16 @@ export function GlobalModalContainer({
 
   if (pinMessageDialogData) {
     return renderPinMessageDialog();
+  }
+
+  // PIN change renders with precedence over the reminder modal, since
+  // the reminder modal can open the PIN change modal.
+  if (isPinChangeModalVisible) {
+    return renderPinChangeModal();
+  }
+
+  if (pinReminderState === PinReminderState.Modal) {
+    return renderPinReminderModal();
   }
 
   if (isProfileNameWarningModalVisible) {
@@ -514,7 +548,7 @@ export function GlobalModalContainer({
         title={null}
         description={content}
       >
-        <AxoConfirmDialog.Cancel>{i18n('icu:ok')}</AxoConfirmDialog.Cancel>
+        <AxoConfirmDialog.Ok />
       </AxoConfirmDialog.Root>
     );
   }

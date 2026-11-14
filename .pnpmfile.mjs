@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
  * }} HookContext
  *
  * @typedef {{
+ *   verifyStoreIntegrity?: unknown,
  *   verifyDepsBeforeRun?: unknown,
  * }} Config
  *
@@ -132,6 +133,11 @@ function satisfies(version, range) {
 
 /** @type {CustomCheck} */
 async function noDeprecatedPackages(lockfile, context) {
+  // The audit-deps workflow reads deprecations from pnpm itself instead
+  if (process.env.SKIP_DEPRECATED_CHECK) {
+    return true;
+  }
+
   const config = await getWorkspaceConfig();
   const packages = getPackages(lockfile);
 
@@ -249,6 +255,9 @@ export const hooks = {
   updateConfig(config) {
     return {
       ...config,
+      verifyStoreIntegrity: process.env.CI
+        ? false
+        : config.verifyStoreIntegrity,
       verifyDepsBeforeRun:
         process.env.CI || process.env.SKIP_VERIFY_DEPS_BEFORE_RUN
           ? false

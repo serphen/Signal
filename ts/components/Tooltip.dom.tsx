@@ -15,11 +15,9 @@ import lodash from 'lodash';
 import { Manager, Reference, Popper } from 'react-popper';
 import type { StrictModifiers } from '@popperjs/core';
 import { createPortal } from 'react-dom';
-import type { Theme } from '../util/theme.std.ts';
-import { themeClassName } from '../util/theme.std.ts';
+import { Theme } from '../util/theme.std.ts';
 import { refMerger } from '../util/refMerger.std.ts';
 import { offsetDistanceModifier } from '../util/popperUtil.std.ts';
-import { getInteractionMode } from '../services/InteractionMode.dom.ts';
 
 const { noop } = lodash;
 
@@ -49,9 +47,7 @@ const TooltipEventWrapper = forwardRef<HTMLSpanElement, EventWrapperPropsType>(
     }, [onHoverChanged]);
 
     const onFocus = useCallback(() => {
-      if (getInteractionMode() === 'keyboard') {
-        on();
-      }
+      on();
     }, [on]);
 
     useEffect(() => {
@@ -123,10 +119,6 @@ export function Tooltip({
 
   const showTooltip = active || Boolean(sticky);
 
-  const tooltipThemeClassName = theme
-    ? `module-tooltip--${themeClassName(theme)}`
-    : undefined;
-
   function handleHoverChanged(hovering: boolean) {
     // Don't accept updates that aren't valid anymore
     clearTimeout(GLOBAL_EXIT_TIMER);
@@ -189,7 +181,7 @@ export function Tooltip({
               <div
                 className={classNames(
                   'module-tooltip',
-                  tooltipThemeClassName,
+                  theme === Theme.Dark && 'module-tooltip--dark-theme',
                   className
                 )}
                 ref={ref}

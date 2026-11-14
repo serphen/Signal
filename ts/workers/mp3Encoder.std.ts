@@ -1,64 +1,34 @@
 // Copyright 2026 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+/// <reference types="audioworklet">
 
 import type {
   WorkletMessageType,
   RendererMessageType,
 } from '../types/AudioRecorder.std.ts';
 import { Encoder } from '@signalapp/lame';
-
-declare const sampleRate: number;
-
-type AudioWorkletProcessor = Readonly<{
-  port: MessagePort;
-}>;
-
-declare const AudioWorkletProcessor: {
-  prototype: AudioWorkletProcessor;
-  new (): AudioWorkletProcessor;
-};
-
-type AudioWorkletProcessorImpl = Readonly<{
-  process: (inputs: Array<Array<Float32Array<ArrayBuffer>>>) => boolean;
-}> &
-  AudioWorkletProcessor;
-
-type AudioWorkletProcessorConstructor = Readonly<{
-  new (): AudioWorkletProcessorImpl;
-}>;
-
-declare function registerProcessor(
-  name: string,
-  processorCtor: AudioWorkletProcessorConstructor
-): void;
+import { WaveformBuilder, toPeak } from '../util/waveformBuilder.std.ts';
+import { DurationInSeconds } from '../util/durations/index.std.ts';
 
 const BIT_RATE = 90;
 const Q = 7;
 
 // Produce a peak value every 100 milliseconds
 const PEAK_EVERY_S = 0.1;
-const PEAK_EVERY = Math.round(sampleRate * PEAK_EVERY_S);
+const PEAK_EVERY = Math.round(globalThis.sampleRate * PEAK_EVERY_S);
 
-// Compute maximum peak over last 5 seconds
-const WINDOW_SIZE = Math.round(5 / PEAK_EVERY_S);
-
-const MAX_DECAY = 0.8;
-
-class Mp3Encoder
-  extends AudioWorkletProcessor
-  implements AudioWorkletProcessorImpl
-{
+class Mp3Encoder extends globalThis.AudioWorkletProcessor {
   readonly #encoder = new Encoder({
     q: Q,
-    sampleRate,
+    sampleRate: globalThis.sampleRate,
     bitRate: BIT_RATE,
   });
   #isStopped = false;
   #peakSquares = 0;
   #peakSamples = 0;
-  #window = new Array<number>();
-  #windowOffset = 0;
-  #previousMax = 1;
+
+  #totalSamples = 0;
+  readonly #waveform = new WaveformBuilder();
 
   constructor() {
     super();
@@ -80,6 +50,10 @@ class Mp3Encoder
           type: 'complete',
           lametagFrame,
           finalFrame: chunk,
+          waveform: this.#waveform.collect(),
+          duration: DurationInSeconds.fromSeconds(
+            this.#totalSamples / globalThis.sampleRate
+          ),
         } satisfies WorkletMessageType,
         [lametagFrame.buffer, chunk.buffer]
       );
@@ -102,38 +76,9 @@ class Mp3Encoder
     }
 
     for (const sample of channel) {
-      this.#peakSquares += sample ** 2;
-      this.#peakSamples += 1;
-      if (this.#peakSamples < PEAK_EVERY) {
-        continue;
-      }
-
-      const peak = Math.min(
-        1,
-        Math.max(0, Math.sqrt(this.#peakSquares / this.#peakSamples))
-      );
-      this.#window[this.#windowOffset] = peak;
-      this.#windowOffset = (this.#windowOffset + 1) % WINDOW_SIZE;
-
-      let max = 1e-23;
-      for (const oldPeak of this.#window) {
-        max = Math.max(max, oldPeak);
-      }
-
-      this.#previousMax *= MAX_DECAY;
-      if (this.#previousMax < max) {
-        this.#previousMax = max;
-      } else {
-        max = this.#previousMax;
-      }
-
-      this.#peakSquares = 0;
-      this.#peakSamples = 0;
-
-      this.port.postMessage({
-        type: 'peak',
-        peak: peak / max,
-      } satisfies WorkletMessageType);
+      this.#totalSamples += 1;
+      this.#streamPeaks(sample);
+      this.#waveform.push(sample);
     }
 
     const shared = this.#encoder.encode(channel);
@@ -151,6 +96,24 @@ class Mp3Encoder
     );
     return true;
   }
+
+  #streamPeaks(sample: number): void {
+    this.#peakSquares += sample ** 2;
+    this.#peakSamples += 1;
+    if (this.#peakSamples < PEAK_EVERY) {
+      return;
+    }
+
+    const meanSquare = this.#peakSquares / this.#peakSamples;
+    this.#peakSquares = 0;
+    this.#peakSamples = 0;
+
+    const peak = toPeak(meanSquare);
+    this.port.postMessage({
+      type: 'peak',
+      peak,
+    } satisfies WorkletMessageType);
+  }
 }
 
-registerProcessor('mp3-encoder', Mp3Encoder);
+globalThis.registerProcessor('mp3-encoder', Mp3Encoder);

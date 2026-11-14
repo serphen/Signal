@@ -21,16 +21,16 @@ import type {
 } from '../state/ducks/stories.preload.ts';
 import { MyStories } from './MyStories.dom.tsx';
 import { StoriesPane } from './StoriesPane.dom.tsx';
-import { NavSidebar, NavSidebarActionButton } from './NavSidebar.dom.tsx';
+import { NavSidebar } from './NavSidebar.dom.tsx';
 import { StoriesAddStoryButton } from './StoriesAddStoryButton.dom.tsx';
 import { I18n } from './I18n.dom.tsx';
 import type { WidthBreakpoint } from './_util.std.ts';
-import type { UnreadStats } from '../util/countUnreadStats.std.ts';
-import { AxoDropdownMenu } from '../axo/AxoDropdownMenu.dom.tsx';
+import { AxoDropdownMenu } from '../axo/menus/AxoDropdownMenu.dom.tsx';
+import { AxoIconButton } from '../axo/AxoIconButton.dom.tsx';
 
 export type PropsType = {
   addStoryData: AddStoryData;
-  otherTabsUnreadStats: UnreadStats;
+  otherTabsUnreadCount: number;
   deleteStoryForEveryone: (story: StoryViewType) => unknown;
   getPreferredBadge: PreferredBadgeSelectorType;
   hasFailedStorySends: boolean;
@@ -70,7 +70,7 @@ export type PropsType = {
 
 export function StoriesTab({
   addStoryData,
-  otherTabsUnreadStats,
+  otherTabsUnreadCount,
   deleteStoryForEveryone,
   getPreferredBadge,
   hasFailedStorySends,
@@ -117,7 +117,7 @@ export function StoriesTab({
       {addStoryData && renderStoryCreator()}
       {isMyStories && myStories.length ? (
         <MyStories
-          otherTabsUnreadStats={otherTabsUnreadStats}
+          otherTabsUnreadCount={otherTabsUnreadCount}
           hasFailedStorySends={hasFailedStorySends}
           hasPendingUpdate={hasPendingUpdate}
           hasViewReceiptSetting={hasViewReceiptSetting}
@@ -135,7 +135,6 @@ export function StoriesTab({
           retryMessageSend={retryMessageSend}
           renderToastManager={renderToastManager}
           savePreferredLeftPaneWidth={savePreferredLeftPaneWidth}
-          theme={theme}
           viewStory={viewStory}
         />
       ) : (
@@ -149,21 +148,22 @@ export function StoriesTab({
           preferredLeftPaneWidth={preferredLeftPaneWidth}
           requiresFullWidth
           savePreferredLeftPaneWidth={savePreferredLeftPaneWidth}
-          otherTabsUnreadStats={otherTabsUnreadStats}
+          otherTabsUnreadCount={otherTabsUnreadCount}
           renderToastManager={renderToastManager}
           actions={
             <>
               <StoriesAddStoryButton
                 i18n={i18n}
                 maxAttachmentVideoSize={maxAttachmentVideoSize}
-                moduleClassName="Stories__pane__add-story"
                 onAddStory={onAddStory}
                 showToast={showToast}
               />
               <AxoDropdownMenu.Root>
                 <AxoDropdownMenu.Trigger>
-                  <NavSidebarActionButton
-                    icon={<span className="StoriesTab__MoreActionsIcon" />}
+                  <AxoIconButton.Root
+                    variant="implied-secondary"
+                    size="sm"
+                    symbol="more"
                     label={i18n('icu:StoriesTab__MoreActionsLabel')}
                   />
                 </AxoDropdownMenu.Trigger>

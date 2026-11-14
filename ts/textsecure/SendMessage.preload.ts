@@ -1,5 +1,6 @@
 // Copyright 2020 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+// oxlint-disable max-classes-per-file
 
 import { z } from 'zod';
 import PQueue from 'p-queue';
@@ -104,6 +105,7 @@ import type {
 } from '../types/PinnedMessage.std.ts';
 import type { Emoji } from '../axo/emoji.std.ts';
 import type { BlockedNumber } from '../types/StorageKeys.std.ts';
+import { isAciString } from '../util/isAciString.std.ts';
 
 const log = createLogger('SendMessage');
 
@@ -487,6 +489,11 @@ class Message {
             organization = contactEntry.organization;
           }
 
+          const hasNickname = Boolean(
+            contactEntry.nickname?.familyName ||
+            contactEntry.nickname?.givenName
+          );
+
           return {
             name,
             email,
@@ -494,6 +501,16 @@ class Message {
             address,
             avatar,
             organization,
+            aciBinary: isAciString(contactEntry.aci)
+              ? toAciObject(contactEntry.aci).getServiceIdBinary()
+              : null,
+            note: contactEntry.note || null,
+            nickname: hasNickname
+              ? {
+                  given: contactEntry.nickname?.givenName || null,
+                  family: contactEntry.nickname?.familyName || null,
+                }
+              : null,
           };
         }
       );
@@ -748,7 +765,6 @@ export function addPniSignatureMessageToProto({
   };
 }
 
-// oxlint-disable-next-line max-classes-per-file
 export class MessageSender {
   pendingMessages: {
     [id: string]: PQueue;
@@ -2013,7 +2029,44 @@ export class MessageSender {
         })
       ),
       type: 'attachmentBackfillRequestSync',
-      urgent: false,
+      urgent: true,
+    };
+  }
+
+  static getAttachmentBackfillResponseSyncMessage(
+    targetConversation: ConversationIdentifier,
+    targetMessage: AddressableMessage,
+    data: NonNullable<
+      Proto.SyncMessage.AttachmentBackfillResponse.Params['data']
+    >
+  ): SingleProtoJobData {
+    const myAci = itemStorage.user.getCheckedAci();
+
+    const syncMessage = this.padSyncMessage({
+      content: {
+        attachmentBackfillResponse: {
+          targetMessage: toAddressableMessage(targetMessage),
+          targetConversation: toConversationIdentifier(targetConversation),
+          data,
+        },
+      },
+    });
+
+    return {
+      contentHint: ContentHint.Resendable,
+      serviceId: myAci,
+      isSyncMessage: true,
+      protoBase64: Bytes.toBase64(
+        Proto.Content.encode({
+          content: {
+            syncMessage,
+          },
+          pniSignatureMessage: null,
+          senderKeyDistributionMessage: null,
+        })
+      ),
+      type: 'attachmentBackfillResponseSync',
+      urgent: true,
     };
   }
 
@@ -2699,9 +2752,11 @@ export class MessageSender {
     timestamp: number;
     urgent: boolean;
   }>): Promise<CallbackResultType> {
-    const myE164 = itemStorage.user.getNumber();
+    const myE164 = itemStorage.user.getOptionalNumber();
     const myAci = itemStorage.user.getAci();
-    const serviceIds = recipients.filter(id => id !== myE164 && id !== myAci);
+    const serviceIds = recipients.filter(id => {
+      return (myE164 == null || id !== myE164) && id !== myAci;
+    });
 
     if (serviceIds.length === 0) {
       const dataMessage = proto.content?.dataMessage

@@ -5,7 +5,7 @@ import type { JSX } from 'react';
 import { useMemo, useCallback } from 'react';
 import type { LocalizerType } from '../types/Util.std.ts';
 import { AxoIconButton } from '../axo/AxoIconButton.dom.tsx';
-import { AxoDropdownMenu } from '../axo/AxoDropdownMenu.dom.tsx';
+import { AxoDropdownMenu } from '../axo/menus/AxoDropdownMenu.dom.tsx';
 import { tw } from '../axo/tw.dom.tsx';
 
 export type MediaQualitySelectorProps = Readonly<{
@@ -44,7 +44,6 @@ export function MediaQualitySelector({
           variant="implied-secondary"
           size="md"
           symbol={isHighQuality ? 'hd' : 'hd-slash'}
-          iconWeight={300}
           label={i18n('icu:MediaQualitySelector--button')}
           tooltip={false}
         />

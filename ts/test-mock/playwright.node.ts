@@ -5,6 +5,7 @@ import type { ElectronApplication, Page } from 'playwright';
 import { _electron as electron } from 'playwright';
 import { EventEmitter, once } from 'node:events';
 import pTimeout from 'p-timeout';
+import createDebug from 'debug';
 
 import type {
   IPCRequest as ChallengeRequestType,
@@ -14,12 +15,15 @@ import type { ReceiptType } from '../types/Receipt.std.ts';
 import { SECOND } from '../util/durations/index.std.ts';
 import { drop } from '../util/drop.std.ts';
 import { toNumber } from '../util/toNumber.std.ts';
-import type { MessageAttributesType } from '../model-types.d.ts';
+import type { MessageAttributesType } from '../model-types.std.ts';
 import type { SocketStatuses } from '../textsecure/SocketManager.preload.ts';
 import type {
   RestoreResponseType,
   StoreParameters,
 } from '../textsecure/WebAPI.preload.ts';
+import { toLogFormat } from '../types/errors.std.ts';
+import { fromBase64 } from '../Bytes.std.ts';
+import { sleep } from '../util/sleep.std.ts';
 
 export type AppLoadedInfoType = Readonly<{
   loadTime: number;
@@ -53,7 +57,11 @@ export type AppOptionsType = Readonly<{
   config: string;
 }>;
 
+const debug = createDebug('playwright.node.ts');
+
 const WAIT_FOR_EVENT_TIMEOUT = 30 * SECOND;
+const GRACEFUL_CLOSE_TIMEOUT = 5 * SECOND;
+const DEFAULT_MESSAGE_WAIT_TIMEOUT = 5 * SECOND;
 
 export class App extends EventEmitter {
   readonly #options: AppOptionsType;
@@ -78,6 +86,7 @@ export class App extends EventEmitter {
         locale: 'en',
         timeout: 30 * SECOND,
       });
+      this.#privApp.on('close', () => this.emit('close'));
 
       // wait for the first window to load
       await pTimeout(
@@ -95,14 +104,37 @@ export class App extends EventEmitter {
         })(),
         { milliseconds: 20 * SECOND }
       );
-    } catch (e) {
-      this.#privApp?.process().kill('SIGKILL');
-      throw e;
+    } catch (error) {
+      await this.#forceClose();
+      throw error;
     }
 
-    this.#privApp.on('close', () => this.emit('close'));
-
     drop(this.#printLoop());
+  }
+
+  async #forceClose(): Promise<void> {
+    const app = this.#privApp;
+    this.#privApp = undefined;
+    if (!app) {
+      return;
+    }
+
+    try {
+      await pTimeout(app.close(), { milliseconds: GRACEFUL_CLOSE_TIMEOUT });
+      return;
+    } catch (error) {
+      debug('graceful close failed', toLogFormat(error));
+    }
+
+    const { pid } = app.process();
+    if (pid !== undefined) {
+      try {
+        // try to kill the whole process group
+        process.kill(-pid, 'SIGKILL');
+      } catch {
+        app.process().kill('SIGKILL');
+      }
+    }
   }
 
   public async waitForProvisionURL(): Promise<string> {
@@ -154,6 +186,12 @@ export class App extends EventEmitter {
     return this.#waitForEvent('receipts');
   }
 
+  public async waitForPhoneNumberSharedWith(
+    serviceId: string
+  ): Promise<ChallengeRequestType> {
+    return this.#waitForEvent(`sharedPhoneNumber:${serviceId}`);
+  }
+
   public async waitForReleaseNoteAndMegaphoneFetcher(): Promise<void> {
     return this.#waitForEvent('release_notes_fetcher_complete');
   }
@@ -162,8 +200,77 @@ export class App extends EventEmitter {
     return this.#waitForEvent('storageServiceComplete');
   }
 
+  public async waitForUploadManifest(desiredVersion?: bigint): Promise<{
+    version: number;
+    storageKey: Buffer<ArrayBuffer>;
+    recordIkm: Buffer<ArrayBuffer> | undefined;
+  }> {
+    // oxlint-disable-next-line no-constant-condition
+    while (true) {
+      // oxlint-disable-next-line no-await-in-loop
+      const result = (await this.#waitForEvent('uploadManifest')) as
+        | {
+            version: number;
+            storageKeyBase64: string;
+            recordIkmBase64: string | undefined;
+          }
+        | undefined;
+      if (!result) {
+        throw new Error('waitForUploadManifest: Found no data!');
+      }
+
+      const { version, storageKeyBase64, recordIkmBase64 } = result;
+      if (desiredVersion !== undefined && BigInt(version) < desiredVersion) {
+        debug(
+          `waitForUploadManifest: version ${version} is below desired version ${desiredVersion}, trying again...`
+        );
+        continue;
+      }
+
+      debug(`waitForUploadManifest: Returning with version ${version}`);
+
+      const storageKey = Buffer.from(fromBase64(storageKeyBase64));
+      const recordIkm = recordIkmBase64
+        ? Buffer.from(fromBase64(recordIkmBase64))
+        : undefined;
+
+      return { version, storageKey, recordIkm };
+    }
+  }
+
+  public async waitForSetProfileKey(): Promise<{
+    profileKey: Buffer<ArrayBuffer>;
+    reason: string;
+  }> {
+    const result = (await this.#waitForEvent('setProfileKey')) as {
+      profileKeyBase64: string;
+      reason: string;
+    };
+    if (!result) {
+      throw new Error('waitForSetProfileKey: Found no data!');
+    }
+
+    const profileKey = Buffer.from(fromBase64(result.profileKeyBase64));
+    return { profileKey, reason: result.reason };
+  }
+
+  public async waitForUpdateGroupsWithNewProfileKey(): Promise<void> {
+    await this.#waitForEvent('updateGroupsWithNewProfileKey');
+  }
+
+  public async waitForQueuedStickerPacks(): Promise<void> {
+    return this.#waitForEvent('queuedStickerPacksDownloaded');
+  }
+
   public async waitForSVRStore(): Promise<StoreParameters> {
-    return this.#waitForEvent('svrStore');
+    const result = (await this.#waitForEvent('svrStore')) as {
+      pin: string;
+      dataBase64: string;
+    };
+    return {
+      pin: result.pin,
+      data: fromBase64(result.dataBase64),
+    };
   }
 
   public async waitForManifestVersion(version: bigint): Promise<void> {
@@ -232,6 +339,41 @@ export class App extends EventEmitter {
     return window.evaluate(`window.SignalCI.getMessagesBySentAt(${timestamp})`);
   }
 
+  public async getMessagesInDBBySentAt(
+    timestamp: number
+  ): Promise<Array<MessageAttributesType>> {
+    const window = await this.getWindow();
+    return window.evaluate(
+      `window.SignalCI.getMessagesInDBBySentAt(${timestamp})`
+    );
+  }
+
+  public async waitForMessage({
+    timestamp,
+    predicate,
+    timeout = DEFAULT_MESSAGE_WAIT_TIMEOUT,
+  }: {
+    timestamp: number;
+    predicate: (message: MessageAttributesType) => boolean;
+    timeout?: number;
+  }): Promise<MessageAttributesType> {
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() < deadline) {
+      // oxlint-disable-next-line no-await-in-loop
+      const [message] = await this.getMessagesBySentAt(timestamp);
+      if (message && predicate(message)) {
+        return message;
+      }
+
+      // oxlint-disable-next-line no-await-in-loop
+      await sleep(100);
+    }
+    throw new Error(
+      `waitForMessage: Timed out waiting for message ${timestamp}`
+    );
+  }
+
   public async exportLocalBackup(backupsBaseDir: string): Promise<string> {
     const window = await this.getWindow();
     return window.evaluate(
@@ -272,6 +414,21 @@ export class App extends EventEmitter {
 
   public async waitForConversationOpenComplete(): Promise<void> {
     return this.#waitForEvent('conversationOpenComplete');
+  }
+
+  public async fetchManifestForPrimary(): Promise<void> {
+    const window = await this.getWindow();
+    return window.evaluate('window.SignalCI.fetchManifestForPrimary()');
+  }
+
+  public async pauseStorageService(): Promise<void> {
+    const window = await this.getWindow();
+    await window.evaluate('window.SignalCI.pauseStorageService()');
+  }
+
+  public async resumeStorageService(): Promise<void> {
+    const window = await this.getWindow();
+    await window.evaluate('window.SignalCI.resumeStorageService()');
   }
 
   // EventEmitter types

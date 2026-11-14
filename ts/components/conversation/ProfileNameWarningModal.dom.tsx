@@ -21,71 +21,80 @@ export function ProfileNameWarningModal({
 }: PropsType): JSX.Element {
   return (
     <AxoDialog.Root open onOpenChange={onClose}>
-      <AxoDialog.Content
-        size="sm"
-        escape="cancel-is-noop"
-        disableMissingAriaDescriptionWarning
-      >
-        <AxoDialog.Header>
+      <AxoDialog.Content size="sm" escape="cancel-is-noop">
+        <AxoDialog.Header floating>
           <AxoDialog.Close />
         </AxoDialog.Header>
         <AxoDialog.Body>
-          <div className={tw('flex justify-center')}>
+          <div className={tw('mb-3 flex justify-center')}>
             <div
               className={tw(
-                'rounded-3xl bg-(--axo-color-legacy-warning-badge)/12 px-4 py-1.5',
-                'type-title-large font-regular text-(--axo-color-legacy-warning-badge)'
+                'flex size-12 items-center justify-center',
+                'bg-safety-tint text-safety',
+                'rounded-3xl'
               )}
             >
               {conversationType === 'direct' ? (
-                <AxoSymbol.InlineGlyph symbol="person-question" label={null} />
+                <AxoSymbol.Icon
+                  size={24}
+                  symbol="person-question"
+                  label={null}
+                />
               ) : (
-                <AxoSymbol.InlineGlyph symbol="person-question" label={null} />
+                <AxoSymbol.Icon
+                  size={24}
+                  symbol="group-question"
+                  label={null}
+                />
               )}
             </div>
           </div>
-          <div className={tw('mt-5 mb-12 type-body-medium text-primary')}>
-            {conversationType === 'direct' ? (
-              <>
-                {i18n('icu:ProfileNameWarningModal__description--direct')}
-                <ul className={tw('list-disc ps-4 [&>li]:mt-3')}>
-                  <li>
-                    {i18n(
-                      'icu:ProfileNameWarningModal__warning--signal-cant-verify'
-                    )}
-                  </li>
-                  <li>
-                    {i18n(
-                      'icu:ProfileNameWarningModal__warning--signal-wont-contact'
-                    )}
-                  </li>
-                  <li>
-                    {i18n('icu:ProfileNameWarningModal__warning--be-cautious')}
-                  </li>
-                  <li>
-                    {i18n(
-                      'icu:ProfileNameWarningModal__warning--dont-share-info'
-                    )}
-                  </li>
-                </ul>
-              </>
-            ) : (
-              <>
-                {i18n('icu:ProfileNameWarningModal__description--group')}
-                <ul className={tw('list-disc ps-4 [&>li]:mt-3')}>
-                  <li>
-                    {i18n('icu:ProfileNameWarningModal__list--item1--group')}
-                  </li>
-                  <li>
-                    {i18n('icu:ProfileNameWarningModal__list--item2--group')}
-                  </li>
-                  <li>
-                    {i18n('icu:ProfileNameWarningModal__list--item3--group')}
-                  </li>
-                </ul>
-              </>
-            )}
-          </div>
+          <AxoDialog.Description>
+            <div className={tw('text-primary')}>
+              {conversationType === 'direct' ? (
+                <>
+                  {i18n('icu:ProfileNameWarningModal__description--direct')}
+                  <ul className={tw('list-disc ps-4 [&>li]:mt-3')}>
+                    <li>
+                      {i18n(
+                        'icu:ProfileNameWarningModal__warning--signal-cant-verify'
+                      )}
+                    </li>
+                    <li>
+                      {i18n(
+                        'icu:ProfileNameWarningModal__warning--signal-wont-contact'
+                      )}
+                    </li>
+                    <li>
+                      {i18n(
+                        'icu:ProfileNameWarningModal__warning--be-cautious'
+                      )}
+                    </li>
+                    <li>
+                      {i18n(
+                        'icu:ProfileNameWarningModal__warning--dont-share-info'
+                      )}
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                <>
+                  {i18n('icu:ProfileNameWarningModal__description--group')}
+                  <ul className={tw('list-disc ps-4 [&>li]:mt-3')}>
+                    <li>
+                      {i18n('icu:ProfileNameWarningModal__list--item1--group')}
+                    </li>
+                    <li>
+                      {i18n('icu:ProfileNameWarningModal__list--item2--group')}
+                    </li>
+                    <li>
+                      {i18n('icu:ProfileNameWarningModal__list--item3--group')}
+                    </li>
+                  </ul>
+                </>
+              )}
+            </div>
+          </AxoDialog.Description>
         </AxoDialog.Body>
       </AxoDialog.Content>
     </AxoDialog.Root>

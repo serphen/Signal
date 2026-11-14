@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import type { ReactNode, JSX } from 'react';
 
 import type { LocalizerType } from '../../../types/Util.std.ts';
-import { AxoContextMenu } from '../../../axo/AxoContextMenu.dom.tsx';
+import { AxoContextMenu } from '../../../axo/menus/AxoContextMenu.dom.tsx';
 import { DeleteAttachmentConfirmationDialog } from '../../DeleteAttachmentConfirmationDialog.dom.tsx';
 
 export type PropsType = Readonly<{
@@ -53,7 +53,10 @@ export function MediaContextMenu(props: PropsType): JSX.Element {
       <AxoContextMenu.Root>
         <AxoContextMenu.Trigger>{children}</AxoContextMenu.Trigger>
         <AxoContextMenu.Content>
-          <AxoContextMenu.Item symbol="message-arrow" onSelect={showMessage}>
+          <AxoContextMenu.Item
+            symbol="message-arrow-forward"
+            onSelect={showMessage}
+          >
             {i18n('icu:MediaGallery__ContextMenu__ViewInChat')}
           </AxoContextMenu.Item>
           {forwardAttachment && (

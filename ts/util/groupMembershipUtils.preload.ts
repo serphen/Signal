@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import isNumber from 'lodash/isNumber.js';
-import type { ConversationAttributesType } from '../model-types.d.ts';
+import type { ConversationAttributesType } from '../model-types.std.ts';
 import type { ServiceIdString, AciString } from '../types/ServiceId.std.ts';
 import { SignalService as Proto } from '../protobuf/index.std.ts';
 import {
@@ -217,7 +217,7 @@ export function areWePending(
   >
 ): boolean {
   const ourAci = itemStorage.user.getAci();
-  const ourPni = itemStorage.user.getPni();
+  const ourPni = itemStorage.user.getOptionalPni();
   return Boolean(
     ourAci &&
     (isMemberPending(conversationAttrs, ourAci) ||

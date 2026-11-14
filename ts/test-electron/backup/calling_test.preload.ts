@@ -6,7 +6,7 @@ import { v4 as generateGuid } from 'uuid';
 import { CallLinkRootKey } from '@signalapp/ringrtc';
 
 import type { ConversationModel } from '../../models/conversations.preload.ts';
-import type { MessageAttributesType } from '../../model-types.d.ts';
+import type { MessageAttributesType } from '../../model-types.std.ts';
 import type { CallHistoryDetails } from '../../types/CallDisposition.std.ts';
 import type { CallLinkType } from '../../types/CallLink.std.ts';
 
@@ -181,7 +181,7 @@ describe('backup/calling', () => {
       const adminKey = CallLinkRootKey.generateAdminPassKey();
       const adminKeyBytes: Uint8Array<ArrayBuffer> = adminKey;
       adminCallLink = {
-        rootKey: adminRootKey.toString(),
+        rootKey: adminRootKey.toUnredactedString(),
         roomId: getRoomIdFromRootKey(adminRootKey),
         adminKey: fromAdminKeyBytes(adminKeyBytes),
         name: "Let's Talk Rocks",
@@ -196,7 +196,7 @@ describe('backup/calling', () => {
 
       const rootKey = CallLinkRootKey.generate();
       callLink = {
-        rootKey: rootKey.toString(),
+        rootKey: rootKey.toUnredactedString(),
         roomId: getRoomIdFromRootKey(rootKey),
         adminKey: null,
         name: "Let's Talk Rocks #2",

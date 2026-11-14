@@ -10,16 +10,12 @@ import type {
   ConversationAttributesType,
   MessageAttributesType,
   SenderKeyInfoType,
-} from '../model-types.d.ts';
+} from '../model-types.std.ts';
 import type { StoredJob } from '../jobs/types.std.ts';
 import type {
   ReactionType,
   ReactionReadStatus,
 } from '../types/Reactions.std.ts';
-import type {
-  ConversationColorType,
-  CustomColorType,
-} from '../types/Colors.std.ts';
 import type { StorageAccessType } from '../types/Storage.d.ts';
 import type { BytesToStrings } from '../types/Util.std.ts';
 import type { QualifiedAddressStringType } from '../types/QualifiedAddress.std.ts';
@@ -55,6 +51,11 @@ import type {
   GroupSendMemberEndorsementRecord,
 } from '../types/GroupSendEndorsements.std.ts';
 import type { SyncTaskType } from '../util/syncTasks.preload.ts';
+import type {
+  UnreadMessageTimeRange,
+  UnreadReminderConversationCandidate,
+  UnreadReminderSummaryData,
+} from './server/unreadReminders.std.ts';
 import type { AttachmentBackupJobType } from '../types/AttachmentBackup.std.ts';
 import type { AttachmentType } from '../types/Attachment.std.ts';
 import type { MediaItemMessageType } from '../types/MediaItem.std.ts';
@@ -65,6 +66,8 @@ import type { NotificationProfileType } from '../types/NotificationProfile.std.t
 import type { DonationReceipt } from '../types/Donations.std.ts';
 import type { InsertOrUpdateCallLinkFromSyncResult } from './server/callLinks.node.ts';
 import type { ChatFolderId, ChatFolder } from '../types/ChatFolder.std.ts';
+import type { ChatStyle } from '../types/ChatStyle.std.ts';
+import type { Account } from '../types/Account.std.ts';
 import type { CurrentChatFolder } from '../types/CurrentChatFolders.std.ts';
 import type {
   PinnedMessage,
@@ -85,6 +88,11 @@ import type {
   SentTimestampMs,
   ServerTimestampMs,
 } from '@signalapp/types';
+import type {
+  FavoriteStickerStatusType,
+  FavoriteStickerType,
+  StickerReferenceType,
+} from '../types/Stickers.preload.ts';
 
 export type ReadableDB = Database & { __readable_db: never };
 export type WritableDB = ReadableDB & { __writable_db: never };
@@ -411,7 +419,7 @@ export type StickerPackInfoType =
 
 export type StickerPackType = InstalledStickerPackType &
   Readonly<{
-    attemptedStatus?: 'downloaded' | 'installed' | 'ephemeral';
+    attemptedStatus?: 'downloaded' | 'installed' | 'ephemeral' | 'known';
     author: string;
     coverStickerId: number;
     createdAt: number;
@@ -589,7 +597,7 @@ export type PageMessagesResultType = Readonly<{
 export type PageBackupMessagesCursorType = Readonly<{
   __page_backup_messages_cursor: never;
 
-  nextRowid: number;
+  lastRowId: number;
   done: boolean;
 }>;
 
@@ -752,6 +760,7 @@ export const MESSAGE_ATTACHMENT_COLUMNS = [
   'thumbnailContentType',
   'thumbnailLocalKey',
   'thumbnailVersion',
+  'transcodingTargetQuality',
   'screenshotPath',
   'screenshotSize',
   'screenshotContentType',
@@ -772,6 +781,7 @@ export const MESSAGE_ATTACHMENT_COLUMNS = [
   'copiedFromQuotedAttachment',
   'version',
   'pending',
+  'audioWaveform',
 ] as const satisfies Array<keyof MessageAttachmentDBType>;
 
 export type MessageAttachmentDBType = {
@@ -807,6 +817,7 @@ export type MessageAttachmentDBType = {
   transitCdnNumber: number | null;
   transitCdnUploadTimestamp: number | null;
   backupCdnNumber: number | null;
+  transcodingTargetQuality: number | null;
   thumbnailPath: string | null;
   thumbnailSize: number | null;
   thumbnailContentType: string | null;
@@ -831,6 +842,7 @@ export type MessageAttachmentDBType = {
   wasTooBig: 1 | 0 | null;
   pending: 1 | 0 | null;
   copiedFromQuotedAttachment: 1 | 0 | null;
+  audioWaveform: Uint8Array<ArrayBuffer> | null;
 };
 
 // Test to make sure that MESSAGE_ATTACHMENT_COLUMNS &
@@ -928,6 +940,13 @@ type ReadableInterface = {
       includeStoryReplies: boolean;
     }
   ) => number;
+  getUnremindedUnreadMessageTimeRanges: (
+    conversations: ReadonlyArray<UnreadReminderConversationCandidate>
+  ) => ReadonlyArray<UnreadMessageTimeRange>;
+  getUnreadReminderSummaryData: (
+    conversationId: string,
+    options: { includeStoryReplies: boolean; ourAci: AciString }
+  ) => UnreadReminderSummaryData;
   getTotalUnreadMentionsOfMeForConversation: (
     conversationId: string,
     options: {
@@ -1003,7 +1022,7 @@ type ReadableInterface = {
   }) => number | null;
   getAllCallHistory: () => ReadonlyArray<CallHistoryDetails>;
   getCallHistoryUnreadCallConversationIds: () => ReadonlyArray<string>;
-  getCallHistoryUnreadCount: () => number;
+  getCallHistoryUnreadCountsByConversationId: () => Record<string, number>;
   getCallHistoryMessageByCallId: (options: {
     conversationId: string;
     callId: string;
@@ -1026,14 +1045,21 @@ type ReadableInterface = {
     receivedAt: number
   ) => string | null;
   callLinkExists: (roomId: string) => boolean;
-  defunctCallLinkExists: (roomId: string) => boolean;
   getAllCallLinks: () => ReadonlyArray<CallLinkType>;
   getCallLinkByRoomId: (roomId: string) => CallLinkType | undefined;
   getCallLinkRecordByRoomId: (roomId: string) => CallLinkRecord | undefined;
+  getDefunctCallLinkByRoomId: (
+    roomId: string
+  ) => DefunctCallLinkType | undefined;
   getAllAdminCallLinks: () => ReadonlyArray<CallLinkType>;
-  getAllCallLinkRecordsWithAdminKey: () => ReadonlyArray<CallLinkRecord>;
-  getAllDefunctCallLinksWithAdminKey: () => ReadonlyArray<DefunctCallLinkType>;
-  getAllMarkedDeletedCallLinkRoomIds: () => ReadonlyArray<string>;
+  getAllCallLinkRecordsForStorageService: () => ReadonlyArray<CallLinkRecord>;
+  getAllDefunctCallLinksForStorageService: () => ReadonlyArray<DefunctCallLinkType>;
+  getTimestampOfOldestDefunctCallLink: () =>
+    | { roomId: string; addedAt: number }
+    | undefined;
+  getTimestampOfOldestDeletedCallLink():
+    | { roomId: string; deletedAt: number }
+    | undefined;
   getMessagesBetween: (
     conversationId: string,
     options: GetMessagesBetweenOptions
@@ -1069,9 +1095,19 @@ type ReadableInterface = {
   getAllStickerPacks: () => Array<StickerPackType>;
   getInstalledStickerPacks: () => Array<StickerPackType>;
   getUninstalledStickerPacks: () => Array<UninstalledStickerPackType>;
+  getSticker: (stickerRef: StickerReferenceType) => StickerType | undefined;
   getStickerPackInfo: (packId: string) => StickerPackInfoType | undefined;
   getAllStickers: () => Array<StickerType>;
   getRecentStickers: (options?: { limit?: number }) => Array<StickerType>;
+  getAllInstalledFavoriteStickers: () => ReadonlyArray<StickerType>;
+  getAllFavoriteStickers: () => ReadonlyArray<FavoriteStickerType>;
+  getAllFavoriteStickersForBackup: () => ReadonlyArray<FavoriteStickerType>;
+  getFavoriteStickersFromPack: (
+    packId: string
+  ) => ReadonlyArray<FavoriteStickerType>;
+  getFavoriteSticker: (
+    stickerRef: StickerReferenceType
+  ) => FavoriteStickerType | undefined;
 
   getRecentEmojis: (limit: number) => ReadonlyArray<Emoji.Parent>;
   getRecentGifs: (limit: number) => ReadonlyArray<GifType>;
@@ -1106,6 +1142,9 @@ type ReadableInterface = {
   getChatFolder: (id: ChatFolderId) => ChatFolder | null;
   hasAllChatsChatFolder: () => boolean;
   getOldestDeletedChatFolder: () => ChatFolder | null;
+
+  getAllCustomChatColors: () => ReadonlyArray<ChatStyle.CustomChatColor>;
+  getAccount: () => Account;
 
   getAllMegaphones: () => ReadonlyArray<RemoteMegaphoneType>;
   getAllMegaphoneIds: () => ReadonlyArray<RemoteMegaphoneId>;
@@ -1234,13 +1273,7 @@ type WritableInterface = {
   /** @internal use ts/util/Conversation.preload.ts */
   _removeConversation: (id: string) => void;
   _removeAllConversations: () => void;
-  updateAllConversationColors: (
-    conversationColor?: ConversationColorType,
-    customColorData?: {
-      id: string;
-      value: CustomColorType;
-    }
-  ) => void;
+  removeAllConversationColors: () => void;
   removeAllProfileKeyCredentials: () => void;
 
   replaceAllEndorsementsForGroup: (data: GroupSendEndorsementsData) => void;
@@ -1323,15 +1356,19 @@ type WritableInterface = {
     roomId: string,
     callLinkState: CallLinkStateType
   ) => CallLinkType;
-  beginDeleteAllCallLinks: () => boolean;
-  beginDeleteCallLink: (roomId: string) => boolean;
+  markAllCallLinksDeleted: () => boolean;
+  markCallLinkDeleted: (roomId: string, deletedAt: number) => boolean;
+  deleteCallLink: (roomId: string) => boolean;
+  deleteDefunctCallLink: (roomId: string) => boolean;
   deleteCallHistoryByRoomId: (roomid: string) => void;
   deleteCallLinkAndHistory: (roomId: string) => void;
-  finalizeDeleteCallLink: (roomId: string) => void;
+  deleteExpiredDefunctCallLinks(
+    messageQueueTime: number
+  ): ReadonlyArray<string>;
+  deleteExpiredCallLinks(messageQueueTime: number): ReadonlyArray<string>;
   _removeAllCallLinks: () => void;
   insertDefunctCallLink: (defunctCallLink: DefunctCallLinkType) => void;
   updateDefunctCallLink: (defunctCallLink: DefunctCallLinkType) => void;
-  deleteCallLinkFromSync: (roomId: string) => void;
   migrateConversationMessages: (obsoleteId: string, currentId: string) => void;
   saveEditedMessage: (
     mainMessage: ReadonlyDeep<MessageType>,
@@ -1435,7 +1472,23 @@ type WritableInterface = {
   ) => { wasPreviouslyUninstalled: boolean; position?: number };
   // Returns `true` if sticker pack was not previously uninstalled
   uninstallStickerPack: (packId: string, timestamp: number) => boolean;
+  removeUninstalledStickerPack: (packId: string) => void;
   clearAllErrorStickerPackAttempts: () => void;
+  clearStickerPackAttempts: (packId: string) => void;
+  createFavoriteSticker: (sticker: FavoriteStickerType) => void;
+  addFavoriteStickerFromStickerRef: (
+    stickerRef: StickerReferenceType
+  ) => FavoriteStickerType | undefined;
+  updateFavoriteSticker: (sticker: FavoriteStickerType) => void;
+  updateFavoriteStickerStatus: (
+    stickerRef: StickerReferenceType,
+    status: FavoriteStickerStatusType
+  ) => void;
+  markFavoriteStickerDeleted: (
+    stickerRef: StickerReferenceType
+  ) => { deletedAtTimestampMs: number; storageNeedsSync: boolean } | undefined;
+  deleteFavoriteSticker: (stickerRef: StickerReferenceType) => void;
+  maybeDeleteSticker: (stickerRef: StickerReferenceType) => string | undefined;
 
   updateEmojiUsage: (emoji: Emoji.Parent, lastUsedAt: number) => void;
 
@@ -1501,6 +1554,19 @@ type WritableInterface = {
   deleteExpiredChatFolders: (
     messageQueueTime: number
   ) => ReadonlyArray<ChatFolderId>;
+  deleteChatFolderById: (id: ChatFolderId) => void;
+
+  createCustomChatColor: (
+    color: ChatStyle.CustomChatColor['color']
+  ) => ChatStyle.CustomChatColor;
+  createCustomChatColors: (
+    colors: ReadonlyArray<ChatStyle.CustomChatColor['color']>
+  ) => ReadonlyArray<ChatStyle.CustomChatColor>;
+  updateCustomChatColor: (customChatColor: ChatStyle.CustomChatColor) => void;
+  deleteCustomChatColor: (id: ChatStyle.CustomChatColorId) => void;
+  updateAccountDefaultBubbleColor: (
+    bubbleColor: ChatStyle['bubbleColor'] | null
+  ) => void;
 
   createMegaphone: (megaphone: RemoteMegaphoneType) => void;
   updateMegaphone: (megaphone: RemoteMegaphoneType) => void;
@@ -1530,7 +1596,8 @@ type WritableInterface = {
     version: number;
     contentType: MIMEType;
   }) => (ExistingAttachmentData & { reuseToken: string }) | undefined;
-  _protectAttachmentPathFromDeletion: ({ path }: { path: string }) => string;
+  releaseAttachmentPathProtections: (attachment: AttachmentType) => void;
+  protectAttachmentPathFromDeletion: ({ path }: { path: string }) => string;
   resetProtectedAttachmentPaths: () => void;
 
   removeAll: () => void;
@@ -1567,11 +1634,13 @@ export type ServerReadableDirectInterface = ReadableInterface & {
     conversationId,
     options,
     contactServiceIdsMatchingQuery,
+    filterByUnread,
   }: {
     query: string;
     conversationId?: string;
     options?: { limit?: number };
     contactServiceIdsMatchingQuery?: Array<ServiceIdString>;
+    filterByUnread: boolean;
   }) => Array<ServerSearchResultMessageType>;
 
   getRecentStoryReplies: (
@@ -1700,11 +1769,13 @@ export type ClientOnlyReadableInterface = ClientInterfaceWrap<{
     conversationId,
     options,
     contactServiceIdsMatchingQuery,
+    filterByUnread,
   }: {
     query: string;
     conversationId?: string;
     options?: { limit?: number };
     contactServiceIdsMatchingQuery?: Array<ServiceIdString>;
+    filterByUnread: boolean;
   }) => Array<ClientSearchResultMessageType>;
 
   getRecentStoryReplies: (

@@ -60,8 +60,10 @@ export function GroupCallOverflowArea({
   //   we should add these values to the component's state.
   let visibleHeight: number;
   let scrollMax: number;
+  // oxlint-disable-next-line react/refs
   if (overflowRef.current) {
     visibleHeight = overflowRef.current.clientHeight;
+    // oxlint-disable-next-line react/refs
     scrollMax = overflowRef.current.scrollHeight - visibleHeight;
   } else {
     visibleHeight = 0;
@@ -74,6 +76,7 @@ export function GroupCallOverflowArea({
     // If there aren't any overflowed participants, we want to clear the scroll position
     //   so we don't hold onto stale values.
     if (!hasOverflowedParticipants) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setOverflowScrollTop(0);
     }
   }, [hasOverflowedParticipants]);
@@ -187,18 +190,26 @@ function OverflowAreaScrollMarker({
   onClick: () => void;
   placement: 'top' | 'bottom';
 }): ReactElement {
-  const baseClassName =
-    'module-ongoing-call__participants__overflow__scroll-marker';
+  const placements = {
+    top: 'module-ongoing-call__participants__overflow__scroll-marker--top',
+    bottom:
+      'module-ongoing-call__participants__overflow__scroll-marker--bottom',
+  };
 
   return (
     <div
-      className={classNames(baseClassName, `${baseClassName}--${placement}`, {
-        [`${baseClassName}--hidden`]: isHidden,
-      })}
+      className={classNames(
+        'module-ongoing-call__participants__overflow__scroll-marker',
+        placements[placement],
+        {
+          'module-ongoing-call__participants__overflow__scroll-marker--hidden':
+            isHidden,
+        }
+      )}
     >
       <button
         type="button"
-        className={`${baseClassName}__button`}
+        className="module-ongoing-call__participants__overflow__scroll-marker__button"
         onClick={onClick}
         aria-label={
           placement === 'top'

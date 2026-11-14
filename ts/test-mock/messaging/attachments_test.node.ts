@@ -16,6 +16,7 @@ import { v4 } from 'uuid';
 import type { App } from '../playwright.node.ts';
 import { Bootstrap } from '../bootstrap.node.ts';
 import {
+  getLoadedImagesInside,
   getMessageInTimelineByTimestamp,
   getTimelineMessageWithText,
   sendMessageWithAttachments,
@@ -25,7 +26,6 @@ import * as durations from '../../util/durations/index.std.ts';
 import { strictAssert } from '../../util/assert.std.ts';
 import { IMAGE_PNG, VIDEO_MP4 } from '../../types/MIME.std.ts';
 import { toBase64 } from '../../Bytes.std.ts';
-import type { AttachmentType } from '../../types/Attachment.std.ts';
 
 export const debug = createDebug('mock:test:attachments');
 
@@ -125,8 +125,8 @@ describe('attachments', function (this: Mocha.Suite) {
     });
 
     await expect(
-      getMessageInTimelineByTimestamp(page, incomingTimestamp).locator(
-        'img.module-image__image'
+      getLoadedImagesInside(
+        getMessageInTimelineByTimestamp(page, incomingTimestamp)
       )
     ).toBeVisible();
 
@@ -179,13 +179,13 @@ describe('attachments', function (this: Mocha.Suite) {
     });
 
     await expect(
-      getMessageInTimelineByTimestamp(page, incrementalTimestamp).locator(
-        'img.module-image__image'
+      getLoadedImagesInside(
+        getMessageInTimelineByTimestamp(page, incrementalTimestamp)
       )
     ).toBeVisible();
     await expect(
-      getMessageInTimelineByTimestamp(page, badIncrementalTimestamp).locator(
-        'img.module-image__image'
+      getLoadedImagesInside(
+        getMessageInTimelineByTimestamp(page, badIncrementalTimestamp)
       )
     ).toBeVisible();
 
@@ -250,7 +250,7 @@ describe('attachments', function (this: Mocha.Suite) {
       timestamp: phoneTimestamp,
     });
     await getMessageInTimelineByTimestamp(page, phoneTimestamp)
-      .locator('.module-image--loaded')
+      .locator('.module-image[data-loaded]')
       .waitFor();
 
     debug('receiving same attachment from contact');
@@ -265,7 +265,7 @@ describe('attachments', function (this: Mocha.Suite) {
     });
 
     await getMessageInTimelineByTimestamp(page, friendTimestamp)
-      .locator('.module-image--loaded')
+      .locator('.module-image[data-loaded]')
       .waitFor();
 
     debug('sending same attachment from desktop');
@@ -286,9 +286,9 @@ describe('attachments', function (this: Mocha.Suite) {
     strictAssert(friendDBMessage, 'incoming message exists in DB');
     strictAssert(sentDBMessage, 'sent message exists in DB');
 
-    const phoneDBAttachment: AttachmentType = phoneDBMessage.attachments?.[0];
-    const friendDBAttachment: AttachmentType = friendDBMessage.attachments?.[0];
-    const sentDBAttachment: AttachmentType = sentDBMessage.attachments?.[0];
+    const phoneDBAttachment = phoneDBMessage.attachments?.[0];
+    const friendDBAttachment = friendDBMessage.attachments?.[0];
+    const sentDBAttachment = sentDBMessage.attachments?.[0];
 
     strictAssert(phoneDBAttachment, 'outgoing sync message exists in DB');
     strictAssert(friendDBAttachment, 'incoming message exists in DB');
@@ -385,13 +385,11 @@ describe('attachments', function (this: Mocha.Suite) {
       [CAT_PATH]
     );
 
-    const firstAttachment: AttachmentType = (
-      await app.getMessagesBySentAt(firstTimestamp)
-    )[0]?.attachments?.[0];
+    const firstAttachment = (await app.getMessagesBySentAt(firstTimestamp))[0]
+      ?.attachments?.[0];
 
-    const secondAttachment: AttachmentType = (
-      await app.getMessagesBySentAt(secondTimestamp)
-    )[0]?.attachments?.[0];
+    const secondAttachment = (await app.getMessagesBySentAt(secondTimestamp))[0]
+      ?.attachments?.[0];
 
     strictAssert(firstAttachment, 'firstAttachment exists in DB');
     strictAssert(secondAttachment, 'secondAttachment exists in DB');
@@ -454,13 +452,13 @@ describe('attachments', function (this: Mocha.Suite) {
     });
 
     await expect(
-      getMessageInTimelineByTimestamp(page, incomingVideoTimestamp).locator(
-        'img.module-image__image'
+      getLoadedImagesInside(
+        getMessageInTimelineByTimestamp(page, incomingVideoTimestamp)
       )
     ).toBeVisible();
     await expect(
-      getMessageInTimelineByTimestamp(page, incomingCatTimestamp).locator(
-        'img.module-image__image'
+      getLoadedImagesInside(
+        getMessageInTimelineByTimestamp(page, incomingCatTimestamp)
       )
     ).toBeVisible();
 

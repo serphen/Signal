@@ -20,7 +20,7 @@ import {
   type NotificationClickData,
   notificationService,
 } from '../services/notifications.preload.ts';
-import { joinViaLink } from '../groups.preload.ts';
+import { startJoinViaLink } from '../groups.preload.ts';
 import {
   StoryViewModeType,
   StoryViewTargetType,
@@ -35,6 +35,7 @@ import type {
 } from './preload.preload.ts';
 import { SystemTraySetting } from '../types/SystemTraySetting.std.ts';
 import { putStickers } from '../textsecure/WebAPI.preload.ts';
+import type { PDFWindowPropsType } from '../windows/pdf/types.std.ts';
 import OS from './os/osPreload.preload.ts';
 
 const { noop } = lodash;
@@ -60,6 +61,7 @@ export type IPCEventsCallbacksType = {
     mediaType: 'screen' | 'microphone' | 'camera'
   ) => Promise<ReturnType<SystemPreferences['getMediaAccessStatus']>>;
   installStickerPack: (packId: string, key: string) => Promise<void>;
+  generatePDF: (args: PDFWindowPropsType) => Promise<Uint8Array<ArrayBuffer>>;
   requestCloseConfirmation: () => Promise<boolean>;
   setMediaPlaybackDisabled: (playbackDisabled: boolean) => void;
   showConversationViaNotification: (data: NotificationClickData) => void;
@@ -81,6 +83,7 @@ export type IPCEventsCallbacksType = {
   ) => Promise<string>;
 };
 
+// oxlint-disable-next-line typescript/no-generated-empty-object-type
 type ValuesWithGetters = Omit<
   SettingsValuesType,
   // Async - we'll redefine these in IPCEventsGettersType
@@ -274,6 +277,9 @@ export function createIPCEvents(
         actionSource: 'ui',
       });
     },
+    generatePDF: (args: PDFWindowPropsType) => {
+      return ipcRenderer.invoke('pdf:generate', args);
+    },
     requestCloseConfirmation: async (): Promise<boolean> => {
       try {
         await new Promise<void>((resolve, reject) => {
@@ -399,7 +405,7 @@ export function createIPCEvents(
         return;
       }
       try {
-        await joinViaLink(value);
+        await startJoinViaLink(value);
       } catch (error) {
         log.error(
           'showGroupViaLink: Ran into an error!',

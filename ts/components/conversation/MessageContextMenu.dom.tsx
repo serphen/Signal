@@ -3,7 +3,7 @@
 
 import { useRef, type ReactNode, type JSX } from 'react';
 import type { LocalizerType } from '../../types/I18N.std.ts';
-import { AxoMenuBuilder } from '../../axo/AxoMenuBuilder.dom.tsx';
+import { AxoMenuBuilder } from '../../axo/menus/AxoMenuBuilder.dom.tsx';
 import { isInternalFeaturesEnabled } from '../../util/isInternalFeaturesEnabled.dom.ts';
 
 type MessageContextMenuProps = Readonly<{
@@ -23,6 +23,8 @@ type MessageContextMenuProps = Readonly<{
   onCopy: (() => void) | null;
   onForward: (() => void) | null;
   onDeleteMessage: (() => void) | null;
+  onFavoriteSticker: (() => void) | null;
+  onUnfavoriteSticker: (() => void) | null;
   onPinMessage: (() => void) | null;
   onUnpinMessage: (() => void) | null;
   onMoreInfo: (() => void) | null;
@@ -39,6 +41,8 @@ export function MessageContextMenu({
   onDebugMessage,
   onDownload: _onDownload,
   onEdit,
+  onFavoriteSticker,
+  onUnfavoriteSticker,
   onReplyToMessage: _onReplyToMessage,
   onReact: _onReact,
   onEndPoll,
@@ -67,6 +71,19 @@ export function MessageContextMenu({
           }
         }}
       >
+        {onFavoriteSticker && (
+          <AxoMenuBuilder.Item symbol="star" onSelect={onFavoriteSticker}>
+            {i18n('icu:messageContextMenu__sticker--addFavorite')}
+          </AxoMenuBuilder.Item>
+        )}
+        {onUnfavoriteSticker && (
+          <AxoMenuBuilder.Item
+            symbol="star-slash"
+            onSelect={onUnfavoriteSticker}
+          >
+            {i18n('icu:messageContextMenu__sticker--removeFavorite')}
+          </AxoMenuBuilder.Item>
+        )}
         {onEndPoll && (
           <AxoMenuBuilder.Item symbol="stop-circle" onSelect={onEndPoll}>
             {i18n('icu:Poll__end-poll')}
@@ -117,7 +134,7 @@ export function MessageContextMenu({
           </AxoMenuBuilder.Item>
         )}
         {onMoreInfo && (
-          <AxoMenuBuilder.Item symbol="info" onSelect={onMoreInfo}>
+          <AxoMenuBuilder.Item symbol="info-circle" onSelect={onMoreInfo}>
             {i18n('icu:MessageContextMenu__info')}
           </AxoMenuBuilder.Item>
         )}

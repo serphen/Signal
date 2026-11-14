@@ -55,8 +55,6 @@ function getToast(toastType: ToastType): AnyToast {
       };
     case ToastType.CallQualitySurveySuccess:
       return { toastType: ToastType.CallQualitySurveySuccess };
-    case ToastType.CannotAddMemberLabel:
-      return { toastType: ToastType.CannotAddMemberLabel };
     case ToastType.CannotEditMessage:
       return { toastType: ToastType.CannotEditMessage };
     case ToastType.CannotForwardEmptyMessage:
@@ -216,6 +214,10 @@ function getToast(toastType: ToastType): AnyToast {
       };
     case ToastType.PinnedMessageNotFound:
       return { toastType: ToastType.PinnedMessageNotFound };
+    case ToastType.PinChangeCompleted:
+      return { toastType: ToastType.PinChangeCompleted };
+    case ToastType.PinReminderCompleted:
+      return { toastType: ToastType.PinReminderCompleted };
     case ToastType.PollNotFound:
       return { toastType: ToastType.PollNotFound };
     case ToastType.ReactionFailed:
@@ -240,6 +242,12 @@ function getToast(toastType: ToastType): AnyToast {
       return { toastType: ToastType.ReportedSpamAndBlocked };
     case ToastType.SQLError:
       return { toastType: ToastType.SQLError };
+    case ToastType.StickerFavoriteAdded:
+      return { toastType: ToastType.StickerFavoriteAdded };
+    case ToastType.StickerFavoriteRemoved:
+      return { toastType: ToastType.StickerFavoriteRemoved };
+    case ToastType.StickerFavoritesTooMany:
+      return { toastType: ToastType.StickerFavoritesTooMany };
     case ToastType.StickerPackInstallFailed:
       return { toastType: ToastType.StickerPackInstallFailed };
     case ToastType.StoryMuted:
@@ -293,6 +301,11 @@ function getToast(toastType: ToastType): AnyToast {
         toastType: ToastType.VideoFileSize,
         parameters: { limit: 100, units: 'MB' },
       };
+    case ToastType.VideoFileDuration:
+      return {
+        toastType: ToastType.VideoFileDuration,
+        parameters: { maxDuration: 300 },
+      };
     case ToastType.ViewOnceDisabled:
       return { toastType: ToastType.ViewOnceDisabled };
     case ToastType.ViewOnceEnabled:
@@ -314,6 +327,12 @@ function getMegaphone(megaphoneType: MegaphoneType): AnyActionableMegaphone {
       return {
         type: megaphoneType,
         onLearnMore: action('onLearnMore'),
+        onDismiss: action('onDismiss'),
+      };
+    case MegaphoneType.PinReminder:
+      return {
+        type: megaphoneType,
+        onShowModal: action('onShowModal'),
         onDismiss: action('onDismiss'),
       };
     case MegaphoneType.Remote:
@@ -365,6 +384,7 @@ export default {
     megaphoneType: MegaphoneType.UsernameOnboarding,
     OS: 'macOS',
     isInFullScreenCall: false,
+    systemPreferredLanguages: [],
   },
 } satisfies Meta<Args>;
 

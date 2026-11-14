@@ -19,6 +19,12 @@ const permissiveNumberOrNull = z
   .transform(convertUndefinedToNull)
   // oxlint-disable-next-line promise/prefer-await-to-then
   .catch(null);
+const permissiveBlobOrNull = z
+  .instanceof(Uint8Array)
+  .optional()
+  .transform(convertUndefinedToNull)
+  // oxlint-disable-next-line promise/prefer-await-to-then
+  .catch(null);
 const permissiveAttachmentVersion = z
   .union([z.literal(1), z.literal(2)])
   .optional()
@@ -66,6 +72,7 @@ export const permissiveMessageAttachmentSchema = z.object({
   key: permissiveStringOrNull,
   fileName: permissiveStringOrNull,
   downloadPath: permissiveStringOrNull,
+  transcodingTargetQuality: permissiveNumberOrNull,
   transitCdnKey: permissiveStringOrNull,
   transitCdnNumber: permissiveNumberOrNull,
   transitCdnUploadTimestamp: permissiveNumberOrNull,
@@ -89,6 +96,7 @@ export const permissiveMessageAttachmentSchema = z.object({
   backupThumbnailVersion: permissiveAttachmentVersion,
   storyTextAttachmentJson: permissiveStringOrNull,
   localBackupPath: permissiveStringOrNull,
+  audioWaveform: permissiveBlobOrNull,
   flags: permissiveNumberOrNull,
   error: permissiveOptionalBool,
   wasTooBig: permissiveOptionalBool,

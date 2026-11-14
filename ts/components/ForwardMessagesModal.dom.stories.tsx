@@ -53,7 +53,7 @@ const useProps = (overrideProps: Partial<PropsType> = {}): PropsType => ({
   getPreferredBadge: () => undefined,
   i18n,
   isInFullScreenCall: false,
-  linkPreviewForSource: () => undefined,
+  linkPreview: undefined,
   onClose: action('onClose'),
   onChange: action('onChange'),
   removeLinkPreview: action('removeLinkPreview'),
@@ -136,6 +136,7 @@ export function LinkPreview(): JSX.Element {
             previews: [
               {
                 description: LONG_DESCRIPTION,
+                // oxlint-disable-next-line react/purity
                 date: Date.now(),
                 domain: 'https://www.signal.org',
                 url: 'signal.org',

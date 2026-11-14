@@ -31,6 +31,7 @@ const config = {
         'ts/windows/calldiagnostic/preload.preload.ts!',
         'ts/windows/debuglog/preload.preload.ts!',
         'ts/windows/loading/preload.preload.ts!',
+        'ts/windows/pdf/preload.preload.ts!',
         'ts/windows/permissions/preload.preload.ts!',
         'ts/windows/screenShare/preload.preload.ts!',
         'ts/windows/sticker-creator/preload.preload.ts!',
@@ -39,11 +40,13 @@ const config = {
         'ts/windows/calldiagnostic/app.dom.tsx!',
         'ts/windows/debuglog/app.dom.tsx!',
         'ts/windows/loading/start.dom.ts!',
+        'ts/windows/pdf/app.dom.tsx!',
         'ts/windows/permissions/app.dom.tsx!',
         'ts/windows/screenShare/app.dom.tsx!',
         // Others
         'codemods/**/*.mjs',
         'scripts/**/*.mjs',
+        '.github/scripts/**/*.mjs',
       ],
       project: [
         // Production
@@ -62,6 +65,7 @@ const config = {
         'ts/util/lint/**/*.{ts,tsx}',
         'test/**/*.mjs',
         'scripts/**/*.mjs',
+        '.github/scripts/**/*.mjs',
         'codemods/**/*.mjs',
 
         // exclude workspaces
@@ -71,6 +75,7 @@ const config = {
         'buffer', // same name as builtin
         'url', // same name as builtin
         'danger', // turn into real workspace
+        '@types/audioworklet', // only referenced via triple-slash include
       ],
       ignoreFiles: [
         'ts/components/Profiler.dom.tsx',
@@ -110,8 +115,22 @@ const config = {
       ignoreBinaries: ['xcrun'],
       ignoreDependencies: ['node-addon-api'],
     },
+    'packages/clonefile': {
+      ignoreBinaries: ['xcrun'],
+      ignoreDependencies: ['node-addon-api'],
+    },
     'packages/windows-ucv': {
       ignoreDependencies: ['node-addon-api'],
+    },
+    'packages/mock-server': {
+      entry: [
+        'src/index.ts!',
+        'certs/generate-trust-root.js',
+        'certs/generate-zk-params.js',
+        'scripts/**/*.mjs',
+      ],
+      ignoreFiles: ['src/**/*.ts', 'test/**/*.ts'],
+      ignoreDependencies: ['.*'],
     },
     'sticker-creator': {
       project: [

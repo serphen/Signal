@@ -7,7 +7,7 @@ import lodash from 'lodash';
 import type {
   MessageAttributesType,
   ReadonlyMessageAttributesType,
-} from '../model-types.d.ts';
+} from '../model-types.std.ts';
 import type { SendStateByConversationId } from '../messages/MessageSendState.std.ts';
 import { isOutgoing, isStory } from '../state/selectors/message.preload.ts';
 import { getOwn } from '../util/getOwn.std.ts';
@@ -302,6 +302,8 @@ const deleteSentProtoBatcher = createWaitBatcher({
       // `deleteSentProtoRecipient` has already updated the database so there
       // is no need in calling `updateConversation`
       convo.set({ shareMyPhoneNumber: undefined });
+
+      window.SignalCI?.handleEvent(`sharedPhoneNumber:${serviceId}`, null);
     }
   },
 });

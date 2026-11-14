@@ -12,7 +12,6 @@ import {
 import { SignalService as Proto } from '../../protobuf/index.std.ts';
 import type { CallHistoryGroup } from '../../types/CallDisposition.std.ts';
 import { assertDev } from '../../util/assert.std.ts';
-import { getConversationColorAttributes } from '../../util/getConversationColorAttributes.std.ts';
 import { getGroupMemberships } from '../../util/getGroupMemberships.dom.ts';
 import {
   getBadgesSelector,
@@ -26,11 +25,9 @@ import {
   getConversationByServiceIdSelector,
   getPendingAvatarDownloadSelector,
 } from '../selectors/conversations.dom.ts';
-import {
-  getAreWeASubscriber,
-  getDefaultConversationColor,
-  getItems,
-} from '../selectors/items.dom.ts';
+import { getAreWeASubscriber, getItems } from '../selectors/items.dom.ts';
+import { getBubbleColorResolver } from '../selectors/chatColors.std.ts';
+import { getBubbleColorRenderDataBackground } from '../../util/getCustomColorStyle.std.ts';
 import { getSelectedNavTab } from '../selectors/nav.std.ts';
 import {
   getIntl,
@@ -52,7 +49,6 @@ import { drop } from '../../util/drop.std.ts';
 import { DataReader } from '../../sql/Client.preload.ts';
 import { isFeaturedEnabledSelector } from '../../util/isFeatureEnabled.dom.ts';
 import { getCanAddLabel } from '../../types/GroupMemberLabels.std.ts';
-import { useToastActions } from '../ducks/toast.preload.ts';
 import { useNavActions } from '../ducks/nav.std.ts';
 import { NavTab, SettingsPage } from '../../types/Nav.std.ts';
 
@@ -115,7 +111,7 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
     getConversationByServiceIdSelector
   );
   const conversationSelector = useSelector(getConversationByIdSelector);
-  const defaultConversationColor = useSelector(getDefaultConversationColor);
+  const bubbleColorResolver = useSelector(getBubbleColorResolver);
   const getPreferredBadge = useSelector(getPreferredBadgeSelector);
   const isPendingAvatarDownload = useSelector(getPendingAvatarDownloadSelector);
   const selectedNavTab = useSelector(getSelectedNavTab);
@@ -137,7 +133,7 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
     reportSpam,
     saveAvatarToDisk,
     setDisappearingMessages,
-    setMuteDuration,
+    setMuteExpiration,
     showConversation,
     startAvatarDownload,
     terminateGroup,
@@ -157,17 +153,15 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
     toggleEditNicknameAndNoteModal,
     toggleSafetyNumberModal,
   } = useGlobalModalActions();
-  const { showToast } = useToastActions();
 
   const conversation = conversationSelector(conversationId);
   assertDev(
     conversation,
     '<SmartConversationDetails> expected a conversation to be found'
   );
-  const conversationWithColorAttributes = {
-    ...conversation,
-    ...getConversationColorAttributes(conversation, defaultConversationColor),
-  };
+  const bubbleColorBackground = getBubbleColorRenderDataBackground(
+    bubbleColorResolver(conversation.bubbleColor)
+  );
 
   const groupMemberships = getGroupMemberships(
     conversation,
@@ -214,7 +208,7 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
   const canAddLabel = getCanAddLabel(conversation, ourMembership);
 
   const handleDeleteNicknameAndNote = useCallback(() => {
-    updateNicknameAndNote(conversationId, { nickname: null, note: null });
+    void updateNicknameAndNote(conversationId, { nickname: null, note: null });
   }, [conversationId, updateNicknameAndNote]);
 
   const handleOpenEditNicknameAndNoteModal = useCallback(() => {
@@ -230,11 +224,11 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
   }, [onMoveToInbox, conversationId]);
 
   const onConversationDeleteMessages = useCallback(() => {
-    destroyMessages(conversationId);
+    void destroyMessages(conversationId);
   }, [destroyMessages, conversationId]);
 
   const onNavigateToDonate = useCallback(() => {
-    changeLocation({
+    void changeLocation({
       tab: NavTab.Settings,
       details: {
         page: SettingsPage.DonationsDonateFlow,
@@ -273,7 +267,8 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
       canAddLabel={canAddLabel}
       canAddNewMembers={canAddNewMembers}
       canEditGroupInfo={canEditGroupInfo}
-      conversation={conversationWithColorAttributes}
+      bubbleColorBackground={bubbleColorBackground}
+      conversation={conversation}
       deleteAvatarFromDisk={deleteAvatarFromDisk}
       getPreferredBadge={getPreferredBadge}
       getProfilesForConversation={getProfilesForConversation}
@@ -312,10 +307,9 @@ export const SmartConversationDetails = memo(function SmartConversationDetails({
       searchInConversation={searchInConversation}
       selectedNavTab={selectedNavTab}
       setDisappearingMessages={setDisappearingMessages}
-      setMuteDuration={setMuteDuration}
+      setMuteExpiration={setMuteExpiration}
       showContactModal={showContactModal}
       showConversation={showConversation}
-      showToast={showToast}
       startAvatarDownload={() => startAvatarDownload(conversationId)}
       terminateGroup={terminateGroup}
       theme={theme}

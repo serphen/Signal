@@ -12,25 +12,25 @@
   vertical-align: middle;
 
   &__contents {
-    @include mixins.avatar-colors;
-    & {
-      position: relative;
-      overflow: hidden;
-      border-radius: 100%;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      outline: none;
+    position: relative;
+    overflow: hidden;
+    border-radius: 100%;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    margin: 0;
+
+    background-color: var(--module-Avatar__contents-bg);
+    color: var(--module-Avatar__contents-fg);
+
+    .module-Avatar__icon {
+      background-color: currentColor;
     }
 
-    @at-root button#{&} {
-      &:focus {
-        outline: none;
-        @include mixins.keyboard-mode {
-          @include mixins.axo-focus-ring;
-        }
+    &:where(button) {
+      &:focus-visible {
+        @include mixins.axo-focus-ring;
       }
     }
   }
@@ -145,14 +145,10 @@
       background-position: center center;
       background-size: contain;
       border: 0;
-      outline: none;
 
-      &:focus {
-        outline: none;
-        @include mixins.keyboard-mode {
-          @include mixins.axo-focus-ring;
-          border-radius: 6px;
-        }
+      &:focus-visible {
+        @include mixins.axo-focus-ring;
+        border-radius: 6px;
       }
     }
   }

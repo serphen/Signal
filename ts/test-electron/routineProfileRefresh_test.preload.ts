@@ -3,10 +3,11 @@
 
 import * as sinon from 'sinon';
 import { v4 as generateUuid } from 'uuid';
+import { MuteExpiration } from '@signalapp/types';
 
 import lodash from 'lodash';
 import { ConversationModel } from '../models/conversations.preload.ts';
-import type { ConversationAttributesType } from '../model-types.d.ts';
+import type { ConversationAttributesType } from '../model-types.std.ts';
 import { DAY, HOUR, MINUTE, MONTH } from '../util/durations/index.std.ts';
 
 import { routineProfileRefresh } from '../routineProfileRefresh.preload.ts';
@@ -50,7 +51,7 @@ describe('routineProfileRefresh', () => {
       messageCount: 2,
       messageCountBeforeMessageRequests: 0,
       messageRequestResponseType: 0,
-      muteExpiresAt: 0,
+      muteExpiresAt: MuteExpiration.UNMUTED,
       profileAvatar: undefined,
       profileKeyCredential: generateUuid(),
       profileKeyCredentialExpiration: Date.now() + 2 * DAY,

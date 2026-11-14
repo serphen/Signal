@@ -1,5 +1,6 @@
 // Copyright 2020 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+// oxlint-disable max-classes-per-file
 
 import type { PublicKey } from '@signalapp/libsignal-client';
 import { z } from 'zod';
@@ -53,7 +54,6 @@ export type TypingEventConfig = {
   typing: TypingEventData;
 };
 
-// oxlint-disable-next-line max-classes-per-file
 export class TypingEvent extends Event {
   public readonly sender?: string;
   public readonly senderAci?: AciString;
@@ -549,6 +549,7 @@ export type CallLinkUpdateSyncEventData = Readonly<{
   type: CallLinkUpdateSyncType;
   rootKey: Uint8Array<ArrayBuffer> | undefined;
   adminKey: Uint8Array<ArrayBuffer> | undefined;
+  timestamp: number;
 }>;
 
 export class CallLinkUpdateSyncEvent extends ConfirmableEvent {
@@ -575,7 +576,7 @@ export class UsernameChangeSyncEvent extends ConfirmableEvent {
   }
 }
 
-const addressableMessageSchema = z.union([
+export const addressableMessageSchema = z.union([
   z.object({
     type: z.literal('aci').readonly(),
     authorAci: z.string().refine(isAciString),
@@ -595,7 +596,7 @@ const addressableMessageSchema = z.union([
 
 export type AddressableMessage = z.infer<typeof addressableMessageSchema>;
 
-const conversationIdentifierSchema = z.union([
+export const conversationIdentifierSchema = z.union([
   z.object({
     type: z.literal('aci').readonly(),
     aci: z.string().refine(isAciString),
@@ -672,6 +673,29 @@ export class DeleteForMeSyncEvent extends ConfirmableEvent {
     super('deleteForMeSync', confirm);
 
     this.deleteForMeSync = deleteForMeSync;
+    this.timestamp = timestamp;
+    this.envelopeId = envelopeId;
+  }
+}
+
+export type AttachmentBackfillRequestSyncEventData = Readonly<{
+  targetMessage: AddressableMessage;
+  targetConversation: ConversationIdentifier;
+}>;
+
+export class AttachmentBackfillRequestSyncEvent extends ConfirmableEvent {
+  public readonly request: AttachmentBackfillRequestSyncEventData;
+  public readonly timestamp: number;
+  public readonly envelopeId: string;
+
+  constructor(
+    request: AttachmentBackfillRequestSyncEventData,
+    timestamp: number,
+    envelopeId: string,
+    confirm: ConfirmCallback
+  ) {
+    super('attachmentBackfillRequestSync', confirm);
+    this.request = request;
     this.timestamp = timestamp;
     this.envelopeId = envelopeId;
   }

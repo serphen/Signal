@@ -134,7 +134,7 @@ const IPC: IPCType = {
   removeSetupMenuItems: () => ipc.send('remove-setup-menu-items'),
   setAutoHideMenuBar: autoHide => ipc.send('set-auto-hide-menu-bar', autoHide),
   setAutoLaunch: value => ipc.invoke('set-auto-launch', value),
-  setBadge: badge => ipc.send('set-badge', badge),
+  setBadgeCount: badgeCount => ipc.send('set-badge-count', badgeCount),
   setMenuBarVisibility: visibility =>
     ipc.send('set-menu-bar-visibility', visibility),
   showDebugLog: (options?: { mode?: 'submit' | 'close' }) => {
@@ -222,7 +222,7 @@ window.open = () => null;
 
 // Playwright uses `eval` for `.evaluate()` API
 if (config.ciMode !== 'full' && config.environment !== Environment.Test) {
-  // oxlint-disable-next-line no-multi-assign
+  // oxlint-disable-next-line no-multi-assign, no-eval
   window.eval = global.eval = () => null;
 }
 
@@ -288,7 +288,7 @@ ipc.on('additional-log-data-request', async event => {
   }
 
   const ourAci = itemStorage.user.getAci();
-  const ourPni = itemStorage.user.getPni();
+  const ourPni = itemStorage.user.getOptionalPni();
 
   let backupTierLogCode: string;
   switch (itemStorage.get('backupTier')) {

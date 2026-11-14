@@ -18,12 +18,17 @@ import {
   IMAGE_PNG,
   LONG_MESSAGE,
 } from '../types/MIME.std.ts';
-import type { MessageAttributesType } from '../model-types.d.ts';
+import { TranscodingTargetQuality } from '../types/transcoding.std.ts';
+import type { MessageAttributesType } from '../model-types.std.ts';
 import { ReadStatus } from '../messages/MessageReadStatus.std.ts';
 import { SeenStatus } from '../MessageSeenStatus.std.ts';
 import { DataWriter, DataReader } from '../sql/Client.preload.ts';
 import { strictAssert } from '../util/assert.std.ts';
-import { HOUR, MINUTE } from '../util/durations/index.std.ts';
+import {
+  HOUR,
+  MINUTE,
+  DurationInSeconds,
+} from '../util/durations/index.std.ts';
 import {
   testAttachmentDigest,
   testAttachmentKey,
@@ -91,7 +96,6 @@ function composeAttachment(
     cdnNumber: 3,
     key: testAttachmentKey(),
     digest: testAttachmentDigest(),
-    duration: 123,
     size: 100,
     downloadPath: 'downloadPath',
     contentType: IMAGE_JPEG,
@@ -128,6 +132,9 @@ function composeAttachment(
     thumbnail: composeThumbnail(index),
     screenshot: composeScreenshot(index),
     thumbnailFromBackup: composeBackupThumbnail(index),
+    transcodingTargetQuality: TranscodingTargetQuality.High,
+    audioWaveform: [1, 2, 3],
+    duration: DurationInSeconds.fromSeconds(123),
     ...overrides,
   } as const;
 
@@ -216,6 +223,9 @@ function composeMessageWithEveryAttachment() {
           isProfile: true,
           avatar: contactAttachment,
         },
+        aci: generateAci(),
+        note: 'note',
+        nickname: { givenName: 'nick', familyName: 'name' },
       },
     ],
     sticker: {

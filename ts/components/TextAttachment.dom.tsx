@@ -139,11 +139,18 @@ export const TextAttachment = forwardRef<HTMLTextAreaElement, PropsType>(
 
       node.focus();
       node.setSelectionRange(node.value.length, node.value.length);
-    }, [isEditingText]);
+    }, [
+      // oxlint-disable-next-line react/exhaustive-effect-dependencies
+      isEditingText,
+    ]);
 
     useEffect(() => {
+      // oxlint-disable-next-line react/set-state-in-effect
       setLinkPreviewOffsetTop(undefined);
-    }, [textAttachment.preview?.url]);
+    }, [
+      // oxlint-disable-next-line react/exhaustive-effect-dependencies
+      textAttachment.preview?.url,
+    ]);
 
     const [isHoveringOverTooltip, setIsHoveringOverTooltip] = useState(false);
 
@@ -243,8 +250,6 @@ export const TextAttachment = forwardRef<HTMLTextAreaElement, PropsType>(
               }}
             >
               {onChange ? (
-                // FIXME
-                // oxlint-disable-next-line jsx-a11y/control-has-associated-label
                 <textarea
                   dir="auto"
                   className="TextAttachment__text__container TextAttachment__text__textarea"
@@ -277,11 +282,7 @@ export const TextAttachment = forwardRef<HTMLTextAreaElement, PropsType>(
           )}
           {textAttachment.preview && textAttachment.preview.url && (
             <div
-              className={classNames('TextAttachment__preview-container', {
-                'TextAttachment__preview-container--large': Boolean(
-                  textAttachment.preview.title
-                ),
-              })}
+              className="TextAttachment__preview-container"
               ref={linkPreview}
               onBlur={() => setIsHoveringOverTooltip(false)}
               onFocus={showTooltip}

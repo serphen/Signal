@@ -1,9 +1,17 @@
 // Copyright 2020 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useCallback, useEffect, useState, useMemo, type JSX } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+  type JSX,
+  useEffectEvent,
+} from 'react';
 import classNames from 'classnames';
 import { FocusScope } from 'react-aria';
+import { tinykeys } from 'tinykeys';
 import type {
   SetLocalAudioType,
   SetLocalVideoType,
@@ -21,7 +29,6 @@ import {
 import { CallMode } from '../types/CallDisposition.std.ts';
 import type { CallingConversationType } from '../types/Calling.std.ts';
 import type { LocalizerType } from '../types/Util.std.ts';
-import * as KeyboardLayout from '../services/keyboardLayout.dom.ts';
 import type { ConversationType } from '../state/ducks/conversations.preload.ts';
 import { useCallingToasts } from './CallingToast.dom.tsx';
 import { CallingButtonToastsContainer } from './CallingToastManager.dom.tsx';
@@ -31,7 +38,7 @@ import { SpinnerV2 } from './SpinnerV2.dom.tsx';
 import type { SetLocalPreviewContainerType } from '../services/calling.preload.ts';
 
 export type PropsType = {
-  availableCameras: Array<MediaDeviceInfo>;
+  availableCameras: ReadonlyArray<MediaDeviceInfo>;
   callMode: CallMode;
   conversation: Pick<
     CallingConversationType,
@@ -79,7 +86,7 @@ export type PropsType = {
   showParticipantsList: boolean;
   toggleParticipants: () => void;
   togglePip: () => void;
-  toggleSettings: () => void;
+  toggleSettings: (open: boolean) => void;
 };
 
 export function CallingLobby({
@@ -129,31 +136,24 @@ export function CallingLobby({
     ? togglePip
     : undefined;
 
+  const onToggleVideoShortcut = useEffectEvent((event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleVideo();
+  });
+
+  const onToggleAudioShortcut = useEffectEvent((event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleAudio();
+  });
+
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent): void {
-      let eventHandled = false;
-
-      const key = KeyboardLayout.lookup(event);
-      if (event.shiftKey && (key === 'V' || key === 'v')) {
-        toggleVideo();
-        eventHandled = true;
-      } else if (event.shiftKey && (key === 'M' || key === 'm')) {
-        toggleAudio();
-        eventHandled = true;
-      }
-
-      if (eventHandled) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [toggleVideo, toggleAudio]);
+    return tinykeys(window, {
+      'Shift+V': onToggleVideoShortcut,
+      'Shift+M': onToggleAudioShortcut,
+    });
+  }, []);
 
   const [isCallConnecting, setIsCallConnecting] = useState(
     isAdhocJoinRequestPending || false
@@ -298,11 +298,10 @@ export function CallingLobby({
 
         <div
           className={classNames(
-            'module-calling__camera-is-off module-CallingLobby__camera-is-off',
-            `module-CallingLobby__camera-is-off--${
-              // oxlint-disable-next-line signal-desktop/enforce-tw
-              shouldShowLocalVideo ? 'invisible' : 'visible'
-            }`
+            'module-calling__camera-is-off',
+            shouldShowLocalVideo
+              ? 'module-CallingLobby__camera-is-off--invisible'
+              : 'module-CallingLobby__camera-is-off--visible'
           )}
         >
           {i18n('icu:calling__your-video-is-off')}

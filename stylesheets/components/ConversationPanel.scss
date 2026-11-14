@@ -57,10 +57,6 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-
-        &__in-contacts-icon {
-          margin-inline-start: 4px;
-        }
       }
     }
 
@@ -93,13 +89,13 @@
         );
       }
 
-      @include mixins.keyboard-mode {
-        &:focus {
+      @include mixins.light-theme {
+        &:focus-visible {
           background-color: variables.$color-ultramarine;
         }
       }
-      @include mixins.dark-keyboard-mode {
-        &:focus {
+      @include mixins.dark-theme {
+        &:focus-visible {
           background-color: variables.$color-ultramarine-light;
         }
       }

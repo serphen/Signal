@@ -21,7 +21,7 @@ import { strictAssert } from '../../util/assert.std.ts';
 import { toNumber } from '../../util/toNumber.std.ts';
 import { IMAGE_GIF } from '../../types/MIME.std.ts';
 import { typeIntoInput, waitForEnabledComposer } from '../helpers.node.ts';
-import type { MessageAttributesType } from '../../model-types.d.ts';
+import type { MessageAttributesType } from '../../model-types.std.ts';
 import { sleep } from '../../util/sleep.std.ts';
 import { generateAci } from '../../test-helpers/serviceIdUtils.std.ts';
 import { expect } from 'playwright/test';
@@ -655,7 +655,8 @@ describe('editing', function (this: Mocha.Suite) {
       }
 
       debug("testing message's send state (original)");
-      {
+
+      await expect(async () => {
         debug('getting message from app (original)');
         const message = await getMessageFromApp(originalMessageTimestamp);
 
@@ -669,7 +670,7 @@ describe('editing', function (this: Mocha.Suite) {
           'send state is delivered for main message'
         );
         assert.isUndefined(message.editHistory, 'no edit history, yet');
-      }
+      }).toPass();
 
       // Sending a v2 edited message targetting the original
       const editMessageV2Text = '12';
@@ -677,6 +678,13 @@ describe('editing', function (this: Mocha.Suite) {
 
       debug('sending edit message v2 desktop -> friend');
       await sendEditedMessage(page, originalMessageTimestamp, '2', '1');
+
+      debug("waiting for message on friend's device (original)");
+      const { editMessage: editMessageV2 } = await friend.waitForEditMessage();
+      assert.strictEqual(editMessageV2.dataMessage?.body, editMessageV2Text);
+      debug('v2 message', {
+        timestamp: toNumber(editMessageV2.dataMessage?.timestamp),
+      });
 
       {
         const readReceiptTimestamp = bootstrap.getTimestamp();
@@ -704,7 +712,7 @@ describe('editing', function (this: Mocha.Suite) {
       }
 
       debug("testing message's send state (current(v2) and original (v1))");
-      {
+      await expect(async () => {
         const message = await getMessageFromApp(originalMessageTimestamp);
         strictAssert(message.editHistory, 'edit history exists');
         // oxlint-disable-next-line typescript/no-unused-vars
@@ -719,14 +727,7 @@ describe('editing', function (this: Mocha.Suite) {
           SendStatus.Read,
           'original message is marked read'
         );
-      }
-
-      debug("waiting for message on friend's device (original)");
-      const { editMessage: editMessageV2 } = await friend.waitForEditMessage();
-      assert.strictEqual(editMessageV2.dataMessage?.body, editMessageV2Text);
-      debug('v2 message', {
-        timestamp: toNumber(editMessageV2.dataMessage?.timestamp),
-      });
+      }).toPass();
 
       // Sending a v3 edited message targetting v2
       // v3 will be read after we receive v4

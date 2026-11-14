@@ -1,96 +1,57 @@
 // Copyright 2024 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { type Readable, PassThrough } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
 import * as libsignal from '@signalapp/libsignal-client/dist/MessageBackup.js';
 import type { InputStream } from '@signalapp/libsignal-client/dist/io.js';
+import type { BackupKey } from '@signalapp/libsignal-client/dist/AccountKeys.js';
 
-import { strictAssert } from '../../util/assert.std.ts';
-import { toAciObject } from '../../util/ServiceId.node.ts';
-import { missingCaseError } from '../../util/missingCaseError.std.ts';
-import { DelimitedStream } from '../../util/DelimitedStream.node.ts';
 import { itemStorage } from '../../textsecure/Storage.preload.ts';
-
-export enum ValidationType {
-  Export = 'Export',
-  Internal = 'Internal',
-}
+import { Backups } from '../../protobuf/index.std.ts';
+import { getMessageBackupKey } from './crypto.preload.ts';
 
 export async function validateBackup(
   inputFactory: () => InputStream,
   fileSize: number,
-  type: ValidationType
+  purpose: libsignal.Purpose,
+  backupKey: BackupKey
 ): Promise<void> {
-  const accountEntropy = itemStorage.get('accountEntropyPool');
-  strictAssert(accountEntropy, 'Account Entropy Pool not available');
-
-  const aci = toAciObject(itemStorage.user.getCheckedAci());
-  const backupKey = new libsignal.MessageBackupKey({
-    accountEntropy,
-    aci,
-  });
-
   const outcome = await libsignal.validate(
-    backupKey,
-    libsignal.Purpose.RemoteBackup,
+    getMessageBackupKey(backupKey, itemStorage.user.getCheckedAci()),
+    purpose,
     inputFactory,
     BigInt(fileSize)
   );
 
-  if (type === ValidationType.Internal) {
-    strictAssert(
-      outcome.ok,
-      `Backup validation failed: ${outcome.errorMessage}`
-    );
-  } else if (type === ValidationType.Export) {
-    strictAssert(
-      outcome.ok,
-      `Backup validation failed: ${outcome.errorMessage}`
-    );
-  } else {
-    throw missingCaseError(type);
+  if (!outcome.ok) {
+    throw new Error(`Backup validation failed: ${outcome.errorMessage}`);
   }
 }
 
-export async function validateBackupStream(
-  readable: Readable
+export async function _internalValidateBackupIterator(
+  info: Backups.BackupInfo.Params,
+  iterable: AsyncIterable<NonNullable<Backups.Frame.Params['item']>>
 ): Promise<number> {
-  let validator: libsignal.OnlineBackupValidator | undefined;
+  const infoBuf = Backups.BackupInfo.encode(info);
+  let totalBytes = infoBuf.byteLength;
 
-  let totalBytes = 0;
-  let frameCount = 0;
+  const validator = new libsignal.OnlineBackupValidator(
+    infoBuf,
+    libsignal.Purpose.RemoteBackup
+  );
+
   const allErrorMessages: Array<string> = [];
+  let frameCount = 0;
+  for await (const item of iterable) {
+    const frameBuf = Backups.Frame.encode({ item });
 
-  const countBytes = new PassThrough();
-  countBytes.on('data', bytes => {
-    totalBytes += bytes.byteLength;
-  });
-
-  const delimited = new DelimitedStream();
-  delimited.on('data', frame => {
-    frameCount += 1;
-
-    // Info frame
-    if (frameCount === 1) {
-      validator = new libsignal.OnlineBackupValidator(
-        frame,
-        libsignal.Purpose.RemoteBackup
-      );
-      return;
-    }
-
-    strictAssert(validator != null, 'validator must be already created');
     try {
-      validator.addFrame(frame);
+      totalBytes += frameBuf.byteLength;
+      frameCount += 1;
+      validator.addFrame(frameBuf);
     } catch (error) {
       allErrorMessages.push(error.message);
     }
-  });
-
-  await pipeline(readable, countBytes, delimited);
-
-  strictAssert(validator != null, 'no frames');
+  }
 
   try {
     validator.finalize();

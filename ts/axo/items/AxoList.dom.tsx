@@ -1,30 +1,49 @@
 // Copyright 2026 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-import type { FC, ReactNode } from 'react';
-import { memo, useId } from 'react';
+import type { FC, ReactNode, Ref } from 'react';
+import { memo } from 'react';
 import { tw } from '../tw.dom.tsx';
-import {
-  AriaLabellingProvider,
-  useAriaLabellingContext,
-  useCreateAriaLabellingContext,
-} from '../_internal/AriaLabellingContext.dom.tsx';
+import { AriaLabelled } from '../aria/AriaLabelled.dom.tsx';
 
 export namespace AxoList {
+  /**
+   * <AxoList.Group>
+   * --------------------------------------------------------------------------
+   */
+
+  export type GroupProps = Readonly<{
+    children: ReactNode;
+  }>;
+
+  export const Group: FC<GroupProps> = memo(props => {
+    return (
+      <div className={tw('group/axo-list-group flex flex-col gap-4')}>
+        {props.children}
+      </div>
+    );
+  });
+
+  Group.displayName = 'AxoList.Group';
+
   /**
    * <AxoList.Root>
    * --------------------------------------------------------------------------
    */
 
   export type RootProps = Readonly<{
+    accessibilityLabel?: string;
     children: ReactNode;
   }>;
 
   export const Root: FC<RootProps> = memo(props => {
-    const { context, labelId } = useCreateAriaLabellingContext();
     return (
-      <AriaLabellingProvider value={context}>
-        <section aria-labelledby={labelId}>{props.children}</section>
-      </AriaLabellingProvider>
+      <AriaLabelled.Root>
+        <AriaLabelled.Target asChild label={props.accessibilityLabel}>
+          <section className={tw('group/axo-list-root min-w-min')}>
+            {props.children}
+          </section>
+        </AriaLabelled.Target>
+      </AriaLabelled.Root>
     );
   });
 
@@ -46,30 +65,26 @@ export namespace AxoList {
   Header.displayName = 'AxoList.Header';
 
   /**
-   * <AxoList.Title>
+   * <AxoList.Label>
    * --------------------------------------------------------------------------
    */
 
-  export type TitleProps = Readonly<{
-    // screenReaderOnly?: boolean;
+  export type LabelProps = Readonly<{
+    id?: string;
     children: ReactNode;
   }>;
 
-  export const Title: FC<TitleProps> = memo(props => {
-    const id = useId();
-    const { labelRef } = useAriaLabellingContext('AxoList.Root');
+  export const Label: FC<LabelProps> = memo(props => {
     return (
-      <h2
-        ref={labelRef}
-        id={id}
-        className={tw('type-body-medium font-semibold')}
-      >
-        {props.children}
-      </h2>
+      <AriaLabelled.Label asChild id={props.id}>
+        <h2 className={tw('type-body-medium font-semibold text-primary')}>
+          {props.children}
+        </h2>
+      </AriaLabelled.Label>
     );
   });
 
-  Title.displayName = 'AxoList.Title';
+  Label.displayName = 'AxoList.Label';
 
   /**
    * <AxoList.Description>
@@ -77,21 +92,14 @@ export namespace AxoList {
    */
 
   export type DescriptionProps = Readonly<{
-    // screenReaderOnly?: boolean;
     children: ReactNode;
   }>;
 
   export const Description: FC<DescriptionProps> = memo(props => {
-    const id = useId();
-    const { descriptionRef } = useAriaLabellingContext('AxoList.Root');
     return (
-      <p
-        ref={descriptionRef}
-        id={id}
-        className={tw('type-body-small text-secondary')}
-      >
-        {props.children}
-      </p>
+      <AriaLabelled.Description asChild>
+        <p className={tw('type-body-small text-secondary')}>{props.children}</p>
+      </AriaLabelled.Description>
     );
   });
 
@@ -103,15 +111,17 @@ export namespace AxoList {
    */
 
   export type BodyProps = Readonly<{
+    ref?: Ref<HTMLDivElement>;
     children: ReactNode;
   }>;
 
   export const Body: FC<BodyProps> = memo(props => {
     return (
       <div
+        ref={props.ref}
         className={tw(
           'min-w-fit',
-          'curved-20 bg-surface-primary p-1.5 shadow-elevation-0',
+          'curved-2xl bg-surface-card p-1 shadow-elevation-0',
           'forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]',
           'forced-colors:border forced-colors:border-[ButtonBorder]'
         )}
@@ -139,26 +149,28 @@ export namespace AxoList {
   Footer.displayName = 'AxoList.Footer';
 
   /**
-   * <AxoList.Help>
+   * <AxoList.FooterDescription>
    * --------------------------------------------------------------------------
    */
 
-  export type HelpProps = Readonly<{
+  export type FooterDescriptionProps = Readonly<{
     children: ReactNode;
   }>;
 
-  export const Help: FC<HelpProps> = memo(props => {
+  export const FooterDescription: FC<FooterDescriptionProps> = memo(props => {
     return (
-      <p
-        className={tw(
-          'type-body-small text-secondary',
-          'forced-colors:text-[GrayText]'
-        )}
-      >
-        {props.children}
-      </p>
+      <AriaLabelled.Description asChild>
+        <p
+          className={tw(
+            'type-body-small text-secondary',
+            'forced-colors:text-[GrayText]'
+          )}
+        >
+          {props.children}
+        </p>
+      </AriaLabelled.Description>
     );
   });
 
-  Help.displayName = 'AxoList.Help';
+  FooterDescription.displayName = 'AxoList.FooterDescription';
 }

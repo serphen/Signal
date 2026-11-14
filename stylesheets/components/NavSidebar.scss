@@ -76,38 +76,7 @@
 }
 
 .NavSidebar__BackButton {
-  @include mixins.button-reset();
-  & {
-    margin-block: -4px;
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  &:hover {
-    background: var(--axo-color-fill-primary);
-  }
-
-  &:focus {
-    outline: none;
-    @include mixins.keyboard-mode {
-      @include mixins.axo-focus-ring;
-    }
-  }
-
-  &::before {
-    content: '';
-    display: block;
-    width: 20px;
-    height: 20px;
-    @include mixins.color-svg(
-      '../images/icons/v3/chevron/chevron-left.svg',
-      var(--axo-color-label-primary)
-    );
-  }
-}
-
-.NavSidebar__BackButtonLabel {
-  @include mixins.sr-only;
+  margin-block: -4px;
 }
 
 .NavSidebar .module-SearchInput__container {
@@ -134,11 +103,8 @@
   // Disable browser handling of gestures so element can be dragged with touch events
   touch-action: none;
 
-  &:focus {
-    outline: none;
-    @include mixins.keyboard-mode {
-      @include mixins.axo-focus-ring;
-    }
+  &:focus-visible {
+    @include mixins.axo-focus-ring;
   }
 }
 
@@ -160,34 +126,6 @@
   .NavSidebar--narrow & {
     flex-direction: column;
   }
-}
-
-.NavSidebar__ActionButton {
-  @include mixins.button-reset();
-  & {
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  &:hover,
-  &:focus {
-    background: var(--axo-color-fill-primary);
-  }
-
-  &:active {
-    background: var(--axo-color-fill-primary-pressed);
-  }
-
-  &:focus {
-    outline: none;
-    @include mixins.keyboard-mode {
-      @include mixins.axo-focus-ring;
-    }
-  }
-}
-
-.NavSidebar__ActionButtonLabel {
-  @include mixins.sr-only;
 }
 
 .NavSidebarSearchHeader {

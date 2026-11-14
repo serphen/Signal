@@ -1,12 +1,13 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-import type { KeyboardEvent, ReactNode, JSX } from 'react';
+import type { ReactNode, JSX } from 'react';
 import { useCallback } from 'react';
 import type { Placement } from 'react-aria';
 import { Dialog, Popover } from 'react-aria-components';
 import classNames from 'classnames';
 import { Tooltip } from 'radix-ui';
 import { ThemeType } from '../../../types/Util.std.ts';
+import { tw } from '../../../axo/tw.dom.tsx';
 
 export type FunPopoverProps = Readonly<{
   placement?: Placement;
@@ -33,27 +34,28 @@ export function FunPopover(props: FunPopoverProps): JSX.Element {
     []
   );
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    event.stopPropagation();
-  }, []);
-
   return (
     <Tooltip.Provider>
-      {/* Prevents keyboard events from bubbling up outside of the popover */}
-      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions */}
-      <div onKeyDown={handleKeyDown}>
-        <Popover
-          data-fun-overlay
-          className={classNames('FunPopover', {
+      <Popover
+        data-fun-overlay
+        className={classNames(
+          'FunPopover',
+          {
+            // oxlint-disable-next-line signal-desktop/enforce-class-name-has-styles
             'light-theme': props.theme === ThemeType.light,
             'dark-theme': props.theme === ThemeType.dark,
-          })}
-          placement={props.placement}
-          shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
-        >
-          <Dialog className="FunPopover__Dialog">{props.children}</Dialog>
-        </Popover>
-      </div>
+          },
+          tw('legacy-z-index-popup')
+        )}
+        placement={props.placement}
+        shouldCloseOnInteractOutside={shouldCloseOnInteractOutside}
+        style={{
+          // Remove the default z-index that React Aria's <Popover> adds
+          zIndex: undefined,
+        }}
+      >
+        <Dialog className="FunPopover__Dialog">{props.children}</Dialog>
+      </Popover>
     </Tooltip.Provider>
   );
 }

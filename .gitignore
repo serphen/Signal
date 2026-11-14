@@ -31,6 +31,7 @@ stylesheets/*.css
 !stylesheets/_fonts.css
 !stylesheets/midnight-override.css
 /storybook-static/
+
 preload.bundle.*
 preload.wrapper.js
 bundles/
@@ -46,6 +47,13 @@ ts/protobuf/*.d.ts
 
 # CSS Modules
 **/*.scss.d.ts
+
+# Vitest
+/.vitest/
+__traces__/
+# Reference screenshots are only generated on Linux in GitHub Actions
+**/__screenshots__/**/*-darwin.png
+**/__screenshots__/**/*-win32.png
 
 # Editors
 /.idea

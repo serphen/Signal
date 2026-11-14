@@ -1,14 +1,13 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import type { Meta, StoryFn } from '@storybook/react';
 import { useState } from 'react';
-import type { MutableRefObject, JSX } from 'react';
 import { action } from '@storybook/addon-actions';
 import lodash from 'lodash';
-
+import type { Meta, StoryFn } from '@storybook/react';
+import type { MutableRefObject, JSX } from 'react';
 import { Preferences } from './Preferences.dom.tsx';
-import { DEFAULT_CONVERSATION_COLOR } from '../types/Colors.std.ts';
+import { DEFAULT_BUBBLE_COLOR } from '../types/ChatStyle.std.ts';
 import { PhoneNumberSharingMode } from '../types/PhoneNumberSharingMode.std.ts';
 import { PhoneNumberDiscoverability } from '../util/phoneNumberDiscoverability.std.ts';
 import { sleep } from '../util/sleep.std.ts';
@@ -30,7 +29,6 @@ import {
   UsernameEditState,
   UsernameLinkState,
 } from '../state/ducks/usernameEnums.std.ts';
-import type { SettingsLocation } from '../types/Nav.std.ts';
 import { NavTab, ProfileEditorPage, SettingsPage } from '../types/Nav.std.ts';
 import { PreferencesDonations } from './PreferencesDonations.dom.tsx';
 import { strictAssert } from '../util/assert.std.ts';
@@ -42,27 +40,35 @@ import {
   NotificationProfilesCreateFlow,
 } from './PreferencesNotificationProfiles.dom.tsx';
 import { DayOfWeek } from '../types/NotificationProfile.std.ts';
+import { BackupLevel } from '../services/backups/types.std.ts';
+import { Emoji } from '../axo/emoji.std.ts';
+import { BadgeCategory } from '../badges/BadgeCategory.std.ts';
+import {
+  SVC_DEFAULT_MODE,
+  SVC_DEFAULT_MODE_FOR_SCREENSHARE,
+} from '../calling/constants.std.ts';
+import { PreferencesBlocked } from './preferences/PreferencesBlocked.dom.tsx';
+import { CurrentChatFolders } from '../types/CurrentChatFolders.std.ts';
 
+import type { SettingsLocation } from '../types/Nav.std.ts';
 import type { LocalizerType } from '../types/Util.std.ts';
 import type { PropsType } from './Preferences.dom.tsx';
 import type { WidthBreakpoint } from './_util.std.ts';
-import type { MessageAttributesType } from '../model-types.d.ts';
+import type { MessageAttributesType } from '../model-types.std.ts';
 import type {
   DonationReceipt,
   DonationWorkflow,
   OneTimeDonationHumanAmounts,
 } from '../types/Donations.std.ts';
 import type { AnyToast } from '../types/Toast.dom.tsx';
+import type { SmartPreferencesBlockedProps } from '../state/smart/PreferencesBlocked.preload.tsx';
 import type { SmartPreferencesChatFoldersPageProps } from '../state/smart/PreferencesChatFoldersPage.preload.tsx';
 import type { SmartPreferencesEditChatFolderPageProps } from '../state/smart/PreferencesEditChatFolderPage.preload.tsx';
-import { CurrentChatFolders } from '../types/CurrentChatFolders.std.ts';
 import type { ExternalProps as SmartNotificationProfilesProps } from '../state/smart/PreferencesNotificationProfiles.preload.tsx';
 import type { NotificationProfileIdString } from '../types/NotificationProfile.std.ts';
 import type { ExportResultType } from '../services/backups/types.std.ts';
-import { BackupLevel } from '../services/backups/types.std.ts';
-import { Emoji } from '../axo/emoji.std.ts';
 import type { BadgeType } from '../badges/types.std.ts';
-import { BadgeCategory } from '../badges/BadgeCategory.std.ts';
+import type { AudioDeviceList } from '@signalapp/ringrtc';
 
 const { shuffle } = lodash;
 
@@ -92,33 +98,39 @@ function conversationSelector(conversationId?: string) {
   return found;
 }
 
-const availableMicrophones = [
-  {
-    name: 'DefAuLt (Headphones)',
-    index: 0,
-    uniqueId: 'Default',
-    i18nKey: 'default_communication_device',
+const availableMicrophones: AudioDeviceList = {
+  devices: [
+    {
+      name: 'DefAuLt (Headphones)',
+      uniqueId: 'Default',
+    },
+  ],
+  defaults: {
+    isWindows: false,
+    device: { name: 'Monitor of UE Boom (Bluetooth)', uniqueId: 'bb.monitor' },
   },
-];
+};
 
-const availableSpeakers = [
-  {
-    name: 'Default',
-    index: 0,
-    uniqueId: 'Default',
-    i18nKey: 'default_communication_device',
+const availableSpeakers: AudioDeviceList = {
+  devices: [
+    {
+      name: 'Default',
+      uniqueId: 'Default',
+    },
+    {
+      name: "Natalie's Airpods (Bluetooth)",
+      uniqueId: 'aa',
+    },
+    {
+      name: 'UE Boom (Bluetooth)',
+      uniqueId: 'bb',
+    },
+  ],
+  defaults: {
+    isWindows: false,
+    device: { name: 'Default', uniqueId: 'Default' },
   },
-  {
-    name: "Natalie's Airpods (Bluetooth)",
-    index: 1,
-    uniqueId: 'aa',
-  },
-  {
-    name: 'UE Boom (Bluetooth)',
-    index: 2,
-    uniqueId: 'bb',
-  },
-];
+};
 
 const validateBackupResult: ExportResultType = {
   attachmentBackupJobs: [],
@@ -132,11 +144,12 @@ const validateBackupResult: ExportResultType = {
     chatFolders: 3,
     chats: 4,
     distributionLists: 5,
+    favoriteStickers: 3,
     messages: 6,
     notificationProfiles: 2,
     skippedConversations: 0,
     skippedMessages: 7,
-    stickerPacks: 8,
+    installedStickerPacks: 8,
     fixedDirectMessages: 9,
     unknownConversationReferences: {},
   },
@@ -222,17 +235,12 @@ function renderUpdateDialog(
     />
   );
 }
-function renderProfileEditor({
-  contentsRef,
-}: {
-  contentsRef: MutableRefObject<HTMLDivElement | null>;
-}): JSX.Element {
+function renderProfileEditor(): JSX.Element {
   return (
     <ProfileEditor
       aboutEmoji={undefined}
       aboutText={undefined}
       color={undefined}
-      contentsRef={contentsRef}
       conversationId="something"
       deleteAvatarFromDisk={action('deleteAvatarFromDisk')}
       deleteUsername={action('deleteUsername')}
@@ -250,7 +258,7 @@ function renderProfileEditor({
       renderUsernameEditor={() => <div />}
       replaceAvatar={action('replaceAvatar')}
       resetUsernameLink={action('resetUsernameLink')}
-      saveAttachment={action('saveAttachment')}
+      saveAttachmentToDisk={action('saveAttachmentToDisk')}
       saveAvatarToDisk={action('saveAvatarToDisk')}
       setEditState={action('setEditState')}
       setUsernameEditState={action('setUsernameEditState')}
@@ -276,7 +284,7 @@ function renderDonationsPane(props: {
   me: typeof me;
   donationReceipts: ReadonlyArray<DonationReceipt>;
   saveAttachmentToDisk: (options: {
-    data: Uint8Array<ArrayBuffer>;
+    data: { type: 'bytes'; bytes: Iterable<Uint8Array<ArrayBuffer>> };
     name: string;
     baseDir?: string | undefined;
   }) => Promise<{ fullPath: string; name: string } | null>;
@@ -324,6 +332,24 @@ function renderDonationsPane(props: {
 
 function renderToastManager(): JSX.Element {
   return <div />;
+}
+
+function renderPreferencesBlockedPage(
+  props: SmartPreferencesBlockedProps
+): JSX.Element {
+  return (
+    <PreferencesBlocked
+      i18n={i18n}
+      blockedContacts={[]}
+      blockedGroups={[]}
+      conversationsNotBlocked={[]}
+      getPreferredBadge={() => undefined}
+      onBlock={action('onBlock')}
+      onUnblock={action('onUnblock')}
+      theme={ThemeType.light}
+      goBack={props.goBack}
+    />
+  );
 }
 
 function renderPreferencesChatFoldersPage(
@@ -396,6 +422,7 @@ function renderNotificationProfilesHome(
       contentsRef={props.contentsRef}
       conversations={conversations}
       conversationSelector={conversationSelector}
+      doWeHaveOtherDevices
       hasOnboardingBeenSeen={false}
       i18n={i18n}
       isSyncEnabled
@@ -415,6 +442,9 @@ function renderNotificationProfilesHome(
 export default {
   title: 'Components/Preferences',
   component: Preferences,
+  parameters: {
+    layout: 'fullscreen',
+  },
   args: {
     i18n,
     backupKey:
@@ -430,42 +460,35 @@ export default {
       {
         deviceId:
           'dfbe6effe70b0611ba0fdc2a9ea3f39f6cb110e6687948f7e5f016c111b7329c',
-        groupId:
-          '63ee218d2446869e40adfc958ff98263e51f74382b0143328ee4826f20a76f47',
-        kind: 'videoinput' as MediaDeviceKind,
         label: 'FaceTime HD Camera (Built-in) (9fba:bced)',
       },
       {
         deviceId:
           'e2db196a31d50ff9b135299dc0beea67f65b1a25a06d8a4ce76976751bb7a08d',
-        groupId:
-          '218ba7f00d7b1239cca15b9116769e5e7d30cc01104ebf84d667643661e0ecf9',
-        kind: 'videoinput' as MediaDeviceKind,
         label: 'Logitech Webcam (4e72:9058)',
       },
     ],
-    availableLocales: ['en'],
     availableMicrophones,
     availableSpeakers,
     backupFreeMediaDays: 45,
-    backupLocalBackupsEnabled: false,
     backupSubscriptionStatus: { status: 'not-found' },
     backupTier: null,
     badge: undefined,
-    blockedContacts: [],
-    blockedGroups: [],
+    blockedContactCount: 0,
+    blockedGroupCount: 0,
     currentChatFoldersCount: 0,
-    customColors: {},
-    defaultConversationColor: DEFAULT_CONVERSATION_COLOR,
+    customChatColors: [],
+    defaultBubbleColor: DEFAULT_BUBBLE_COLOR,
     deviceName: 'Work Windows ME',
     emojiSkinToneDefault: Emoji.SkinTone.None,
     phoneNumber: '+1 555 123-4567',
+    e164: '+15551234567',
+    hasAllowSealedSenderFromAnyone: false,
     hasAnyCurrentCustomChatFolders: false,
     hasAudioNotifications: true,
     hasAutoConvertEmoji: true,
     hasAutoDownloadUpdate: true,
     hasAutoLaunch: true,
-    hasCallNotifications: true,
     hasCallRingtoneNotification: false,
     hasContentProtection: false,
     hasCountMutedConversations: false,
@@ -481,14 +504,19 @@ export default {
     hasMinimizeToSystemTray: true,
     hasNotificationAttention: false,
     hasNotifications: true,
+    hasPinReminders: false,
     hasPreferContactAvatars: true,
+    hasReactionNotifications: true,
     hasReadReceipts: true,
+    hasRegistrationLock: false,
     hasRelayCalls: false,
     hasSealedSenderIndicators: true,
     hasSpellCheck: true,
     hasStoriesDisabled: false,
+    hasSvrPin: false,
     hasTextFormatting: true,
     hasTypingIndicators: true,
+    hasUnreadReminders: true,
     hasKeepMutedChatsArchived: false,
     initialSpellCheckSetting: true,
     isAutoDownloadUpdatesSupported: true,
@@ -496,6 +524,7 @@ export default {
     isHideMenuBarSupported: true,
     isKeyTransparencyAvailable: true,
     isNotificationAttentionSupported: true,
+    isSvrPinPending: false,
     isSyncSupported: true,
     isSystemTraySupported: true,
     isInternalUser: false,
@@ -509,13 +538,9 @@ export default {
     me,
     navTabsCollapsed: false,
     notificationContent: 'name',
-    notificationProfileCount: 0,
+    notifyWhileMuted: { calls: false, mentions: true, replies: true },
     osName: 'windows',
-    otherTabsUnreadStats: {
-      unreadCount: 0,
-      unreadMentionsCount: 0,
-      readChatsMarkedUnreadCount: 0,
-    },
+    otherTabsUnreadCount: 0,
     settingsLocation: {
       page: SettingsPage.Profile,
       state: ProfileEditorPage.None,
@@ -526,13 +551,18 @@ export default {
     resolvedLocale: 'en',
     selectedCamera:
       'dfbe6effe70b0611ba0fdc2a9ea3f39f6cb110e6687948f7e5f016c111b7329c',
-    selectedMicrophone: availableMicrophones[0],
-    selectedSpeaker: availableSpeakers[1],
+    selectedMicrophone: { type: 'nonWindowsDefault' },
+    selectedSpeaker: {
+      type: 'specificDevice',
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      device: availableSpeakers.devices[1]!,
+    },
     sentMediaQualitySetting: 'standard',
     shouldShowUpdateDialog: false,
     themeSetting: 'system',
     theme: ThemeType.light,
     universalExpireTimer: DurationInSeconds.HOUR,
+    unreadCountBadgeType: 'unread-messages',
     weArePrimaryDevice: false,
     whoCanFindMe: PhoneNumberDiscoverability.Discoverable,
     whoCanSeeMe: PhoneNumberSharingMode.Everybody,
@@ -569,6 +599,7 @@ export default {
     renderProfileEditor,
     renderToastManager,
     renderUpdateDialog,
+    renderPreferencesBlockedPage,
     renderPreferencesChatFoldersPage,
     renderPreferencesEditChatFolderPage,
     getConversationsWithCustomColor: () => [],
@@ -583,15 +614,16 @@ export default {
     getMessageSampleForSchemaVersion: async () => [
       { id: 'messageId' } as MessageAttributesType,
     ],
-    getPreferredBadge: () => undefined,
     makeSyncRequest: action('makeSyncRequest'),
+    onAllowSealedSenderFromAnyoneChange: action(
+      'onAllowSealedSenderFromAnyoneChange'
+    ),
     onAudioNotificationsChange: action('onAudioNotificationsChange'),
     onAutoConvertEmojiChange: action('onAutoConvertEmojiChange'),
     onAutoDownloadAttachmentChange: action('onAutoDownloadAttachmentChange'),
     onAutoDownloadUpdateChange: action('onAutoDownloadUpdateChange'),
     onAutoLaunchChange: action('onAutoLaunchChange'),
     onBackupKeyViewed: action('onBackupKeyViewed'),
-    onCallNotificationsChange: action('onCallNotificationsChange'),
     onCallRingtoneNotificationChange: action(
       'onCallRingtoneNotificationChange'
     ),
@@ -607,6 +639,7 @@ export default {
       'onIncomingCallNotificationsChange'
     ),
     onKeepMutedChatsArchivedChange: action('onKeepMutedChatsArchivedChange'),
+    onPinRemindersChange: action('onHasPinRemindersChange'),
     onLocaleChange: action('onLocaleChange'),
     onLastSyncTimeChange: action('onLastSyncTimeChange'),
     onLinkPreviewsChange: action('onLinkPreviewsChange'),
@@ -620,9 +653,13 @@ export default {
     onNotificationAttentionChange: action('onNotificationAttentionChange'),
     onNotificationContentChange: action('onNotificationContentChange'),
     onNotificationsChange: action('onNotificationsChange'),
+    onNotifyWhileMutedChange: action('onNotifyWhileMutedChange'),
     onPreferContactAvatarsChange: action('onPreferContactAvatarsChange'),
+    onReactionNotificationsChange: action('onReactionNotificationsChange'),
     onReadReceiptsChange: action('onReadReceiptsChange'),
+    onRegistrationLockChange: action('onRegistrationLockChange'),
     onRelayCallsChange: action('onRelayCallsChange'),
+    onResetNotificationSettings: action('onResetNotificationSettings'),
     onSealedSenderIndicatorsChange: action('onSealedSenderIndicatorsChange'),
     onSelectedCameraChange: action('onSelectedCameraChange'),
     onSelectedMicrophoneChange: action('onSelectedMicrophoneChange'),
@@ -635,6 +672,8 @@ export default {
     onToggleNavTabsCollapse: action('onToggleNavTabsCollapse'),
     onTypingIndicatorsChange: action('onTypingIndicatorsChange'),
     onUniversalExpireTimerChange: action('onUniversalExpireTimerChange'),
+    onUnreadCountBadgeTypeChange: action('onUnreadCountBadgeTypeChange'),
+    onUnreadRemindersChange: action('onUnreadRemindersChange'),
     onWhoCanFindMeChange: action('onWhoCanFindMeChange'),
     onWhoCanSeeMeChange: action('onWhoCanSeeMeChange'),
     onZoomFactorChange: action('onZoomFactorChange'),
@@ -642,23 +681,23 @@ export default {
     pickLocalBackupFolder: () =>
       Promise.resolve('/home/signaluser/Signal Backups/'),
     disableLocalBackups: () => Promise.resolve(),
-    promptOSAuth: () => Promise.resolve('success'),
+    disableSignalPin: () => Promise.resolve(),
+    promptOSAuth: async () => {
+      await sleep(1000);
+      return 'success';
+    },
     refreshCloudBackupStatus: action('refreshCloudBackupStatus'),
     refreshBackupSubscriptionStatus: action('refreshBackupSubscriptionStatus'),
     removeCustomColor: action('removeCustomColor'),
-    removeCustomColorOnConversations: action(
-      'removeCustomColorOnConversations'
-    ),
     resumeBackupMediaDownload: action('resumeBackupMediaDownload'),
     pauseBackupMediaDownload: action('pauseBackupMediaDownload'),
     cancelBackupMediaDownload: action('cancelBackupMediaDownload'),
     resetAllChatColors: action('resetAllChatColors'),
     resetDefaultChatColor: action('resetDefaultChatColor'),
     savePreferredLeftPaneWidth: action('savePreferredLeftPaneWidth'),
-    setGlobalDefaultConversationColor: action(
-      'setGlobalDefaultConversationColor'
-    ),
+    setGlobalDefaultBubbleColor: action('setGlobalDefaultBubbleColor'),
     setSettingsLocation: action('setSettingsLocation'),
+    showPinChangeModal: action('showPinChangeModal'),
     showToast: action('showToast'),
     startLocalBackupExport: action('startLocalBackupExport'),
     startPlaintextExport: action('startPlaintextExport'),
@@ -688,16 +727,27 @@ export default {
     setCqsTestMode: action('setCqsTestMode'),
     dredDuration: 0,
     setDredDuration: action('setDredDuration'),
+    callStatsIntervalSecs: undefined,
+    setCallStatsIntervalSecs: action('setCallStatsIntervalSecs'),
     directMaxBitrate: 1000000,
     setDirectMaxBitrate: action('setDirectMaxBitrate'),
-    isDirectVp9Enabled: true,
-    setIsDirectVp9Enabled: action('setIsDirectVp9Enabled'),
-    groupMaxBitrate: 1000000,
+    enableVp9Encode: true,
+    setEnableVp9Encode: action('setEnableVp9Encode'),
+    enableVp9Decode: true,
+    setEnableVp9Decode: action('setEnableVp9Decode'),
+    groupMaxBitrate: undefined,
     setGroupMaxBitrate: action('setGroupMaxBitrate'),
-    isGroupVp9Enabled: false,
-    setIsGroupVp9Enabled: action('setIsDirectVp9Enabled'),
+    isGroupSvcEnabled: false,
+    setIsGroupSvcEnabled: action('setIsGroupSvcEnabled'),
+    groupSvcMode: SVC_DEFAULT_MODE,
+    setGroupSvcMode: action('setGroupSvcMode'),
+    groupSvcModeForScreenshare: SVC_DEFAULT_MODE_FOR_SCREENSHARE,
+    setGroupSvcModeForScreenshare: action('setGroupSvcModeForScreenshare'),
     sfuUrl: 'https://sfu.voip.signal.org',
     setSfuUrl: action('setSfuUrl'),
+    saveAccountKeysPDF: async () => {
+      await sleep(1000);
+    },
     forceKeyTransparencyCheck: async () => {
       await sleep(1000);
     },
@@ -724,6 +774,22 @@ const Template: StoryFn<PropsType> = args => {
 
 export const _Preferences = Template.bind({});
 
+export const Account = Template.bind({});
+Account.args = {
+  settingsLocation: { page: SettingsPage.Account },
+};
+export const AccountE164Less = Template.bind({});
+AccountE164Less.args = {
+  phoneNumber: undefined,
+  me: { ...me, phoneNumber: undefined },
+  settingsLocation: { page: SettingsPage.Account },
+};
+export const AccountKeys = Template.bind({});
+AccountKeys.args = {
+  phoneNumber: undefined,
+  me: { ...me, phoneNumber: undefined },
+  settingsLocation: { page: SettingsPage.AccountKeys },
+};
 export const General = Template.bind({});
 General.args = {
   settingsLocation: { page: SettingsPage.General },
@@ -759,6 +825,16 @@ Calls.args = {
 export const Notifications = Template.bind({});
 Notifications.args = {
   settingsLocation: { page: SettingsPage.Notifications },
+};
+export const NotificationsDisabled = Template.bind({});
+NotificationsDisabled.args = {
+  settingsLocation: { page: SettingsPage.Notifications },
+  hasNotifications: false,
+  notificationContent: 'off',
+};
+export const NotificationsWhileMuted = Template.bind({});
+NotificationsWhileMuted.args = {
+  settingsLocation: { page: SettingsPage.WhileMuted },
 };
 export const Privacy = Template.bind({});
 Privacy.args = {
@@ -865,7 +941,6 @@ const threeProfiles = [
 
 NotificationsPageWithThreeProfiles.args = {
   settingsLocation: { page: SettingsPage.Notifications },
-  notificationProfileCount: threeProfiles.length,
   renderNotificationProfilesCreateFlow: (
     props: SmartNotificationProfilesProps
   ) => {
@@ -890,6 +965,53 @@ NotificationsPageWithThreeProfiles.args = {
         contentsRef={props.contentsRef}
         conversations={conversations}
         conversationSelector={conversationSelector}
+        doWeHaveOtherDevices
+        hasOnboardingBeenSeen
+        i18n={i18n}
+        isSyncEnabled
+        loading={false}
+        markProfileDeleted={action('markProfileDeleted')}
+        preferredBadgeSelector={() => undefined}
+        setHasOnboardingBeenSeen={action('setHasOnboardingBeenSeen')}
+        setIsSyncEnabled={action('setIsSyncEnabled')}
+        setSettingsLocation={props.setSettingsLocation}
+        setProfileOverride={action('setProfileOverride)')}
+        theme={ThemeType.light}
+        updateProfile={action('updateProfile')}
+      />
+    );
+  },
+};
+
+export const NotificationsPageWithThreeProfilesAndNoOtherDevices =
+  Template.bind({});
+NotificationsPageWithThreeProfilesAndNoOtherDevices.args = {
+  settingsLocation: { page: SettingsPage.Notifications },
+  renderNotificationProfilesCreateFlow: (
+    props: SmartNotificationProfilesProps
+  ) => {
+    return (
+      <NotificationProfilesCreateFlow
+        contentsRef={props.contentsRef}
+        conversations={conversations}
+        conversationSelector={conversationSelector}
+        createProfile={action('createProfile')}
+        i18n={i18n}
+        setSettingsLocation={props.setSettingsLocation}
+        preferredBadgeSelector={() => undefined}
+        theme={ThemeType.light}
+      />
+    );
+  },
+  renderNotificationProfilesHome: (props: SmartNotificationProfilesProps) => {
+    return (
+      <NotificationProfilesHome
+        activeProfileId={threeProfiles[0].id}
+        allProfiles={threeProfiles}
+        contentsRef={props.contentsRef}
+        conversations={conversations}
+        conversationSelector={conversationSelector}
+        doWeHaveOtherDevices={false}
         hasOnboardingBeenSeen
         i18n={i18n}
         isSyncEnabled
@@ -1053,67 +1175,108 @@ Internal.args = {
   isInternalUser: true,
 };
 
+export const PrivacyPrimaryDevice = Template.bind({});
+PrivacyPrimaryDevice.args = {
+  weArePrimaryDevice: true,
+  settingsLocation: { page: SettingsPage.Privacy },
+};
+
 export const PrivacyBlocked1Contact = Template.bind({});
 PrivacyBlocked1Contact.args = {
-  blockedContacts: [
-    { conversation: getDefaultConversation(), blockedAt: undefined },
-  ],
+  blockedContactCount: 1,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyBlocked1Group = Template.bind({});
 PrivacyBlocked1Group.args = {
-  blockedGroups: [
-    { conversation: getDefaultConversation(), blockedAt: undefined },
-  ],
+  blockedGroupCount: 1,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyBlocked1BothWithBlockedAt = Template.bind({});
 PrivacyBlocked1BothWithBlockedAt.args = {
-  blockedContacts: [
-    { conversation: getDefaultConversation(), blockedAt: Date.now() },
-  ],
-  blockedGroups: [
-    { conversation: getDefaultConversation(), blockedAt: Date.now() - DAY },
-  ],
+  blockedContactCount: 1,
+  blockedGroupCount: 1,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyBlockedManyContacts = Template.bind({});
 PrivacyBlockedManyContacts.args = {
-  blockedContacts: new Array(55).fill(undefined).map(() => ({
-    conversation: getDefaultConversation(),
-    blockedAt: undefined,
-  })),
+  blockedContactCount: 55,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyBlockedManyGroups = Template.bind({});
 PrivacyBlockedManyGroups.args = {
-  blockedGroups: new Array(55).fill(undefined).map(() => ({
-    conversation: getDefaultConversation(),
-    blockedAt: undefined,
-  })),
+  blockedGroupCount: 55,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyBlockedManyBoth = Template.bind({});
 PrivacyBlockedManyBoth.args = {
-  blockedContacts: new Array(20).fill(undefined).map(() => ({
-    conversation: getDefaultConversation(),
-    blockedAt: undefined,
-  })),
-  blockedGroups: new Array(20).fill(undefined).map(() => ({
-    conversation: getDefaultConversation(),
-    blockedAt: undefined,
-  })),
+  blockedContactCount: 20,
+  blockedGroupCount: 20,
   settingsLocation: { page: SettingsPage.Privacy },
 };
 
 export const PrivacyWhenPrimary = Template.bind({});
 PrivacyWhenPrimary.args = {
   settingsLocation: { page: SettingsPage.Privacy },
+  hasSvrPin: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimary = Template.bind({});
+GeneralWhenPrimary.args = {
+  settingsLocation: { page: SettingsPage.General },
+  hasSvrPin: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryWithRegLock = Template.bind({});
+GeneralWhenPrimaryWithRegLock.args = {
+  settingsLocation: { page: SettingsPage.General },
+  hasSvrPin: true,
+  hasRegistrationLock: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryWithoutSignalPin = Template.bind({});
+GeneralWhenPrimaryWithoutSignalPin.args = {
+  settingsLocation: { page: SettingsPage.General },
+  hasSvrPin: false,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryAdvancedPinSettings = Template.bind({});
+GeneralWhenPrimaryAdvancedPinSettings.args = {
+  settingsLocation: { page: SettingsPage.SignalPinAdvanced },
+  hasSvrPin: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryAdvancedPinSettingsBackups = Template.bind({});
+GeneralWhenPrimaryAdvancedPinSettingsBackups.args = {
+  settingsLocation: { page: SettingsPage.SignalPinAdvanced },
+  backupTier: BackupLevel.Free,
+  hasSvrPin: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryAdvancedPinSettingsRegLock = Template.bind({});
+GeneralWhenPrimaryAdvancedPinSettingsRegLock.args = {
+  settingsLocation: { page: SettingsPage.SignalPinAdvanced },
+  hasRegistrationLock: true,
+  hasSvrPin: true,
+  weArePrimaryDevice: true,
+};
+
+export const GeneralWhenPrimaryAdvancedPinSettingsWithoutPin = Template.bind(
+  {}
+);
+GeneralWhenPrimaryAdvancedPinSettingsWithoutPin.args = {
+  settingsLocation: { page: SettingsPage.SignalPinAdvanced },
+  hasSvrPin: false,
   weArePrimaryDevice: true,
 };
 
@@ -1140,7 +1303,6 @@ PNPDiscoverabilityDisabled.args = {
 export const BackupDetailsMediaDownloadActive = Template.bind({});
 BackupDetailsMediaDownloadActive.args = {
   settingsLocation: { page: SettingsPage.BackupsDetails },
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1164,7 +1326,6 @@ BackupDetailsMediaDownloadActive.args = {
 export const BackupDetailsMediaDownloadPaused = Template.bind({});
 BackupDetailsMediaDownloadPaused.args = {
   settingsLocation: { page: SettingsPage.BackupsDetails },
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1189,7 +1350,6 @@ BackupDetailsMediaDownloadPaused.args = {
 export const BackupDetailsFree = Template.bind({});
 BackupDetailsFree.args = {
   settingsLocation: { page: SettingsPage.BackupsDetails },
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1205,7 +1365,6 @@ export const BackupsPaidActive = Template.bind({});
 BackupsPaidActive.args = {
   settingsLocation: { page: SettingsPage.Backups },
   backupTier: BackupLevel.Paid,
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1224,7 +1383,6 @@ export const BackupsPaidLoadingSubscription = Template.bind({});
 BackupsPaidLoadingSubscription.args = {
   settingsLocation: { page: SettingsPage.Backups },
   backupTier: BackupLevel.Paid,
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1245,7 +1403,6 @@ export const BackupsPaidLoadingFirstTime = Template.bind({});
 BackupsPaidLoadingFirstTime.args = {
   settingsLocation: { page: SettingsPage.Backups },
   backupTier: BackupLevel.Paid,
-  backupLocalBackupsEnabled: true,
   cloudBackupStatus: {
     protoSize: 100_000_000,
     createdTimestamp: Date.now() - WEEK,
@@ -1259,7 +1416,6 @@ BackupsPaidLoadingFirstTime.args = {
 export const BackupsPaidCanceled = Template.bind({});
 BackupsPaidCanceled.args = {
   settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: true,
   backupTier: BackupLevel.Paid,
   cloudBackupStatus: {
     protoSize: 100_000_000,
@@ -1279,38 +1435,21 @@ export const BackupsFree = Template.bind({});
 BackupsFree.args = {
   settingsLocation: { page: SettingsPage.Backups },
   backupTier: BackupLevel.Free,
-  backupLocalBackupsEnabled: true,
 };
-export const BackupsFreeNoLocal = Template.bind({});
-BackupsFreeNoLocal.args = {
-  settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: false,
-  backupTier: BackupLevel.Free,
-};
-
 export const BackupsOff = Template.bind({});
 BackupsOff.args = {
   settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: true,
   backupTier: null,
 };
 
 export const BackupsLocalBackups = Template.bind({});
 BackupsLocalBackups.args = {
   settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: true,
-};
-
-export const BackupsRemoteEnabledLocalDisabled = Template.bind({});
-BackupsRemoteEnabledLocalDisabled.args = {
-  settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: false,
 };
 
 export const BackupsPaidSubscriptionNotFound = Template.bind({});
 BackupsPaidSubscriptionNotFound.args = {
   settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: true,
   backupSubscriptionStatus: {
     status: 'not-found',
   },
@@ -1324,7 +1463,6 @@ BackupsPaidSubscriptionNotFound.args = {
 export const BackupsSubscriptionExpired = Template.bind({});
 BackupsSubscriptionExpired.args = {
   settingsLocation: { page: SettingsPage.Backups },
-  backupLocalBackupsEnabled: true,
   backupTier: null,
   backupSubscriptionStatus: {
     status: 'expired',
@@ -1334,7 +1472,6 @@ BackupsSubscriptionExpired.args = {
 export const LocalBackups = Template.bind({});
 LocalBackups.args = {
   settingsLocation: { page: SettingsPage.LocalBackups },
-  backupLocalBackupsEnabled: true,
   previouslyViewedBackupKeyHash: 'hash',
   lastLocalBackup: {
     timestamp: Date.now() - DAY,
@@ -1347,7 +1484,6 @@ LocalBackups.args = {
 export const LocalBackupsNeverBackedUp = Template.bind({});
 LocalBackupsNeverBackedUp.args = {
   settingsLocation: { page: SettingsPage.LocalBackups },
-  backupLocalBackupsEnabled: true,
   previouslyViewedBackupKeyHash: 'hash',
   lastLocalBackup: undefined,
   localBackupFolder: '/home/signaluser/Signal Backups/',
@@ -1356,13 +1492,11 @@ LocalBackupsNeverBackedUp.args = {
 export const LocalBackupsSetupChooseFolder = Template.bind({});
 LocalBackupsSetupChooseFolder.args = {
   settingsLocation: { page: SettingsPage.LocalBackups },
-  backupLocalBackupsEnabled: true,
 };
 
 export const LocalBackupsSetupViewBackupKey = Template.bind({});
 LocalBackupsSetupViewBackupKey.args = {
   settingsLocation: { page: SettingsPage.LocalBackups },
-  backupLocalBackupsEnabled: true,
   localBackupFolder: '/home/signaluser/Signal Backups/',
 };
 
@@ -1380,20 +1514,12 @@ export const NavTabsCollapsedWithBadges = Template.bind({});
 NavTabsCollapsedWithBadges.args = {
   navTabsCollapsed: true,
   hasFailedStorySends: false,
-  otherTabsUnreadStats: {
-    unreadCount: 1,
-    unreadMentionsCount: 2,
-    readChatsMarkedUnreadCount: 0,
-  },
+  otherTabsUnreadCount: 1,
 };
 
 export const NavTabsCollapsedWithExclamation = Template.bind({});
 NavTabsCollapsedWithExclamation.args = {
   navTabsCollapsed: true,
   hasFailedStorySends: true,
-  otherTabsUnreadStats: {
-    unreadCount: 1,
-    unreadMentionsCount: 2,
-    readChatsMarkedUnreadCount: 0,
-  },
+  otherTabsUnreadCount: 1,
 };

@@ -67,12 +67,11 @@ import {
 } from '../quill/util.dom.ts';
 import { SignalClipboard } from '../quill/signal-clipboard/index.dom.ts';
 import { DirectionalBlot } from '../quill/block/blot.dom.tsx';
-import { getClassNamesFor } from '../util/getClassNamesFor.std.ts';
 import { isNotNil } from '../util/isNotNil.std.ts';
 import { createLogger } from '../logging/log.std.ts';
 import type { LinkPreviewForUIType } from '../types/message/LinkPreviews.std.ts';
 import { StagedLinkPreview } from './conversation/StagedLinkPreview.dom.tsx';
-import type { DraftEditMessageType } from '../model-types.d.ts';
+import type { DraftEditMessageType } from '../model-types.std.ts';
 import { usePreviousDeprecated } from '../hooks/usePrevious.std.ts';
 import {
   matchBold,
@@ -88,13 +87,14 @@ import { dropNull } from '../util/dropNull.std.ts';
 import { SimpleQuillWrapper } from './SimpleQuillWrapper.dom.tsx';
 import { FUN_STATIC_EMOJI_CLASS } from './fun/FunEmoji.dom.tsx';
 import type { EmojiCompletionOptions } from '../quill/emoji/completion.dom.tsx';
-import { MAX_BODY_ATTACHMENT_BYTE_LENGTH } from '../util/longAttachment.std.ts';
+import { MAX_PLAINTEXT_BODY_ATTACHMENT_BYTE_LENGTH } from '../util/longAttachment.std.ts';
 import type { FunEmojiSelection } from './fun/panels/FunPanelEmojis.dom.tsx';
 import { AxoSymbol } from '../axo/AxoSymbol.dom.tsx';
 import { AxoTooltip } from '../axo/AxoTooltip.dom.tsx';
 import { tw } from '../axo/tw.dom.tsx';
 import type { Emoji } from '../axo/emoji.std.ts';
 import { RecoveryKeyPasteWarning } from './RecoveryKeyPasteWarning.dom.tsx';
+import { mergeProps, useFocusVisible, useFocusWithin } from 'react-aria';
 
 const log = createLogger('CompositionInput');
 
@@ -113,6 +113,21 @@ Quill.register(
   },
   true
 );
+
+function usePreservedFocusVisibleWithin() {
+  const { isFocusVisible } = useFocusVisible({
+    isTextInput: true,
+  });
+
+  const [isFocusWithin, setFocusWithin] = useState(false);
+  const { focusWithinProps: focusVisibleWithinProps } = useFocusWithin({
+    onFocusWithinChange: setFocusWithin,
+  });
+
+  const isFocusVisibleWithin = isFocusWithin && isFocusVisible;
+
+  return { isFocusVisibleWithin, focusVisibleWithinProps };
+}
 
 export type InputApi = {
   focus: () => void;
@@ -142,7 +157,8 @@ export type Props = Readonly<{
   emojiSkinToneDefault: Emoji.SkinTone | null;
   draftText: string | null;
   draftBodyRanges: HydratedBodyRangesType | null;
-  moduleClassName?: string;
+  /** @deprecated */
+  className?: string;
   theme: ThemeType;
   placeholder?: string;
   sortedGroupMembers: ReadonlyArray<ConversationType> | null;
@@ -177,8 +193,6 @@ export type Props = Readonly<{
   onToggleViewOnce: () => void;
 }>;
 
-const BASE_CLASS_NAME = 'module-composition-input';
-
 export function CompositionInput(props: Props): ReactElement {
   const {
     children,
@@ -195,7 +209,7 @@ export function CompositionInput(props: Props): ReactElement {
     large,
     linkPreviewLoading,
     linkPreviewResult,
-    moduleClassName,
+    className,
     onCloseLinkPreview,
     onBlur,
     onFocus,
@@ -235,6 +249,9 @@ export function CompositionInput(props: Props): ReactElement {
   const memberRepositoryRef = useRef<MemberRepository>(new MemberRepository());
 
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
+
+  const { isFocusVisibleWithin, focusVisibleWithinProps } =
+    usePreservedFocusVisibleWithin();
 
   const generateDelta = (
     text: string,
@@ -667,7 +684,7 @@ export function CompositionInput(props: Props): ReactElement {
 
       // FIXME
       // oxlint-disable-next-line no-undef
-      if (Buffer.byteLength(text) > MAX_BODY_ATTACHMENT_BYTE_LENGTH) {
+      if (Buffer.byteLength(text) > MAX_PLAINTEXT_BODY_ATTACHMENT_BYTE_LENGTH) {
         quill.history.undo();
         propsRef.current.onTextTooLong();
         return;
@@ -798,8 +815,7 @@ export function CompositionInput(props: Props): ReactElement {
 
     const newDelta = getDeltaToRemoveStaleMentions(ops, currentMemberAcis);
 
-    // oxlint-disable-next-line typescript/no-explicit-any
-    quill.updateContents(newDelta as any);
+    quill.updateContents(newDelta);
   };
 
   const memberIdList = useMemo(() => {
@@ -836,7 +852,7 @@ export function CompositionInput(props: Props): ReactElement {
 
       return (
         <SimpleQuillWrapper
-          className={`${BASE_CLASS_NAME}__quill`}
+          className="module-composition-input__quill"
           onChange={() => callbacksRef.current.onChange()}
           defaultValue={delta}
           modules={{
@@ -857,6 +873,7 @@ export function CompositionInput(props: Props): ReactElement {
                 ['STRONG', matchBold],
                 ['EM', matchItalic],
                 ['SPAN', matchMonospace],
+                ['A', matchMonospace],
                 ['S', matchStrikethrough],
                 ['SPAN', matchSpoiler],
                 [Node.TEXT_NODE, matchEmojiText],
@@ -996,8 +1013,6 @@ export function CompositionInput(props: Props): ReactElement {
   //   visual text box is much larger. Clicking that should allow you to start typing,
   //   hence the click handler.
 
-  const getClassName = getClassNamesFor(BASE_CLASS_NAME, moduleClassName);
-
   const onMouseDown = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       const { currentTarget } = event;
@@ -1032,18 +1047,21 @@ export function CompositionInput(props: Props): ReactElement {
     <Manager>
       <Reference>
         {({ ref }) => (
-          // oxlint-disable-next-line jsx_a11y/no-static-element-interactions
           <div
             className={classNames(
-              getClassName('__input'),
-              showViewOnceButton && getClassName('__input--with-view-once'),
-              isViewOnceActive && getClassName('__input--view-once-active')
+              'module-composition-input__input',
+              showViewOnceButton &&
+                'module-composition-input__input--with-view-once',
+              isViewOnceActive &&
+                'module-composition-input__input--view-once-active',
+              className
             )}
             data-supertab
             ref={ref}
             data-testid="CompositionInput"
             data-enabled={isInputEnabled ? 'true' : 'false'}
-            onMouseDown={onMouseDown}
+            data-focus-visible={isFocusVisibleWithin}
+            {...mergeProps(focusVisibleWithinProps, { onMouseDown })}
           >
             {onRecoveryKeyPasteConfirm ? (
               <RecoveryKeyPasteWarning
@@ -1056,12 +1074,12 @@ export function CompositionInput(props: Props): ReactElement {
               />
             ) : null}
             {draftEditMessage && (
-              <div className={getClassName('__editing-message')}>
+              <div className="module-composition-input__editing-message">
                 {i18n('icu:CompositionInput__editing-message')}
               </div>
             )}
             {draftEditMessage?.attachmentThumbnail && (
-              <div className={getClassName('__editing-message__attachment')}>
+              <div className="module-composition-input__editing-message__attachment">
                 <img
                   alt={i18n('icu:stagedImageAttachment', {
                     path: draftEditMessage.attachmentThumbnail,
@@ -1073,14 +1091,14 @@ export function CompositionInput(props: Props): ReactElement {
             {conversationId && linkPreviewLoading && linkPreviewResult && (
               <StagedLinkPreview
                 {...linkPreviewResult}
-                moduleClassName="CompositionInput__link-preview"
+                className="CompositionInput__link-preview"
                 i18n={i18n}
                 onClose={() => onCloseLinkPreview?.(conversationId)}
               />
             )}
             {children}
             {isViewOnceActive && (
-              <div className={getClassName('__view-once-placeholder')}>
+              <div className="module-composition-input__view-once-placeholder">
                 {i18n('icu:CompositionArea--viewOnceMediaPlaceholder')}
               </div>
             )}
@@ -1089,12 +1107,16 @@ export function CompositionInput(props: Props): ReactElement {
               onClick={focus}
               onScroll={onScroll}
               className={classNames(
-                getClassName('__input__scroller'),
+                'module-composition-input__input__scroller',
                 !large && linkPreviewResult
-                  ? getClassName('__input__scroller--link-preview')
+                  ? 'module-composition-input__input__scroller--link-preview'
                   : null,
-                large ? getClassName('__input__scroller--large') : null,
-                children ? getClassName('__input--with-children') : null
+                large
+                  ? 'module-composition-input__input__scroller--large'
+                  : null,
+                children
+                  ? 'module-composition-input__input--with-children'
+                  : null
               )}
             >
               {reactQuill}
@@ -1107,7 +1129,7 @@ export function CompositionInput(props: Props): ReactElement {
               )}
             </div>
             {showViewOnceButton && (
-              <div className={getClassName('__view-once-button')}>
+              <div className="module-composition-input__view-once-button">
                 <AxoTooltip.Root
                   label={i18n('icu:CompositionArea--viewOnceToggle')}
                   tooltipRepeatsTriggerAccessibleName
@@ -1118,14 +1140,13 @@ export function CompositionInput(props: Props): ReactElement {
                     onClick={onToggleViewOnce}
                     className={tw(
                       'flex cursor-default items-center justify-center rounded-full',
-                      'not-forced-colors:outline-none not-forced-colors:keyboard-mode:focus:axo-focus-ring',
+                      'focus-visible:axo-focus-ring',
                       'forced-colors:border forced-colors:border-[ButtonBorder]'
                     )}
                   >
                     <AxoSymbol.Icon
                       size={20}
                       symbol={isViewOnceActive ? 'viewonce' : 'viewonce-slash'}
-                      weight={300}
                       label={null}
                     />
                   </button>

@@ -70,10 +70,8 @@
       background: var(--axo-color-fill-primary-pressed);
     }
 
-    &:has(.Preferences__profile-chip__button:focus) {
-      @include mixins.keyboard-mode {
-        @include mixins.axo-focus-ring;
-      }
+    &:has(.Preferences__profile-chip__button:focus-visible) {
+      @include mixins.axo-focus-ring;
     }
     &:has(.Preferences__profile-chip__button:hover):not(&--selected) {
       background: var(--axo-color-fill-primary);
@@ -86,8 +84,8 @@
         z-index: 1;
         inset: 0;
       }
-      &:focus {
-        outline: none;
+      &:focus-visible {
+        @include mixins.axo-focus-ring;
       }
     }
 
@@ -143,11 +141,8 @@
       &:active {
         background: var(--axo-color-fill-secondary);
       }
-      &:focus {
-        outline: none;
-        @include mixins.keyboard-mode {
-          @include mixins.axo-focus-ring;
-        }
+      &:focus-visible {
+        @include mixins.axo-focus-ring;
       }
     }
     &__qr-icon {
@@ -159,83 +154,6 @@
         '../images/icons/v3/qr_code/qr_code.svg',
         var(--axo-color-label-primary)
       );
-    }
-  }
-
-  &__button {
-    @include mixins.button-reset;
-    & {
-      @include mixins.font-body-1;
-      align-items: center;
-      display: flex;
-      width: 100%;
-      height: 40px;
-      padding-block: 14px;
-      padding-inline: 0;
-      border-radius: 10px;
-      margin-bottom: 4px;
-    }
-
-    &--selected {
-      background: var(--axo-color-fill-secondary);
-    }
-
-    &:not(&--selected) {
-      &:hover,
-      &:focus {
-        background: var(--axo-color-fill-primary);
-      }
-    }
-
-    &::before {
-      content: '';
-      display: block;
-      height: 20px;
-      margin-inline-start: 14px;
-      margin-inline-end: 12px;
-      width: 20px;
-    }
-
-    &--general {
-      @include preferences-icon('../images/icons/v3/settings/settings.svg');
-    }
-
-    &--appearance {
-      @include preferences-icon('../images/icons/v3/appearance/appearance.svg');
-    }
-
-    &--chats {
-      @include preferences-icon('../images/icons/v3/chat/chat.svg');
-    }
-
-    &--calls {
-      @include preferences-icon('../images/icons/v3/phone/phone.svg');
-    }
-
-    &--notifications {
-      @include preferences-icon('../images/icons/v3/bell/bell.svg');
-    }
-
-    &--privacy {
-      @include preferences-icon('../images/icons/v3/lock/lock.svg');
-    }
-
-    &--data-usage {
-      @include preferences-icon('../images/icons/v3/data/data.svg');
-    }
-
-    &--backups {
-      @include preferences-icon(
-        '../images/icons/v3/signal_backups/signal_backups.svg'
-      );
-    }
-
-    &--donations {
-      @include preferences-icon('../images/icons/v3/heart/heart.svg');
-    }
-
-    &--internal {
-      @include preferences-icon('../images/icons/v3/internal/internal.svg');
     }
   }
 
@@ -296,11 +214,6 @@
     flex-shrink: 0;
     position: relative;
 
-    &--backups {
-      border: none;
-      margin-bottom: 16px;
-    }
-
     &--header {
       flex-grow: 1;
       text-align: center;
@@ -329,17 +242,6 @@
     border-bottom: 1px solid var(--axo-color-border-primary);
   }
 
-  &__pnp {
-    padding-inline: 0;
-    width: 100%;
-
-    h3 {
-      @include mixins.font-body-1;
-      font-weight: 400;
-      margin: 0;
-    }
-  }
-
   &__light-icon-label {
     display: flex;
   }
@@ -357,14 +259,7 @@
       width: 100%;
     }
   }
-  &__half-flow {
-    vertical-align: middle;
-    display: inline-block;
-    width: 50%;
-    @container (max-width: 350px) {
-      width: 100%;
-    }
-  }
+
   &__two-thirds-flow {
     vertical-align: middle;
     display: inline-block;
@@ -374,12 +269,6 @@
     }
   }
 
-  &__half-flow--align-right {
-    text-align: end;
-    @container (max-width: 350px) {
-      text-align: start;
-    }
-  }
   &__one-third-flow--align-right {
     text-align: end;
     @container (max-width: 350px) {
@@ -392,19 +281,6 @@
     @container (max-width: 350px) {
       justify-content: flex-start;
     }
-  }
-  &__full-flow {
-    vertical-align: middle;
-    display: inline-block;
-    width: 100%;
-  }
-  &__flow-value,
-  &__flow-description {
-    vertical-align: middle;
-    color: var(--axo-color-label-secondary);
-  }
-  &__device-name-description {
-    padding-top: 8px;
   }
   &__flow-button {
     padding-inline-start: 5px;
@@ -450,26 +326,12 @@
       &:focus {
         background: var(--axo-color-fill-primary);
       }
-      &:focus {
-        outline: none;
-        @include mixins.keyboard-mode {
-          @include mixins.axo-focus-ring;
-        }
+      &:focus-visible {
+        @include mixins.axo-focus-ring;
       }
     }
   }
 
-  &__checkbox {
-    padding-block: 10px;
-    padding-inline: 24px;
-  }
-
-  &__option-name {
-    @include mixins.font-body-1;
-    color: var(--axo-color-label-primary);
-  }
-
-  &__checkbox__description,
   &__description {
     @include mixins.font-subtitle;
     color: var(--axo-color-label-secondary);
@@ -483,21 +345,6 @@
     }
   }
 
-  &__select {
-    width: 100%;
-  }
-
-  &__select-title {
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  &__right-button {
-    display: flex;
-    justify-content: flex-end;
-    min-width: 120px;
-  }
-
   &__back-icon {
     @include mixins.button-reset;
 
@@ -508,11 +355,8 @@
       @include mixins.position-absolute-center-y;
     }
 
-    &:focus {
-      outline: none;
-      @include mixins.keyboard-mode {
-        @include mixins.axo-focus-ring;
-      }
+    &:focus-visible {
+      @include mixins.axo-focus-ring;
     }
 
     &::before {
@@ -553,104 +397,9 @@
   }
 }
 
-.Preferences__LanguageIcon {
-  @include mixins.color-svg(
-    '../images/icons/v3/globe/globe.svg',
-    var(--axo-color-label-secondary)
-  );
-}
-
 .Preferences__LanguageButton {
   @include mixins.button-reset;
   @include mixins.localized-fonts;
-}
-
-.Preferences__LanguageModal {
-  height: 560px;
-  .module-Modal__body {
-    flex-grow: 1;
-  }
-}
-
-.Preferences__LanguageModal__Title {
-  @include mixins.font-body-1-bold;
-  margin-inline: 8px;
-}
-
-.Preferences__LanguageModal__NoResults {
-  @include mixins.font-body-1;
-  margin: 16px;
-  text-align: center;
-}
-
-.Preferences__LanguageModal__Item {
-  @include mixins.button-reset;
-  & {
-    width: 100%;
-    padding-block: 2px;
-    padding-inline: 8px;
-  }
-  &:hover,
-  &:focus {
-    .Preferences__LanguageModal__Item__Inner {
-      background: var(--axo-color-fill-primary);
-    }
-  }
-  &:focus {
-    outline: none;
-    .Preferences__LanguageModal__Item__Inner {
-      @include mixins.keyboard-mode {
-        @include mixins.axo-focus-ring;
-      }
-    }
-  }
-}
-
-.Preferences__LanguageModal__Item__Inner {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  padding-block: 5px;
-  padding-inline: 16px;
-  border-radius: 8px;
-}
-
-.Preferences__LanguageModal__Item__Label {
-  flex-grow: 1;
-}
-
-.Preferences__LanguageModal__Item__Current {
-  display: block;
-  @include mixins.font-body-1;
-}
-
-.Preferences__LanguageModal__Item__Check {
-  display: flex;
-  height: 20px;
-  width: 20px;
-  align-items: center;
-  justify-content: center;
-  background: var(--axo-color-fill-accent);
-  @include mixins.rounded-corners;
-  &::after {
-    @include mixins.color-svg(
-      '../images/icons/v3/check/check.svg',
-      var(--axo-color-label-primary-oncolor)
-    );
-    & {
-      content: '';
-      height: 14px;
-      width: 14px;
-    }
-  }
-}
-
-.Preferences__LanguageModal__Item__Matching {
-  display: block;
-  @include mixins.localized-fonts;
-  @include mixins.font-body-2;
-  color: var(--axo-color-label-secondary);
 }
 
 .Preferences--backups-summary {
@@ -854,7 +603,6 @@
   background: variables.$color-gray-02;
   border-radius: 12px;
   border-width: 0;
-  outline: none;
   color: variables.$color-gray-90;
   font-family: 'MonoSpecial', variables.$monospace;
   font-size: 16px;
@@ -867,6 +615,10 @@
   &::placeholder {
     color: var(--axo-color-label-placeholder);
     text-transform: none;
+  }
+
+  &:focus-visible {
+    @include mixins.axo-focus-ring;
   }
 }
 
@@ -898,15 +650,6 @@
   }
 }
 
-.Preferences--LocalBackupsSetupIcon-key {
-  &::before {
-    @include mixins.color-svg(
-      '../images/icons/v3/key/key.svg',
-      var(--axo-color-brand-primary)
-    );
-  }
-}
-
 .Preferences--LocalBackupsSetupIcon-lock {
   &::before {
     @include mixins.color-svg(
@@ -914,31 +657,6 @@
       var(--axo-color-brand-primary)
     );
   }
-}
-
-.Preferences--LocalBackupsConfirmKeyModal {
-  padding-block: 36px 20px;
-  padding-inline: 32px;
-  text-align: center;
-}
-
-.Preferences--LocalBackupsConfirmKeyModal__body {
-  padding: 0;
-}
-
-.Preferences--LocalBackupsConfirmKeyModalTitle {
-  @include mixins.font-title-medium;
-  margin-block: 12px;
-}
-
-.Preferences--LocalBackupsConfirmKeyModalBody {
-  @include mixins.font-body-1;
-  margin-block: 8px 32px;
-  color: var(--axo-color-label-secondary);
-}
-
-.Preferences--LocalBackupsConfirmKeyModal .module-Modal__button-footer {
-  justify-content: center;
 }
 
 .Preferences--internal--result {
@@ -998,9 +716,9 @@
   }
 }
 
-.Preferences__ChatFolders__ChatSelection__Item:focus {
-  outline: none;
-  @include mixins.keyboard-mode {
+.Preferences__ChatFolders__ChatSelection__Item {
+  &:focus-visible {
+    outline: none;
     .Preferences__ChatFolders__ChatSelection__ItemContent {
       @include mixins.axo-focus-ring-inset;
     }
@@ -1098,40 +816,14 @@
     color: var(--axo-color-label-destructive);
     border-radius: 1px;
   }
-  @include mixins.keyboard-mode {
-    outline: none;
-    &:focus {
-      @include mixins.axo-focus-ring;
-    }
+
+  &:focus-visible {
+    @include mixins.axo-focus-ring;
   }
-}
-
-.Preferences__EditChatFolderPage__SelectChatsDialog__width-container {
-  // Override .module-modal-host__width-container
-  &.module-modal-host__width-container {
-    max-width: 360px;
-  }
-}
-
-.Preferences__EditChatFolderPage__SelectChatsDialog {
-  height: 60vw;
-}
-
-.Preferences__EditChatFolderPage__SelectChatsDialog__body {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.Preferences__EditChatFolderPage__SelectChatsDialog__body_inner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 }
 
 .Preferences__ReadonlySqlPlayground__Textarea {
-  &__input {
+  .Input__input {
     font-family: variables.$monospace;
   }
 }

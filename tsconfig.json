@@ -6,12 +6,14 @@
     "build/intl-linter/**/*.ts",
     ".oxlint/**/*",
     "scripts/**/*",
+    ".github/scripts/**/*",
     "codemods/**/*",
     "test/test.mjs",
     ".babelrc.mjs",
     ".prettierrc.mjs",
     ".stylelintrc.mjs",
-    "knip.js"
+    "knip.js",
+    "vitest.config.mts"
   ],
   "compilerOptions": {
     /*

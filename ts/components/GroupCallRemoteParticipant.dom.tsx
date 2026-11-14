@@ -16,7 +16,7 @@ import lodash from 'lodash';
 import type { VideoFrameSource } from '@signalapp/ringrtc';
 import type { GroupCallRemoteParticipantType } from '../types/Calling.std.ts';
 import type { LocalizerType } from '../types/Util.std.ts';
-import { AvatarColors } from '../types/Colors.std.ts';
+import { AvatarColors } from '../types/Avatar.std.ts';
 import { CallBackgroundBlur } from './CallBackgroundBlur.dom.tsx';
 import {
   CallingAudioIndicator,
@@ -32,7 +32,7 @@ import { isOlderThan } from '../util/timestamp.std.ts';
 import type { CallingImageDataCache } from './CallManager.dom.tsx';
 import { usePreviousDeprecated } from '../hooks/usePrevious.std.ts';
 import type { PropsType as SmartCallingParticipantMenuProps } from '../state/smart/CallingParticipantMenu.preload.tsx';
-import type { AxoMenuBuilder } from '../axo/AxoMenuBuilder.dom.tsx';
+import type { AxoMenuBuilder } from '../axo/menus/AxoMenuBuilder.dom.tsx';
 import { AxoIconButton } from '../axo/AxoIconButton.dom.tsx';
 import { tw } from '../axo/tw.dom.tsx';
 import { CallingStatusIndicatorHandRaised } from './CallingStatusIndicatorHandRaised.dom.tsx';
@@ -282,8 +282,12 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
         return;
       }
 
-      canvasEl.width = frameWidth;
-      canvasEl.height = frameHeight;
+      if (canvasEl.width !== frameWidth) {
+        canvasEl.width = frameWidth;
+      }
+      if (canvasEl.height !== frameHeight) {
+        canvasEl.height = frameHeight;
+      }
       canvasContext.putImageData(imageData, 0, 0);
       lastReceivedVideoAt.current = Date.now();
 
@@ -300,6 +304,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
 
     useEffect(() => {
       if (!hasRemoteVideo) {
+        // oxlint-disable-next-line react/set-state-in-effect
         setHasReceivedVideoRecently(false);
       }
     }, [hasRemoteVideo]);
@@ -319,7 +324,13 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
       return () => {
         cancelAnimationFrame(rafId);
       };
-    }, [hasRemoteVideo, isVisible, renderVideoFrame, videoFrameSource]);
+    }, [
+      hasRemoteVideo,
+      isVisible,
+      renderVideoFrame,
+      // oxlint-disable-next-line react/exhaustive-effect-dependencies
+      videoFrameSource,
+    ]);
 
     const setIsOnTopDebounced = useMemo(
       () => debounce(setIsOnTop, CONTAINER_TRANSITION_TIME),
@@ -331,6 +342,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
     useEffect(() => {
       if (isActiveSpeakerInSpeakerView !== prevIsActiveSpeakerInSpeakerView) {
         if (isActiveSpeakerInSpeakerView) {
+          // oxlint-disable-next-line react/set-state-in-effect
           setIsOnTop(true);
         } else {
           setIsOnTopDebounced(false);
@@ -386,7 +398,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
 
       const nameElement = (
         <ContactName
-          module="module-ongoing-call__group-call-remote-participant__info__contact-name"
+          className="module-ongoing-call__group-call-remote-participant__info__contact-name"
           title={title}
         />
       );
@@ -512,6 +524,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
       }
 
       if (isBlocked) {
+        // oxlint-disable-next-line react/set-state-in-effect
         setErrorDialogTitle(
           <div className="module-ongoing-call__group-call-remote-participant__more-info-modal-title">
             <I18n
@@ -589,7 +602,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
           title={errorDialogTitle}
           description={errorDialogBody}
         >
-          <AxoConfirmDialog.Cancel>{i18n('icu:ok')}</AxoConfirmDialog.Cancel>
+          <AxoConfirmDialog.Ok />
         </AxoConfirmDialog.Root>
         {maybeWrapWithParticipantMenu(
           'AxoContextMenu',
@@ -647,8 +660,6 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
               </>
             )}
             {wantsToShowVideo && (
-              // FIXME
-              // oxlint-disable-next-line jsx-a11y/control-has-associated-label
               <canvas
                 className={classNames(
                   'module-ongoing-call__group-call-remote-participant__remote-video',

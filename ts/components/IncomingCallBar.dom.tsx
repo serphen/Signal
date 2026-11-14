@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import type { ReactNode, JSX } from 'react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useEffectEvent, useRef } from 'react';
+import { tinykeys } from 'tinykeys';
+import classNames from 'classnames';
 import { Avatar, AvatarSize } from './Avatar.dom.tsx';
 import { Tooltip } from './Tooltip.dom.tsx';
 import { I18n } from './I18n.dom.tsx';
@@ -10,7 +12,7 @@ import { Theme } from '../util/theme.std.ts';
 import { getParticipantName } from '../util/callingGetParticipantName.std.ts';
 import { ContactName } from './conversation/ContactName.dom.tsx';
 import type { LocalizerType } from '../types/Util.std.ts';
-import { AvatarColors } from '../types/Colors.std.ts';
+import { AvatarColors } from '../types/Avatar.std.ts';
 import { CallMode } from '../types/CallDisposition.std.ts';
 import type { ConversationType } from '../state/ducks/conversations.preload.ts';
 import type {
@@ -18,12 +20,9 @@ import type {
   DeclineCallType,
 } from '../state/ducks/calling.preload.ts';
 import { missingCaseError } from '../util/missingCaseError.std.ts';
-import {
-  useIncomingCallShortcuts,
-  useKeyboardShortcuts,
-} from '../hooks/useKeyboardShortcuts.dom.tsx';
 import { UserText } from './UserText.dom.tsx';
 import { AxoDragRegion } from '../axo/AxoDragRegion.dom.tsx';
+import { getControlOrAltKey } from '../hooks/useKeyboardShortcuts.dom.tsx';
 
 const { useDisableDragRegions } = AxoDragRegion;
 
@@ -72,14 +71,14 @@ export type PropsType = {
 );
 
 type CallButtonProps = {
-  classSuffix: string;
+  iconClassName: `IncomingCallBar__button--${string}`;
   tabIndex: number;
   tooltipContent: string;
   onClick: () => void;
 };
 
 function CallButton({
-  classSuffix,
+  iconClassName,
   onClick,
   tabIndex,
   tooltipContent,
@@ -92,7 +91,7 @@ function CallButton({
     >
       <button
         aria-label={tooltipContent}
-        className={`IncomingCallBar__button IncomingCallBar__button--${classSuffix}`}
+        className={classNames('IncomingCallBar__button', iconClassName)}
         onClick={onClick}
         tabIndex={tabIndex}
         type="button"
@@ -273,12 +272,41 @@ export function IncomingCallBar(props: PropsType): JSX.Element | null {
     declineCall({ conversationId });
   }, [conversationId, declineCall]);
 
-  const incomingCallShortcuts = useIncomingCallShortcuts(
-    acceptAudioCall,
-    acceptVideoCall,
-    declineIncomingCall
+  const onAcceptAudioCallShortcut = useEffectEvent((event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    acceptAudioCall();
+  });
+
+  const onAcceptVideoCallShortcut = useEffectEvent((event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    acceptVideoCall();
+  });
+
+  const onDeclineIncomingCallShortcut = useEffectEvent(
+    (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      declineIncomingCall();
+    }
   );
-  useKeyboardShortcuts(incomingCallShortcuts);
+
+  useEffect(() => {
+    const ControlOrAlt = getControlOrAltKey();
+    return tinykeys(
+      window,
+      {
+        [`${ControlOrAlt}+Shift+A`]: onAcceptAudioCallShortcut,
+        [`${ControlOrAlt}+Shift+V`]: onAcceptVideoCallShortcut,
+        [`${ControlOrAlt}+Shift+D`]: onDeclineIncomingCallShortcut,
+      },
+      {
+        // Override default ignore so shortcuts work while textboxes are focused
+        ignore: () => false,
+      }
+    );
+  }, []);
 
   return (
     <div className="IncomingCallBar__container">
@@ -312,7 +340,7 @@ export function IncomingCallBar(props: PropsType): JSX.Element | null {
         </div>
         <div className="IncomingCallBar__actions">
           <CallButton
-            classSuffix="decline"
+            iconClassName="IncomingCallBar__button--decline"
             onClick={declineIncomingCall}
             tabIndex={0}
             tooltipContent={i18n('icu:declineCall')}
@@ -320,13 +348,13 @@ export function IncomingCallBar(props: PropsType): JSX.Element | null {
           {isVideoCall ? (
             <>
               <CallButton
-                classSuffix="accept-video-as-audio"
+                iconClassName="IncomingCallBar__button--accept-video-as-audio"
                 onClick={acceptAudioCall}
                 tabIndex={0}
                 tooltipContent={i18n('icu:acceptCallWithoutVideo')}
               />
               <CallButton
-                classSuffix="accept-video"
+                iconClassName="IncomingCallBar__button--accept-video"
                 onClick={acceptVideoCall}
                 tabIndex={0}
                 tooltipContent={i18n('icu:acceptCall')}
@@ -334,7 +362,7 @@ export function IncomingCallBar(props: PropsType): JSX.Element | null {
             </>
           ) : (
             <CallButton
-              classSuffix="accept-audio"
+              iconClassName="IncomingCallBar__button--accept-audio"
               onClick={acceptAudioCall}
               tabIndex={0}
               tooltipContent={i18n('icu:acceptCall')}

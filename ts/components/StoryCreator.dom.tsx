@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useEffect, useState, type JSX } from 'react';
-import lodash, { omit } from 'lodash';
+import { v4 as generateUuid } from 'uuid';
 
 import { createPortal } from 'react-dom';
-import type { AttachmentType } from '../types/Attachment.std.ts';
 import type { LinkPreviewSourceType } from '../types/LinkPreview.std.ts';
 import type { LinkPreviewForUIType } from '../types/message/LinkPreviews.std.ts';
 import type { LocalizerType, ThemeType } from '../types/Util.std.ts';
 import type { PropsType as SendStoryModalPropsType } from './SendStoryModal.dom.tsx';
 import type { StoryDistributionIdString } from '../types/StoryDistributionId.std.ts';
+import type { StoryDraftAttachmentType } from '../types/Stories.std.ts';
 import type { imageToBlurHash } from '../util/imageToBlurHash.dom.ts';
+import {
+  getLocalAttachmentUrl,
+  AttachmentDisposition,
+} from '../util/getLocalAttachmentUrl.std.ts';
 import type { PropsType as MediaEditorPropsType } from './MediaEditor.dom.tsx';
 
-import { TEXT_ATTACHMENT } from '../types/MIME.std.ts';
 import { isVideoAttachment } from '../util/Attachment.std.ts';
 import { SendStoryModal } from './SendStoryModal.dom.tsx';
 
@@ -24,8 +27,6 @@ import type { DraftBodyRanges } from '../types/BodyRange.std.ts';
 import type { processAttachment } from '../util/processAttachment.preload.ts';
 import { AxoTheme } from '../axo/AxoTheme.dom.tsx';
 
-const { get, has } = lodash;
-
 function usePortalElement(testid: string): HTMLDivElement | null {
   const [element, setElement] = useState<HTMLDivElement | null>(null);
 
@@ -33,6 +34,7 @@ function usePortalElement(testid: string): HTMLDivElement | null {
     const div = document.createElement('div');
     div.dataset.testid = testid;
     document.body.appendChild(div);
+    // oxlint-disable-next-line react/set-state-in-effect
     setElement(div);
     return () => {
       document.body.removeChild(div);
@@ -55,7 +57,7 @@ export type PropsType = {
   onSend: (
     listIds: Array<StoryDistributionIdString>,
     conversationIds: Array<string>,
-    attachment: AttachmentType,
+    attachment: StoryDraftAttachmentType,
     bodyRanges: DraftBodyRanges | undefined
   ) => unknown;
   imageToBlurHash: typeof imageToBlurHash;
@@ -90,6 +92,7 @@ export type PropsType = {
     MediaEditorPropsType,
     | 'isFormattingEnabled'
     | 'emojiSkinToneDefault'
+    | 'onMarkStickerAsFavorite'
     | 'onSelectEmoji'
     | 'onTextTooLong'
     | 'platform'
@@ -118,6 +121,7 @@ export function StoryCreator({
   onDeleteList,
   onDistributionListCreated,
   onHideMyStoriesFrom,
+  onMarkStickerAsFavorite,
   onMediaPlaybackStart,
   onSelectEmoji,
   onRemoveMembers,
@@ -141,14 +145,13 @@ export function StoryCreator({
   const portalElement = usePortalElement('StoryCreatorPortal');
 
   const [draftAttachment, setDraftAttachment] = useState<
-    AttachmentType | undefined
+    StoryDraftAttachmentType | undefined
   >();
   const [isReadyToSend, setIsReadyToSend] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | undefined>();
   const [bodyRanges, setBodyRanges] = useState<DraftBodyRanges | undefined>();
 
   useEffect(() => {
-    let url: string | undefined;
     let unmounted = false;
 
     async function loadAttachment(): Promise<void> {
@@ -160,56 +163,55 @@ export function StoryCreator({
         // Screenshot is used in `getStoryBackground`
         generateScreenshot: true,
         flags: null,
+        clientUuid: generateUuid(),
       });
-      if (!draft || unmounted) {
+      if (!draft || draft.pending || unmounted) {
         return;
       }
 
-      let attachment: AttachmentType = draft;
+      const attachment = {
+        ...draft,
+        url: getLocalAttachmentUrl(draft, {
+          disposition: AttachmentDisposition.Draft,
+        }),
+        screenshot:
+          draft.screenshot == null
+            ? undefined
+            : {
+                ...draft.screenshot,
+                url: getLocalAttachmentUrl(draft.screenshot, {
+                  disposition: AttachmentDisposition.Draft,
+                }),
+              },
+      };
+
       if (isVideoAttachment(draft)) {
-        if (
-          'screenshotData' in draft &&
-          draft.screenshotData &&
-          draft.screenshotContentType
-        ) {
-          url = URL.createObjectURL(
-            new Blob([draft.screenshotData], {
-              type: draft.screenshotContentType,
-            })
-          );
-          attachment = {
-            ...omit(draft, 'screenshotData'),
-            screenshot: {
-              contentType: draft.screenshotContentType,
-              url,
-            },
-          };
-        }
         setAttachmentUrl(undefined);
         setIsReadyToSend(true);
-      } else if (draft && has(draft, 'data')) {
-        url = URL.createObjectURL(new Blob([get(draft, 'data')]));
-        setAttachmentUrl(url);
+      } else {
+        setAttachmentUrl(attachment.url);
 
         // Needs editing in MediaEditor
         setIsReadyToSend(false);
       }
-      setDraftAttachment(attachment);
+
+      setDraftAttachment({
+        type: 'media',
+        attachment,
+      });
     }
 
     void loadAttachment();
 
     return () => {
       unmounted = true;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
     };
   }, [file, processAttachment]);
 
   useEffect(() => {
     if (draftAttachment === undefined) {
       sendStoryModalOpenStateChanged(false);
+      // oxlint-disable-next-line react/set-state-in-effect
       setIsReadyToSend(false);
     } else {
       sendStoryModalOpenStateChanged(true);
@@ -270,26 +272,43 @@ export function StoryCreator({
                 convertDraftBodyRangesIntoHydrated
               }
               onClose={onClose}
-              onDone={({
+              onDone={async ({
                 contentType,
                 data,
                 blurHash,
                 caption,
                 captionBodyRanges,
               }) => {
+                const clientUuid = generateUuid();
+                const newAttachment = await processAttachment(
+                  new File([data], clientUuid, { type: contentType }),
+                  {
+                    generateScreenshot: false,
+                    disableTranscoding: true,
+                    flags: null,
+                    clientUuid,
+                  }
+                );
+                if (newAttachment == null || newAttachment.pending) {
+                  return;
+                }
                 setDraftAttachment({
-                  ...draftAttachment,
-                  contentType,
-                  data,
-                  size: data.byteLength,
-                  blurHash,
-                  caption,
+                  type: 'media',
+                  attachment: {
+                    ...newAttachment,
+                    // We don't do transcoding, but filename still has to be
+                    // stripped
+                    fileName: undefined,
+                    caption,
+                    blurHash,
+                  },
                 });
                 setBodyRanges(captionBodyRanges);
                 setIsReadyToSend(true);
               }}
               onSelectEmoji={onSelectEmoji}
               onTextTooLong={onTextTooLong}
+              onMarkStickerAsFavorite={onMarkStickerAsFavorite}
               ourConversationId={ourConversationId}
               platform={platform}
               emojiSkinToneDefault={emojiSkinToneDefault}
@@ -307,9 +326,8 @@ export function StoryCreator({
               onClose={onClose}
               onDone={textAttachment => {
                 setDraftAttachment({
-                  contentType: TEXT_ATTACHMENT,
-                  textAttachment,
-                  size: textAttachment.text?.length || 0,
+                  type: 'text',
+                  attachment: textAttachment,
                 });
                 setIsReadyToSend(true);
               }}

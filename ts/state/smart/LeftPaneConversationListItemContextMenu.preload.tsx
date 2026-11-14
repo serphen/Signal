@@ -38,7 +38,7 @@ export const SmartLeftPaneConversationListItemContextMenu: FC<RenderConversation
       onArchive,
       onMoveToInbox,
       deleteConversation,
-      setMuteDuration,
+      setMuteExpiration,
     } = useConversationsActions();
     const { updateChatFolderToggleChat } = useChatFolderActions();
     const { changeLocation } = useNavActions();
@@ -62,7 +62,7 @@ export const SmartLeftPaneConversationListItemContextMenu: FC<RenderConversation
 
     const handleChatFolderOpenCreatePage = useCallback(
       (initChatFolderParams: ChatFolderParams) => {
-        changeLocation({
+        void changeLocation({
           tab: NavTab.Settings,
           details: {
             page: SettingsPage.EditChatFolder,
@@ -77,7 +77,12 @@ export const SmartLeftPaneConversationListItemContextMenu: FC<RenderConversation
 
     const handleChatFolderToggleChat: ChatFolderToggleChat = useCallback(
       (chatFolderId, conversationId, toggle) => {
-        updateChatFolderToggleChat(chatFolderId, conversationId, toggle, true);
+        void updateChatFolderToggleChat(
+          chatFolderId,
+          conversationId,
+          toggle,
+          true
+        );
       },
       [updateChatFolderToggleChat]
     );
@@ -93,7 +98,7 @@ export const SmartLeftPaneConversationListItemContextMenu: FC<RenderConversation
         onMarkRead={markConversationRead}
         onPin={handlePin}
         onUnpin={handleUnpin}
-        onUpdateMute={setMuteDuration}
+        onUpdateMute={setMuteExpiration}
         onArchive={onArchive}
         onUnarchive={onMoveToInbox}
         onDelete={deleteConversation}

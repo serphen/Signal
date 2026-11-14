@@ -89,6 +89,93 @@ export async function typeIntoInput(
   }
 }
 
+const VERIFICATION_CODE_LENGTH = 6;
+
+async function getVerificationCodeInputs(window: Page): Promise<Locator> {
+  const locators = window
+    .getByRole('group', { name: 'Verification code' })
+    .getByRole('textbox', {
+      name: new RegExp(`^Character \\d+ of ${VERIFICATION_CODE_LENGTH}`),
+    });
+  // Wait for the items to be fully rendered
+  await expect(locators).toHaveCount(VERIFICATION_CODE_LENGTH);
+  for (const input of await locators.all()) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toBeVisible();
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toBeEnabled();
+  }
+  return locators;
+}
+
+export async function typeVerificationCode(
+  window: Page,
+  code: string
+): Promise<void> {
+  const inputs = await getVerificationCodeInputs(window);
+  const all = await inputs.all();
+
+  expect(code.length).toEqual(VERIFICATION_CODE_LENGTH);
+
+  await inputs.first().focus();
+
+  for (const [index, input] of all.entries()) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toBeFocused();
+    // oxlint-disable-next-line no-await-in-loop
+    await window.keyboard.press(code.charAt(index));
+  }
+
+  await expect(inputs.last()).toBeFocused();
+
+  for (const [index, input] of all.entries()) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toHaveValue(code.charAt(index));
+  }
+}
+
+export async function clearVerificationCode(window: Page): Promise<void> {
+  const inputs = await getVerificationCodeInputs(window);
+  const all = await inputs.all();
+
+  await inputs.last().focus();
+
+  for (const input of all.toReversed()) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toBeFocused();
+    // oxlint-disable-next-line no-await-in-loop
+    await window.keyboard.press('Backspace');
+  }
+
+  await expect(inputs.first()).toBeFocused();
+
+  for (const input of all) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(input).toHaveValue('');
+  }
+}
+
+export async function selectAxoOption(
+  page: Page,
+  combobox: Locator,
+  options: { name: string; exact?: boolean }
+): Promise<void> {
+  // Read this before opening, while open everything outside of the listbox
+  // (including `combobox`) is `aria-hidden` and can't be resolved by role
+  const selectId = await combobox.getAttribute('data-axo-select-id');
+  strictAssert(selectId != null, 'Missing data-axo-select-id on combobox');
+
+  await combobox.click();
+
+  // Select options are rendered in a portal outside of the combobox, the
+  // listbox has a matching `data-axo-select-id`
+  await page
+    .getByRole('listbox')
+    .and(page.locator(`[data-axo-select-id="${selectId}"]`))
+    .getByRole('option', options)
+    .click();
+}
+
 export async function expectItemsWithText(
   items: Locator,
   expected: ReadonlyArray<string | RegExp>
@@ -125,7 +212,9 @@ export async function expectSystemMessages(
   expected: ReadonlyArray<string | RegExp>
 ): Promise<void> {
   await expectItemsWithText(
-    context.locator('.SystemMessage__contents'),
+    context
+      .locator('.SystemMessage__contents')
+      .or(context.getByTestId('axo-chat-event')),
     expected
   );
 }
@@ -353,7 +442,8 @@ export async function pinContact(
 
 export async function acceptConversation(page: Page): Promise<void> {
   await page
-    .locator('.module-message-request-actions button >> "Accept"')
+    .getByTestId('message-request-actions')
+    .getByRole('button', { name: 'Accept' })
     .click();
 
   const confirmationButton = page
@@ -390,9 +480,9 @@ export async function composerAttachFiles(
 ): Promise<void> {
   const AttachmentInput = page.getByTestId('attachfile-input');
 
-  const AttachmentsList = page.locator('.module-attachments');
+  const AttachmentsList = page.locator('.module-attachments__rail');
   const AttachmentsListImageLoaded = AttachmentsList.locator(
-    '.module-image--loaded'
+    '.module-image[data-loaded]'
   );
 
   debug('setting input files');
@@ -417,6 +507,10 @@ export async function composerAttachFiles(
   );
 }
 
+export function getLoadedImagesInside(parent: Locator): Locator {
+  return parent.locator('img.module-image__image[data-loaded="true"]');
+}
+
 export async function sendMessageWithAttachments(
   page: Page,
   receiver: PrimaryDevice,
@@ -434,14 +528,13 @@ export async function sendMessageWithAttachments(
   await input.press('Enter');
 
   const Message = getTimelineMessageWithText(page, text);
-  const MessageImageLoaded = Message.locator('.module-image__image');
 
   await Message.waitFor();
 
   await Promise.all(
     filePaths.map(async (_, index) => {
       debug(`waiting for ${index} image to render in timeline`);
-      await MessageImageLoaded.nth(index).waitFor({
+      await getLoadedImagesInside(Message).nth(index).waitFor({
         state: 'visible',
       });
     })
@@ -479,9 +572,7 @@ export async function sendMessageWithAttachments(
 }
 
 export async function waitForEnabledComposer(page: Page): Promise<Locator> {
-  const composeArea = page.locator(
-    '.composition-area-wrapper, .Inbox__conversation .ConversationView'
-  );
+  const composeArea = page.locator('.ConversationView__composition-area');
   const composeContainer = composeArea.locator(
     '[data-testid=CompositionInput][data-enabled=true]'
   );
@@ -509,19 +600,21 @@ export async function createCallLink(
   await editModal.waitFor();
 
   if (isAdminApprovalRequired !== undefined) {
-    const restrictionsInput = editModal.getByLabel('Require admin approval');
+    const restrictions = editModal.getByRole('switch', {
+      name: 'Require admin approval',
+    });
     if (isAdminApprovalRequired) {
-      await expect(restrictionsInput).toHaveJSProperty('value', '0');
-      await restrictionsInput.selectOption({ label: 'On' });
-      await expect(restrictionsInput).toHaveJSProperty('value', '1');
+      await expect(restrictions).toBeChecked({ checked: false });
+      await restrictions.click();
+      await expect(restrictions).toBeChecked();
     } else {
-      await expect(restrictionsInput).toHaveJSProperty('value', '0');
+      await expect(restrictions).toBeChecked({ checked: false });
     }
   }
 
   await editModal.getByRole('button', { name: 'Add call name' }).click();
 
-  const addNameModal = page.locator('.CallLinkAddNameModal');
+  const addNameModal = page.getByRole('dialog', { name: 'Add call name' });
   await addNameModal.waitFor();
 
   const nameInput = addNameModal.getByLabel('Call name');
@@ -535,11 +628,9 @@ export async function createCallLink(
   const doneBtn = editModal.getByText('Done');
   await doneBtn.click();
 
-  const callLinkTitle = page.locator('.CallsList__ItemTile').getByText(name);
-
-  const callLinkItem = page.locator('.CallsList__Item', {
-    has: callLinkTitle,
-  });
+  const callLinkItem = page
+    .locator('.CallsList__ItemTile', { hasText: name })
+    .locator('xpath=..');
   const testId = await callLinkItem.getAttribute('data-testid');
   return testId || undefined;
 }

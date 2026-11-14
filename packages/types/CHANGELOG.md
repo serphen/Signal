@@ -1,5 +1,17 @@
 # @signalapp/types
 
+## 0.4.0
+
+### Minor Changes
+
+- 417c44a: Add types for AccountEntropyPool, Username, UsernameNickname, UsernameDiscriminator, UsernameHash, UsernameProof
+
+## 0.3.0
+
+### Minor Changes
+
+- e8fd531: Add MuteExpiration
+
 ## 0.2.0
 
 ### Minor Changes

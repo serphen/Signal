@@ -5,7 +5,7 @@ import type { AttachmentType } from '../types/Attachment.std.ts';
 import type {
   MessageAttributesType,
   QuotedAttachmentType,
-} from '../model-types.d.ts';
+} from '../model-types.std.ts';
 import type { LinkPreviewType } from '../types/message/LinkPreviews.std.ts';
 import type { StickerType } from '../types/Stickers.preload.ts';
 import { IMAGE_JPEG, IMAGE_GIF } from '../types/MIME.std.ts';
@@ -17,11 +17,10 @@ import {
   isTapToView,
 } from '../state/selectors/message.preload.ts';
 import { createLogger } from '../logging/log.std.ts';
+import { DataWriter } from '../sql/Client.preload.ts';
 import { map, take, collect } from './iterables.std.ts';
 import { strictAssert } from './assert.std.ts';
-import { loadAttachmentData } from './migrations.preload.ts';
 import { getMessageSentTimestamp } from './getMessageSentTimestamp.std.ts';
-import { getLocalAttachmentUrl } from './getLocalAttachmentUrl.std.ts';
 import type { QuotedMessageForComposerType } from '../state/ducks/composer.preload.ts';
 
 const log = createLogger('makeQuote');
@@ -73,7 +72,7 @@ export async function getQuoteAttachment(
 ): Promise<Array<QuotedAttachmentType>> {
   if (attachments && attachments.length) {
     const attachmentsToUse = Array.from(take(attachments, 1));
-    const isGIFQuote = isGIF(attachmentsToUse);
+    const isGIFQuote = isGIF(attachmentsToUse[0]);
 
     return Promise.all(
       map(attachmentsToUse, async attachment => {
@@ -93,8 +92,11 @@ export async function getQuoteAttachment(
           thumbnail:
             thumbnail && thumbnail.path
               ? {
-                  ...(await loadAttachmentData(thumbnail)),
-                  url: getLocalAttachmentUrl(thumbnail),
+                  ...thumbnail,
+                  reuseToken:
+                    await DataWriter.protectAttachmentPathFromDeletion({
+                      path: thumbnail.path,
+                    }),
                 }
               : undefined,
         };
@@ -115,8 +117,11 @@ export async function getQuoteAttachment(
           thumbnail:
             image && image.path
               ? {
-                  ...(await loadAttachmentData(image)),
-                  objectUrl: getLocalAttachmentUrl(image),
+                  ...image,
+                  reuseToken:
+                    await DataWriter.protectAttachmentPathFromDeletion({
+                      path: image.path,
+                    }),
                 }
               : undefined,
         };
@@ -132,8 +137,10 @@ export async function getQuoteAttachment(
         contentType,
         thumbnail: path
           ? {
-              ...(await loadAttachmentData(sticker.data)),
-              url: getLocalAttachmentUrl(sticker.data),
+              ...sticker.data,
+              reuseToken: await DataWriter.protectAttachmentPathFromDeletion({
+                path: sticker.data.path,
+              }),
             }
           : undefined,
       },

@@ -15,7 +15,6 @@ export enum ToastType {
   CallQualitySurveySuccess = 'CallQualitySurveySuccess',
   CaptchaFailed = 'CaptchaFailed',
   CaptchaSolved = 'CaptchaSolved',
-  CannotAddMemberLabel = 'CannotAddMemberLabel',
   CannotEditMessage = 'CannotEditMessage',
   CannotForwardEmptyMessage = 'CannotForwardEmptyMessage',
   CannotMixMultiAndNonMultiAttachments = 'CannotMixMultiAndNonMultiAttachments',
@@ -73,6 +72,8 @@ export enum ToastType {
   OriginalMessageNotFound = 'OriginalMessageNotFound',
   PinnedConversationsFull = 'PinnedConversationsFull',
   PinnedMessageNotFound = 'PinnedMessageNotFound',
+  PinChangeCompleted = 'PinChangeCompleted',
+  PinReminderCompleted = 'PinReminderCompleted',
   PollNotFound = 'PollNotFound',
   ReactionFailed = 'ReactionFailed',
   ReceiptSaved = 'ReceiptSaved',
@@ -81,6 +82,9 @@ export enum ToastType {
   RemoteConfigChanged = 'RemoteConfigChanged',
   ReportedSpamAndBlocked = 'ReportedSpamAndBlocked',
   SQLError = 'SQLError',
+  StickerFavoriteAdded = 'StickerFavoriteAdded',
+  StickerFavoriteRemoved = 'StickerFavoriteRemoved',
+  StickerFavoritesTooMany = 'StickerFavoritesTooMany',
   StickerPackInstallFailed = 'StickerPackInstallFailed',
   StoryMuted = 'StoryMuted',
   StoryReact = 'StoryReact',
@@ -101,6 +105,7 @@ export enum ToastType {
   ViewOnceDisabled = 'ViewOnceDisabled',
   ViewOnceEnabled = 'ViewOnceEnabled',
   VideoFileSize = 'VideoFileSize',
+  VideoFileDuration = 'VideoFileDuration',
   VoiceNoteLimit = 'VoiceNoteLimit',
   VoiceNoteMustBeTheOnlyAttachment = 'VoiceNoteMustBeTheOnlyAttachment',
   WhoCanFindMeReadOnly = 'WhoCanFindMeReadOnly',
@@ -130,7 +135,6 @@ export type AnyToast =
       parameters: { canRetry: boolean };
     }
   | { toastType: ToastType.CallQualitySurveySuccess }
-  | { toastType: ToastType.CannotAddMemberLabel }
   | { toastType: ToastType.CannotEditMessage }
   | { toastType: ToastType.CannotForwardEmptyMessage }
   | { toastType: ToastType.CannotMixMultiAndNonMultiAttachments }
@@ -191,6 +195,10 @@ export type AnyToast =
       toastType: ToastType.FileSize | ToastType.VideoFileSize;
       parameters: { limit: number; units: string };
     }
+  | {
+      toastType: ToastType.VideoFileDuration;
+      parameters: { maxDuration: number };
+    }
   | { toastType: ToastType.GroupLinkCopied }
   | {
       toastType: ToastType.DecryptionError;
@@ -223,6 +231,8 @@ export type AnyToast =
       maxPinnedConversations: number;
     }
   | { toastType: ToastType.PinnedMessageNotFound }
+  | { toastType: ToastType.PinChangeCompleted }
+  | { toastType: ToastType.PinReminderCompleted }
   | { toastType: ToastType.PollNotFound }
   | { toastType: ToastType.ReactionFailed }
   | {
@@ -240,6 +250,9 @@ export type AnyToast =
   | { toastType: ToastType.ReceiptSaveFailed }
   | { toastType: ToastType.ReportedSpam }
   | { toastType: ToastType.ReportedSpamAndBlocked }
+  | { toastType: ToastType.StickerFavoriteAdded }
+  | { toastType: ToastType.StickerFavoriteRemoved }
+  | { toastType: ToastType.StickerFavoritesTooMany }
   | { toastType: ToastType.StickerPackInstallFailed }
   | { toastType: ToastType.SQLError }
   | { toastType: ToastType.StoryMuted }

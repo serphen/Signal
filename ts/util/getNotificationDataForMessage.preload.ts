@@ -4,7 +4,7 @@
 import type { ReadonlyDeep } from 'type-fest';
 
 import type { RawBodyRange } from '../types/BodyRange.std.ts';
-import type { ReadonlyMessageAttributesType } from '../model-types.d.ts';
+import type { ReadonlyMessageAttributesType } from '../model-types.std.ts';
 import type { ICUStringMessageParamsByKeyType } from '../types/Util.std.ts';
 import * as Attachment from './Attachment.std.ts';
 import * as EmbeddedContact from '../types/EmbeddedContact.std.ts';
@@ -157,7 +157,7 @@ export function getNotificationDataForMessage(
     const changes = GroupChange.renderChange<string>(change, {
       i18n,
       ourAci: itemStorage.user.getCheckedAci(),
-      ourPni: itemStorage.user.getCheckedPni(),
+      ourPni: itemStorage.user.getOptionalPni(),
       renderContact: (conversationId: string) => {
         const conversation = window.ConversationController.get(conversationId);
         return conversation
@@ -359,9 +359,10 @@ export function getNotificationDataForMessage(
   const { body: untrimmedBody = '', bodyRanges = [] } = attributes;
   const body = untrimmedBody.trim();
 
-  if (attachments.length) {
+  const attachment = attachments.at(0);
+  if (attachment != null) {
     // This should never happen but we want to be extra-careful.
-    const attachment = attachments[0] || {};
+
     const { contentType } = attachment;
 
     const tooBigAttachmentCount = attachments.filter(
@@ -374,7 +375,7 @@ export function getNotificationDataForMessage(
       };
     }
 
-    if (contentType === MIME.IMAGE_GIF || Attachment.isGIF(attachments)) {
+    if (contentType === MIME.IMAGE_GIF || Attachment.isGIF(attachment)) {
       return {
         bodyRanges,
         emoji: Emoji.FERRIS_WHEEL,
@@ -441,7 +442,7 @@ export function getNotificationDataForMessage(
       callHistorySelector: getCallHistorySelector(state),
       conversationSelector: getConversationSelector(state),
       selectedMessageIds: getSelectedMessageIds(state),
-      targetedMessageId: getTargetedMessage(state)?.id,
+      targetedMessageId: getTargetedMessage(state)?.id ?? null,
     });
     if (callingNotification) {
       const text = getCallingNotificationText(callingNotification, i18n);
@@ -479,8 +480,10 @@ export function getNotificationDataForMessage(
   const { contact: contacts } = attributes;
   if (contacts && contacts.length) {
     return {
-      // oxlint-disable-next-line typescript/no-non-null-assertion
-      text: EmbeddedContact.getName(contacts[0]!) || i18n('icu:unknownContact'),
+      text:
+        // oxlint-disable-next-line typescript/no-non-null-assertion
+        EmbeddedContact.getDisplayName(contacts[0]!) ||
+        i18n('icu:unknownContact'),
       emoji: Emoji.BUST_IN_SILHOUETTE,
     };
   }

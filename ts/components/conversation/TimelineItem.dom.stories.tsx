@@ -9,7 +9,7 @@ import type { PropsType as TimelineItemProps } from './TimelineItem.dom.tsx';
 import { TimelineItem } from './TimelineItem.dom.tsx';
 import { UniversalTimerNotification } from './UniversalTimerNotification.dom.tsx';
 import { CallMode } from '../../types/CallDisposition.std.ts';
-import { AvatarColors } from '../../types/Colors.std.ts';
+import { AvatarColors } from '../../types/Avatar.std.ts';
 import { getDefaultConversation } from '../../test-helpers/getDefaultConversation.std.ts';
 import { WidthBreakpoint } from '../_util.std.ts';
 import { ThemeType } from '../../types/Util.std.ts';
@@ -50,17 +50,18 @@ const getDefaultProps = () => ({
   isTargeted: false,
   isBlocked: false,
   isGroup: false,
+  isFavoriteSticker: false,
   interactivity: MessageInteractivity.Normal,
   interactionMode: 'keyboard' as const,
-  targetedMessage: undefined,
+  targetedMessage: null,
   theme: ThemeType.light,
   platform: 'darwin',
+  handleClickCtaButton: action('handleClickCtaButton'),
   handleDebugMessage: action('handleDebugMessage'),
   targetMessage: action('targetMessage'),
   toggleSelectMessage: action('toggleSelectMessage'),
   endPoll: action('endPoll'),
   reactToMessage: action('reactToMessage'),
-  checkForAccount: action('checkForAccount'),
   clearTargetedMessage: action('clearTargetedMessage'),
   setMessageToEdit: action('setMessageToEdit'),
   setQuoteByMessageId: action('setQuoteByMessageId'),
@@ -72,6 +73,7 @@ const getDefaultProps = () => ({
   cancelAttachmentDownload: action('cancelAttachmentDownload'),
   kickOffAttachmentDownload: action('kickOffAttachmentDownload'),
   markAttachmentAsCorrupted: action('markAttachmentAsCorrupted'),
+  markStickerAsFavorite: action('markStickerAsFavorite'),
   messageExpanded: action('messageExpanded'),
   showConversation: action('showConversation'),
   openGiftBadge: action('openGiftBadge'),
@@ -108,7 +110,9 @@ const getDefaultProps = () => ({
   scrollToPollMessage: action('scrollToPollMessage'),
   scrollToQuotedMessage: action('scrollToQuotedMessage'),
   showSpoiler: action('showSpoiler'),
-  startConversation: action('startConversation'),
+  startConversationWithSharedContact: action(
+    'startConversationWithSharedContact'
+  ),
   renderItem: () => {
     throw new Error('not implemented');
   },
@@ -143,6 +147,7 @@ export function PlainMessage(): JSX.Element {
     data: {
       id: 'id-1',
       direction: 'incoming',
+      // oxlint-disable-next-line react/purity
       timestamp: Date.now(),
       author: {
         phoneNumber: '(202) 555-2001',
@@ -209,6 +214,7 @@ export function Notification(): JSX.Element {
       type: 'changeNumberNotification',
       data: {
         sender: getDefaultConversation(),
+        // oxlint-disable-next-line react/purity
         timestamp: Date.now(),
       },
     },
@@ -226,6 +232,7 @@ export function Notification(): JSX.Element {
         wasDeclined: true,
         wasIncoming: true,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -237,6 +244,7 @@ export function Notification(): JSX.Element {
         wasDeclined: true,
         wasIncoming: true,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -245,10 +253,12 @@ export function Notification(): JSX.Element {
       data: {
         // accepted incoming audio
         callMode: CallMode.Direct,
+        // oxlint-disable-next-line react/purity
         acceptedTime: Date.now() - 300,
         wasDeclined: false,
         wasIncoming: true,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -257,10 +267,12 @@ export function Notification(): JSX.Element {
       data: {
         // accepted incoming video
         callMode: CallMode.Direct,
+        // oxlint-disable-next-line react/purity
         acceptedTime: Date.now() - 400,
         wasDeclined: false,
         wasIncoming: true,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -272,6 +284,7 @@ export function Notification(): JSX.Element {
         wasDeclined: false,
         wasIncoming: true,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -283,6 +296,7 @@ export function Notification(): JSX.Element {
         wasDeclined: false,
         wasIncoming: true,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -291,10 +305,12 @@ export function Notification(): JSX.Element {
       data: {
         // accepted outgoing audio
         callMode: CallMode.Direct,
+        // oxlint-disable-next-line react/purity
         acceptedTime: Date.now() - 200,
         wasDeclined: false,
         wasIncoming: false,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -303,10 +319,12 @@ export function Notification(): JSX.Element {
       data: {
         // accepted outgoing video
         callMode: CallMode.Direct,
+        // oxlint-disable-next-line react/purity
         acceptedTime: Date.now() - 200,
         wasDeclined: false,
         wasIncoming: false,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -318,6 +336,7 @@ export function Notification(): JSX.Element {
         wasDeclined: true,
         wasIncoming: false,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -329,6 +348,7 @@ export function Notification(): JSX.Element {
         wasDeclined: true,
         wasIncoming: false,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -340,6 +360,7 @@ export function Notification(): JSX.Element {
         wasDeclined: false,
         wasIncoming: false,
         wasVideoCall: false,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -351,6 +372,7 @@ export function Notification(): JSX.Element {
         wasDeclined: false,
         wasIncoming: false,
         wasVideoCall: true,
+        // oxlint-disable-next-line react/purity
         endedTime: Date.now(),
       },
     },
@@ -368,6 +390,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 1,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -385,6 +408,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 1,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -397,6 +421,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 1,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -415,6 +440,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 1,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -433,6 +459,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 1,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -450,6 +477,7 @@ export function Notification(): JSX.Element {
         ended: false,
         deviceCount: 16,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },
@@ -467,6 +495,7 @@ export function Notification(): JSX.Element {
         ended: true,
         deviceCount: 0,
         maxDevices: 16,
+        // oxlint-disable-next-line react/purity
         startedTime: Date.now(),
       },
     },

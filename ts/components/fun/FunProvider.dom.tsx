@@ -41,11 +41,17 @@ export type FunContextSmartProps = Readonly<{
   onSelectEmoji: (emojiSelection: FunEmojiSelection) => void;
 
   // Stickers
+  favoriteStickers: ReadonlyArray<StickerType>;
+  isFavoriteStickersEnabled: boolean;
   isStickerReplySendEnabled: boolean;
   installedStickerPacks: ReadonlyArray<StickerPackType>;
   showStickerPickerHint: boolean;
   onClearStickerPickerHint: () => unknown;
   onSelectSticker: (stickerSelection: FunStickerSelection) => void;
+  onMarkStickerAsFavorite: (
+    stickerSelection: FunStickerSelection,
+    markAsFavorite: boolean
+  ) => void;
 
   // GIFs
   fetchGiphyTrending: typeof fetchGiphyTrending;
@@ -58,7 +64,8 @@ export type FunContextSmartProps = Readonly<{
 export type FunContextProps = FunContextSmartProps &
   Readonly<{
     // Open state
-    onOpenChange: (open: boolean) => void;
+    isAnyOpen: boolean;
+    onAnyOpenChange: (open: boolean) => void;
 
     // Current Tab
     tab: FunPickerTabKey;
@@ -69,10 +76,6 @@ export type FunContextProps = FunContextSmartProps &
     onStoredSearchInputChange: (nextSearchInput: string) => void;
     shouldAutoFocus: boolean;
     onChangeShouldAutoFocus: (shouldAutoFocus: boolean) => void;
-
-    // Sticker reply
-    stagedStickerReply: FunStickerSelection | null;
-    onStageStickerReply: (selection: FunStickerSelection | null) => void;
   }>;
 
 const FunContext = createContext<FunContextProps | null>(null);
@@ -81,6 +84,11 @@ export function useFunContext(): FunContextProps {
   const fun = useContext(FunContext);
   strictAssert(fun != null, 'Must be wrapped with <FunProvider>');
   return fun;
+}
+
+export function useFunContextIsAnyOpen(): boolean {
+  const fun = useFunContext();
+  return fun.isAnyOpen;
 }
 
 type FunProviderInnerProps = FunContextProps & {
@@ -102,40 +110,20 @@ export type FunProviderProps = FunContextSmartProps & {
 export const FunProvider = memo(function FunProvider(
   props: FunProviderProps
 ): JSX.Element {
+  // Open state
+  const [isAnyOpen, setIsAnyOpen] = useState(false);
+
   // Current Tab
   const [tab, setTab] = useState<FunPickerTabKey>(FunPickerTabKey.EmojisTab);
-  const handleChangeTab = useCallback((key: FunPickerTabKey) => {
-    setTab(key);
-  }, []);
 
   // Search Input
   const [storedSearchInput, setStoredSearchInput] = useState<string>('');
-  const handleStoredSearchInputChange = useCallback(
-    (newSearchInput: string) => {
-      setStoredSearchInput(newSearchInput);
-    },
-    []
-  );
-
-  // Sticker reply
-  const [stagedStickerReply, setStagedStickerReply] =
-    useState<FunStickerSelection | null>(null);
-  const handleStageStickerReply = useCallback(
-    (selection: FunStickerSelection | null) => {
-      setStagedStickerReply(selection);
-    },
-    []
-  );
 
   const [shouldAutoFocus, setShouldAutoFocus] = useState(true);
-  const handleChangeShouldAutofocus = useCallback(
-    (nextShouldAutoFocus: boolean) => {
-      setShouldAutoFocus(nextShouldAutoFocus);
-    },
-    []
-  );
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  // Callbacks
+  const handleAnyOpenChange = useCallback((open: boolean) => {
+    setIsAnyOpen(open);
     if (open) {
       return;
     }
@@ -143,11 +131,30 @@ export const FunProvider = memo(function FunProvider(
     setShouldAutoFocus(true);
   }, []);
 
+  const handleChangeTab = useCallback((key: FunPickerTabKey) => {
+    setTab(key);
+  }, []);
+
+  const handleStoredSearchInputChange = useCallback(
+    (newSearchInput: string) => {
+      setStoredSearchInput(newSearchInput);
+    },
+    []
+  );
+
+  const handleChangeShouldAutofocus = useCallback(
+    (nextShouldAutoFocus: boolean) => {
+      setShouldAutoFocus(nextShouldAutoFocus);
+    },
+    []
+  );
+
   return (
     <FunProviderInner
       i18n={props.i18n}
       // Open state
-      onOpenChange={handleOpenChange}
+      isAnyOpen={isAnyOpen}
+      onAnyOpenChange={handleAnyOpenChange}
       // Current Tab
       tab={tab}
       onChangeTab={handleChangeTab}
@@ -168,13 +175,14 @@ export const FunProvider = memo(function FunProvider(
       }
       onSelectEmoji={props.onSelectEmoji}
       // Stickers
+      favoriteStickers={props.favoriteStickers}
+      isFavoriteStickersEnabled={props.isFavoriteStickersEnabled}
       isStickerReplySendEnabled={props.isStickerReplySendEnabled}
       installedStickerPacks={props.installedStickerPacks}
       showStickerPickerHint={props.showStickerPickerHint}
-      stagedStickerReply={stagedStickerReply}
       onClearStickerPickerHint={props.onClearStickerPickerHint}
       onSelectSticker={props.onSelectSticker}
-      onStageStickerReply={handleStageStickerReply}
+      onMarkStickerAsFavorite={props.onMarkStickerAsFavorite}
       // GIFs
       fetchGiphyTrending={props.fetchGiphyTrending}
       fetchGiphySearch={props.fetchGiphySearch}

@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import lodash from 'lodash';
-import type { ReadStatus } from '../messages/MessageReadStatus.std.ts';
-import type { SeenStatus } from '../MessageSeenStatus.std.ts';
 import type { ServiceIdString } from '../types/ServiceId.std.ts';
 import { dropNull, shallowDropNull } from '../util/dropNull.std.ts';
 import type {
@@ -28,7 +26,7 @@ import {
   stringToMIMEType,
 } from '../types/MIME.std.ts';
 import { strictAssert } from '../util/assert.std.ts';
-import type { MessageAttributesType } from '../model-types.d.ts';
+import type { MessageAttributesType } from '../model-types.std.ts';
 import { createLogger } from '../logging/log.std.ts';
 
 const { groupBy } = lodash;
@@ -125,8 +123,8 @@ function hydrateMessageTableColumns(row: MessageTypeUnhydrated): MessageType {
     sourceDevice: dropNull(sourceDevice),
     storyId: dropNull(storyId),
     type: type as MessageType['type'],
-    readStatus: readStatus == null ? undefined : (readStatus as ReadStatus),
-    seenStatus: seenStatus == null ? undefined : (seenStatus as SeenStatus),
+    readStatus: readStatus == null ? undefined : readStatus,
+    seenStatus: seenStatus == null ? undefined : seenStatus,
     timestamp: timestamp || 0,
     serverTimestamp: dropNull(serverTimestamp),
     unidentifiedDeliveryReceived: toBoolean(unidentifiedDeliveryReceived),
@@ -365,6 +363,7 @@ export function convertAttachmentDBFieldsToAttachmentType(
     transitCdnKey: cdnKey,
     transitCdnNumber: cdnNumber,
     transitCdnUploadTimestamp: uploadTimestamp,
+    transcodingTargetQuality,
     error,
     pending,
     wasTooBig,
@@ -373,6 +372,7 @@ export function convertAttachmentDBFieldsToAttachmentType(
     storyTextAttachmentJson,
     copiedFromQuotedAttachment,
     localBackupPath,
+    audioWaveform,
   } = messageAttachment;
 
   const result: AttachmentType = {
@@ -448,6 +448,9 @@ export function convertAttachmentDBFieldsToAttachmentType(
           },
         }
       : {}),
+    audioWaveform:
+      audioWaveform == null ? undefined : Array.from(audioWaveform),
+    transcodingTargetQuality: transcodingTargetQuality ?? undefined,
   };
 
   return result;

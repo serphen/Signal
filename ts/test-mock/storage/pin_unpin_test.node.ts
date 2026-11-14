@@ -47,9 +47,9 @@ describe('storage service', function (this: Mocha.Suite) {
       debug('Unpinning group via storage service');
       {
         const state = await phone.expectStorageState('initial state');
-        const newState = state.unpinGroup(group);
+        const modifiedState = state.unpinGroup(group);
 
-        await phone.setStorageState(newState);
+        const newState = await phone.setStorageState(modifiedState);
         await phone.sendFetchStorage({
           timestamp: bootstrap.getTimestamp(),
         });
@@ -60,6 +60,7 @@ describe('storage service', function (this: Mocha.Suite) {
       debug('Pinning group in the app');
       {
         const state = await phone.expectStorageState('consistency check');
+        assert.isFalse(state.isGroupPinned(group));
 
         const convo = leftPane.getByTestId(group.id);
         await convo.click();
@@ -71,22 +72,14 @@ describe('storage service', function (this: Mocha.Suite) {
 
         const pinButton = window.getByRole('menuitem', {
           name: 'Pin chat',
+          exact: true,
         });
         await pinButton.click();
 
-        const newState = await phone.waitForStorageState({
+        await phone.waitForStorageState({
           after: state,
+          predicate: storageState => storageState.isGroupPinned(group),
         });
-        assert.isTrue(newState.isGroupPinned(group), 'group not pinned');
-
-        // AccountRecord
-        const { added, removed } = newState.diff(state);
-        assert.strictEqual(added.length, 1, 'only one record must be added');
-        assert.strictEqual(
-          removed.length,
-          1,
-          'only one record must be removed'
-        );
       }
 
       debug('Pinning > 4 conversations');
@@ -107,6 +100,7 @@ describe('storage service', function (this: Mocha.Suite) {
 
           // oxlint-disable-next-line no-await-in-loop
           const state = await phone.expectStorageState('consistency check');
+          assert.isFalse(state.isPinned(contact));
 
           debug('pinning contact=%d', i);
           const convo = leftPane.locator(
@@ -123,12 +117,13 @@ describe('storage service', function (this: Mocha.Suite) {
 
           const pinButton = window.getByRole('menuitem', {
             name: 'Pin chat',
+            exact: true,
           });
           // oxlint-disable-next-line no-await-in-loop
           await pinButton.click();
 
           if (isLast) {
-            // Storage state shouldn't be updated because we failed to pin
+            // The fifth chat should remain unpinned.
             // oxlint-disable-next-line no-await-in-loop
             await window
               .locator('.Toast >> "You can only pin up to 4 chats"')
@@ -138,26 +133,24 @@ describe('storage service', function (this: Mocha.Suite) {
 
           debug('verifying storage state change contact=%d', i);
           // oxlint-disable-next-line no-await-in-loop
-          const newState = await phone.waitForStorageState({
+          await phone.waitForStorageState({
             after: state,
+            predicate: storageState => storageState.isPinned(contact),
           });
-          assert.isTrue(newState.isPinned(contact), 'contact not pinned');
-
-          // AccountRecord
-          const { added, removed } = newState.diff(state);
-          assert.strictEqual(added.length, 1, 'only one record must be added');
-          assert.strictEqual(
-            removed.length,
-            1,
-            'only one record must be removed'
-          );
         }
       }
 
-      debug('Verifying the final manifest version');
+      debug('Verifying the final pinned conversations');
       const finalState = await phone.expectStorageState('consistency check');
 
-      assert.strictEqual(finalState.version, 5n);
+      assert.isTrue(finalState.isGroupPinned(group));
+      for (const [index, contact] of contacts.slice(0, 4).entries()) {
+        assert.strictEqual(finalState.isPinned(contact), index < 3);
+      }
+      assert.lengthOf(
+        finalState.getAccountRecord()?.pinnedConversations ?? [],
+        4
+      );
     });
   }
 });

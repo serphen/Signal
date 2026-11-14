@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { AxoDialog } from '../../../axo/AxoDialog.dom.tsx';
 import { filterAndSortConversations } from '../../../util/filterAndSortConversations.std.ts';
+import { groupByFirstInitial } from '../../../util/groupByFirstInitial.std.ts';
 import type { GroupV2Membership } from './ConversationDetailsMembershipList.dom.tsx';
 import { AxoSearchField } from '../../../axo/fields/AxoSearchField.dom.tsx';
 import type { ConversationType } from '../../../state/ducks/conversations.preload.ts';
@@ -18,13 +19,11 @@ import { AriaClickable } from '../../../axo/AriaClickable.dom.tsx';
 import { UserText } from '../../UserText.dom.tsx';
 import { AxoContactName } from '../../../axo/AxoContactName.dom.tsx';
 import { AxoIconButton } from '../../../axo/AxoIconButton.dom.tsx';
-import { AxoDropdownMenu } from '../../../axo/AxoDropdownMenu.dom.tsx';
+import { AxoDropdownMenu } from '../../../axo/menus/AxoDropdownMenu.dom.tsx';
 import { missingCaseError } from '../../../util/missingCaseError.std.ts';
 import { copyGroupLink } from '../../../util/copyLinksWithToast.dom.ts';
 import { drop } from '../../../util/drop.std.ts';
 import { I18n } from '../../I18n.dom.tsx';
-
-const IS_LETTER_REGEX = /^\p{Letter}\p{Mark}*/u;
 
 export enum GroupMembersSearchDialogFilter {
   All = '',
@@ -95,9 +94,8 @@ export function GroupMembersSearchDialog(
   );
 
   const handleSelectAddMember = useCallback(() => {
-    onOpenChange(false);
     onSelectAddMember();
-  }, [onOpenChange, onSelectAddMember]);
+  }, [onSelectAddMember]);
 
   const handleSelectInviteViaGroupLink = useCallback(() => {
     strictAssert(canInviteViaGroupLink, 'cannot invite via group link');
@@ -107,7 +105,11 @@ export function GroupMembersSearchDialog(
 
   return (
     <AxoDialog.Root open={props.open} onOpenChange={props.onOpenChange}>
-      <AxoDialog.Content size="md" escape="cancel-is-noop">
+      <AxoDialog.Content
+        size="md"
+        escape="cancel-is-noop"
+        disableMissingAriaDescriptionWarning
+      >
         <AxoDialog.Header>
           <AxoDialog.Title>
             {i18n('icu:GroupMembersSearchDialog__DialogTitle')}
@@ -123,13 +125,8 @@ export function GroupMembersSearchDialog(
           />
           <FilterMenu i18n={i18n} filter={filter} onFilterChange={setFilter} />
         </AxoDialog.Search>
-        <AxoDialog.Body
-          scrollbarWidth="none"
-          padding="md"
-          noFooterHideBottomScrollHint
-          forceMaxHeight
-        >
-          <div className={tw('flex flex-col gap-2 pb-4')}>
+        <AxoDialog.Body padding="md" forceMaxHeight>
+          <div className={tw('flex flex-col gap-2')}>
             {searchQuery === '' ? (
               <AlphabeticMemberList
                 i18n={i18n}
@@ -151,7 +148,7 @@ export function GroupMembersSearchDialog(
                   <AxoContactList.ActionItem
                     symbol="plus"
                     title={i18n(
-                      'icu:GroupMembersSearchDialog__BottomActions__AddMember'
+                      'icu:GroupMembersSearchDialog__BottomActions__AddMembers'
                     )}
                     onClick={handleSelectAddMember}
                   />
@@ -208,9 +205,11 @@ function SearchField(props: SearchFieldProps): ReactNode {
     <AxoSearchField.Root
       value={props.searchValue}
       onValueChange={props.onSearchValueChange}
-      placeholder={placeholder}
-      autoFocus
-    />
+    >
+      <AxoSearchField.Icon />
+      <AxoSearchField.Input placeholder={placeholder} autoFocus />
+      <AxoSearchField.Clear />
+    </AxoSearchField.Root>
   );
 }
 
@@ -239,10 +238,6 @@ function FilterMenu(props: FilterMenuProps): ReactNode {
           variant="implied-secondary"
           label={i18n('icu:GroupMembersSearchDialog__FilterMenu__Label')}
           pressed={props.filter !== GroupMembersSearchDialogFilter.All}
-          tooltip={{
-            label: i18n('icu:GroupMembersSearchDialog__FilterMenu__Label'),
-            onlyShowOnFocusForUserInputDeviceEvents: true,
-          }}
         />
       </AxoDropdownMenu.Trigger>
       <AxoDropdownMenu.Content>
@@ -288,40 +283,8 @@ function AlphabeticMemberList(props: AlphabeticMemberListProps): ReactNode {
   const { i18n, members } = props;
 
   const sections = useMemo(() => {
-    const segmenter = new Intl.Segmenter([], { granularity: 'grapheme' });
-
-    function getFirstInitial(conversation: ConversationType): string {
-      const title = conversation.titleNoDefault ?? '';
-      const segments = segmenter.segment(title);
-
-      for (const segment of segments) {
-        if (IS_LETTER_REGEX.test(segment.segment)) {
-          return segment.segment.toUpperCase();
-        }
-      }
-
-      return '';
-    }
-
-    const groups = new Map<string, Array<GroupV2Membership>>();
-
-    for (const member of members) {
-      const initial = getFirstInitial(member.member);
-      const group = groups.getOrInsert(initial, []);
-      group.push(member);
-    }
-
-    const initials = Array.from(groups.keys()).toSorted((a, b) => {
-      if (a === '') return 1;
-      if (b === '') return -1;
-      return a.localeCompare(b);
-    });
-
-    return initials.map(initial => {
-      return {
-        initial,
-        members: groups.get(initial) ?? [],
-      };
+    return groupByFirstInitial(members, member => {
+      return member.member.titleNoDefault ?? '';
     });
   }, [members]);
 
@@ -330,7 +293,7 @@ function AlphabeticMemberList(props: AlphabeticMemberListProps): ReactNode {
       {sections.map(section => {
         return (
           <AxoContactList.Root key={section.initial} title={section.initial}>
-            {section.members.map(member => {
+            {section.items.map(member => {
               return (
                 <MemberItem
                   key={member.member.id}
@@ -454,13 +417,14 @@ function MemberItem(props: MemberItemProps): ReactNode {
           profileName={conversation.profileName}
           size={AvatarSize.THIRTY_TWO}
           title={conversation.title}
-          searchResult
           badge={undefined}
         />
       }
       title={
         <>
-          <UserText text={conversation.title} />
+          <UserText
+            text={conversation.isMe ? i18n('icu:you') : conversation.title}
+          />
           {inSystemContacts && (
             <>
               &nbsp;

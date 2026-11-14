@@ -20,9 +20,10 @@ import type {
   ReplaceAvatarActionType,
   SaveAvatarToDiskActionType,
 } from '../../types/Avatar.std.ts';
-import { AvatarColors } from '../../types/Colors.std.ts';
+import { AvatarColors } from '../../types/Avatar.std.ts';
 import { AxoConfirmDialog } from '../../axo/AxoConfirmDialog.dom.tsx';
 import { AxoDialog } from '../../axo/AxoDialog.dom.tsx';
+import { NavSidebarBackButton } from '../NavSidebar.dom.tsx';
 
 export type LeftPaneSetGroupMetadataPropsType = {
   groupAvatar: undefined | Uint8Array<ArrayBuffer>;
@@ -79,14 +80,13 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
 
     return (
       <div className="module-left-pane__header__contents">
-        <button
-          aria-label={backButtonLabel}
-          className="module-left-pane__header__contents__back-button"
-          disabled={this.#isCreating}
-          onClick={this.getBackAction({ showChooseGroupMembers })}
-          title={backButtonLabel}
-          type="button"
-        />
+        <div className="module-left-pane__header__contents__back-button">
+          <NavSidebarBackButton
+            label={backButtonLabel}
+            disabled={this.#isCreating}
+            onClick={this.getBackAction({ showChooseGroupMembers })}
+          />
+        </div>
         <div className="module-left-pane__header__contents__text">
           {i18n('icu:setGroupMetadata__title')}
         </div>
@@ -144,7 +144,11 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
       >
         {this.#isEditingAvatar && (
           <AxoDialog.Root open onOpenChange={toggleComposeEditingAvatar}>
-            <AxoDialog.Content size="md" escape="cancel-is-noop">
+            <AxoDialog.Content
+              size="md"
+              escape="cancel-is-noop"
+              disableMissingAriaDescriptionWarning
+            >
               <AxoDialog.Header>
                 <AxoDialog.Title>
                   {i18n(
@@ -153,24 +157,22 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
                 </AxoDialog.Title>
                 <AxoDialog.Close />
               </AxoDialog.Header>
-              <AxoDialog.Body maxHeight={600}>
-                <AvatarEditor
-                  avatarColor={avatarColor}
-                  avatarValue={this.#groupAvatar}
-                  deleteAvatarFromDisk={composeDeleteAvatarFromDisk}
-                  i18n={i18n}
-                  isDisplayedAsPanel={false}
-                  isGroup
-                  onCancel={toggleComposeEditingAvatar}
-                  onSave={newAvatar => {
-                    setComposeGroupAvatar(newAvatar);
-                    toggleComposeEditingAvatar();
-                  }}
-                  userAvatarData={this.#userAvatarData}
-                  replaceAvatar={composeReplaceAvatar}
-                  saveAvatarToDisk={composeSaveAvatarToDisk}
-                />
-              </AxoDialog.Body>
+              <AvatarEditor
+                avatarColor={avatarColor}
+                avatarValue={this.#groupAvatar}
+                deleteAvatarFromDisk={composeDeleteAvatarFromDisk}
+                i18n={i18n}
+                isInsideDialog
+                isGroup
+                onCancel={toggleComposeEditingAvatar}
+                onSave={newAvatar => {
+                  setComposeGroupAvatar(newAvatar);
+                  toggleComposeEditingAvatar();
+                }}
+                userAvatarData={this.#userAvatarData}
+                replaceAvatar={composeReplaceAvatar}
+                saveAvatarToDisk={composeSaveAvatarToDisk}
+              />
             </AxoDialog.Content>
           </AxoDialog.Root>
         )}
@@ -216,7 +218,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
           title={null}
           description={i18n('icu:setGroupMetadata__error-message')}
         >
-          <AxoConfirmDialog.Cancel>{i18n('icu:ok')}</AxoConfirmDialog.Cancel>
+          <AxoConfirmDialog.Ok />
         </AxoConfirmDialog.Root>
       </form>
     );

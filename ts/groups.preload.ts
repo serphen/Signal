@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import lodash from 'lodash';
-import type { ClientZkGroupCipher } from '@signalapp/libsignal-client/zkgroup.js';
+import { v4 as generateGuid } from 'uuid';
 import { LRUCache } from 'lru-cache';
+
+import type { ClientZkGroupCipher } from '@signalapp/libsignal-client/zkgroup.js';
+
 import { createLogger } from './logging/log.std.ts';
 import {
   getCheckedGroupCredentialsForToday,
@@ -35,14 +38,14 @@ import type {
   GroupV2PendingMemberType,
   GroupV2BannedMemberType,
   MessageAttributesType,
-} from './model-types.d.ts';
+} from './model-types.std.ts';
 import {
   createProfileKeyCredentialPresentation,
   decodeProfileKeyCredentialPresentation,
-  decryptGroupBlob,
-  decryptProfileKey,
   decryptAci,
+  decryptGroupBlob,
   decryptPni,
+  decryptProfileKey,
   decryptServiceId,
   deriveGroupID,
   deriveGroupPublicParams,
@@ -133,19 +136,21 @@ import {
 } from './types/GroupMemberLabels.std.ts';
 import { getConversationIdForLogging } from './util/idForLogging.preload.ts';
 import { toNumber } from './util/toNumber.std.ts';
+import { computeGroupNameHash } from './util/Conversation.preload.ts';
+import { Emoji } from './axo/emoji.std.ts';
+import { areWeInGroupWith } from './util/areWeInGroupWith.preload.ts';
+import { registrationJobQueue } from './jobs/registrationJobQueue.preload.ts';
 
 import Actions = Proto.GroupChange.Actions;
 import AccessRequired = Proto.AccessControl.AccessRequired;
 import MemberRole = Proto.Member.Role;
-import { computeGroupNameHash } from './util/Conversation.preload.ts';
-import { Emoji } from './axo/emoji.std.ts';
 
 const { compact, difference, flatten, fromPairs, isNumber, omit, values } =
   lodash;
 
 const log = createLogger('groups');
 
-export { joinViaLink } from './groups/joinViaLink.preload.ts';
+export { startJoinViaLink } from './groups/joinViaLink.preload.ts';
 
 export type GroupFields = {
   readonly id: Uint8Array<ArrayBuffer>;
@@ -274,6 +279,9 @@ export async function getPreJoinGroupInfo(
   masterKeyBase64: string
 ): Promise<Proto.GroupJoinInfo> {
   const data = deriveGroupFields(Bytes.fromBase64(masterKeyBase64));
+
+  // Ensure we have the credentials we need before attempting GroupsV2 operations
+  await maybeFetchNewCredentials();
 
   return makeRequestWithCredentials({
     // oxlint-disable-next-line typescript/restrict-template-expressions
@@ -860,6 +868,42 @@ export function buildInviteLinkPasswordChange(
     modifyInviteLinkPassword: {
       inviteLinkPassword: Bytes.fromBase64(inviteLinkPassword),
     },
+  });
+}
+
+export function buildModifyMemberProfileKeyChange({
+  group,
+  profileKeyCredentialBase64,
+  serverPublicParamsBase64,
+}: {
+  group: ConversationAttributesType;
+  profileKeyCredentialBase64: string;
+  serverPublicParamsBase64: string;
+}): Actions.Params {
+  if (!group.secretParams) {
+    throw new Error(
+      'buildModifyMemberProfileKeyChange: group was missing secretParams!'
+    );
+  }
+
+  const clientZkProfileCipher = getClientZkProfileOperations(
+    serverPublicParamsBase64
+  );
+  const presentation = createProfileKeyCredentialPresentation(
+    clientZkProfileCipher,
+    profileKeyCredentialBase64,
+    group.secretParams
+  );
+
+  return toGroupActionsParams({
+    version: (group.revision || 0) + 1,
+    modifyMemberProfileKeys: [
+      {
+        presentation,
+        userId: null,
+        profileKey: null,
+      },
+    ],
   });
 }
 
@@ -2605,7 +2649,7 @@ function buildMigrationBubble(
   newAttributes: ConversationAttributesType
 ): GroupChangeMessageType {
   const ourAci = itemStorage.user.getCheckedAci();
-  const ourPni = itemStorage.user.getPni();
+  const ourPni = itemStorage.user.getOptionalPni();
   const ourConversationId =
     window.ConversationController.getOurConversationId();
 
@@ -2869,7 +2913,7 @@ export async function respondToGroupV2Migration({
             log.info(
               `respondToGroupV2Migration/${logId}: Upgrading group with migration/removed events`
             );
-            const ourNumber = itemStorage.user.getNumber();
+            const ourNumber = itemStorage.user.getOptionalNumber();
             await updateGroup({
               conversation,
               receivedAt,
@@ -2881,7 +2925,9 @@ export async function respondToGroupV2Migration({
                   addedBy: undefined,
                   left: true,
                   members: (conversation.get('members') || []).filter(
-                    item => item !== ourAci && item !== ourNumber
+                    item =>
+                      item !== ourAci &&
+                      (ourNumber == null || item !== ourNumber)
                   ),
                 },
                 groupChangeMessages: [
@@ -3167,7 +3213,7 @@ async function updateGroup(
 
   const { newAttributes, groupChangeMessages, newProfileKeys } = updates;
   const ourAci = itemStorage.user.getCheckedAci();
-  const ourPni = itemStorage.user.getPni();
+  const ourPni = itemStorage.user.getOptionalPni();
 
   const wasMemberOrPending =
     conversation.hasMember(ourAci) ||
@@ -3176,7 +3222,7 @@ async function updateGroup(
   const isMemberOrPending =
     !newAttributes.left ||
     newAttributes.pendingMembersV2?.some(
-      item => item.serviceId === ourAci || item.serviceId === ourPni
+      item => item.serviceId === ourAci || (ourPni && item.serviceId === ourPni)
     );
 
   // Ensure that all generated messages are ordered properly.
@@ -3262,7 +3308,7 @@ async function updateGroup(
   const justAdded = !wasMemberOrPending && isMemberOrPending;
   const addedBy =
     newAttributes.pendingMembersV2?.find(
-      item => item.serviceId === ourAci || item.serviceId === ourPni
+      item => item.serviceId === ourAci || (ourPni && item.serviceId === ourPni)
     )?.addedByUserId || newAttributes.addedBy;
 
   if (justAdded) {
@@ -3321,6 +3367,13 @@ async function updateGroup(
       });
     }
   }
+  const justLeft = conversation.hasMember(ourAci) && !isMemberOrPending;
+  const previousMemberACIs = (conversation.get('membersV2') || []).map(
+    member => member.aci
+  );
+  const currentMemberACIs = (newAttributes.membersV2 || []).map(
+    member => member.aci
+  );
 
   // We update group membership last to ensure that all notifications are in place before
   //   the group updates happen on the model.
@@ -3360,6 +3413,72 @@ async function updateGroup(
 
   // Save these most recent updates to conversation
   await updateConversation(conversation.attributes);
+
+  // Do these checks after group was updated - we want areWeInGroupWith to be accurate
+  const profileKey = itemStorage.get('profileKey');
+  if (
+    window.ConversationController.areWePrimaryDevice() &&
+    Bytes.isNotEmpty(profileKey)
+  ) {
+    const shouldWeRotate = getShouldWeRotateProfileKey({
+      logId: `updateGroup/${logId}`,
+      justLeft,
+      previousMemberACIs,
+      currentMemberACIs,
+    });
+    if (shouldWeRotate) {
+      await registrationJobQueue.add({
+        type: 'RotateProfileKey',
+        id: generateGuid(),
+        oldProfileKeyBase64: Bytes.toBase64(profileKey),
+      });
+    }
+  }
+}
+
+export function getShouldWeRotateProfileKey({
+  logId,
+  justLeft,
+  previousMemberACIs,
+  currentMemberACIs,
+}: {
+  logId: string;
+  justLeft: boolean;
+  previousMemberACIs: Array<AciString>;
+  currentMemberACIs: Array<AciString>;
+}): boolean {
+  if (justLeft) {
+    const blockedAcis = previousMemberACIs.filter(aci =>
+      itemStorage.blocked.isServiceIdBlocked(aci)
+    );
+    const result = blockedAcis.some(aci => !areWeInGroupWith(aci));
+
+    if (result) {
+      log.info(
+        `${logId}: We just left group; a former member was blocked and is no longer in any shared groups`
+      );
+    }
+
+    return result;
+  }
+
+  const justLeftGroupAcis = difference(previousMemberACIs, currentMemberACIs);
+  if (justLeftGroupAcis.length > 0) {
+    const blockedAcis = justLeftGroupAcis.filter(aci =>
+      itemStorage.blocked.isServiceIdBlocked(aci)
+    );
+    const result = blockedAcis.some(aci => !areWeInGroupWith(aci));
+
+    if (result) {
+      log.info(
+        `${logId}: Group member who left group was blocked and is no longer in any shared groups`
+      );
+    }
+
+    return result;
+  }
+
+  return false;
 }
 
 // Exported for testing
@@ -4214,7 +4333,7 @@ async function generateLeftGroupChanges(
   const logId = idForLogging(group.groupId);
   log.info(`generateLeftGroupChanges/${logId}: Starting...`);
   const ourAci = itemStorage.user.getCheckedAci();
-  const ourPni = itemStorage.user.getCheckedPni();
+  const ourPni = itemStorage.user.getOptionalPni();
 
   const { masterKey, groupInviteLinkPassword } = group;
   let { revision } = group;
@@ -4243,7 +4362,8 @@ async function generateLeftGroupChanges(
     addedBy: undefined,
     membersV2: (group.membersV2 || []).filter(member => member.aci !== ourAci),
     pendingMembersV2: (group.pendingMembersV2 || []).filter(
-      member => member.serviceId !== ourAci && member.serviceId !== ourPni
+      member =>
+        member.serviceId !== ourAci && (!ourPni || member.serviceId !== ourPni)
     ),
     pendingAdminApprovalV2: (group.pendingAdminApprovalV2 || []).filter(
       member => member.aci !== ourAci
@@ -4636,7 +4756,7 @@ function extractDiffs({
   const logId = idForLogging(old.groupId);
   const details: Array<GroupV2ChangeDetailType> = [];
   const ourAci = itemStorage.user.getCheckedAci();
-  const ourPni = itemStorage.user.getPni();
+  const ourPni = itemStorage.user.getOptionalPni();
   const ACCESS_ENUM = Proto.AccessControl.AccessRequired;
 
   let areWeInGroup = false;
@@ -4645,7 +4765,7 @@ function extractDiffs({
   let whoInvitedUsUserId = null;
 
   function isUs(serviceId: ServiceIdString): boolean {
-    return serviceId === ourAci || serviceId === ourPni;
+    return serviceId === ourAci || (ourPni != null && serviceId === ourPni);
   }
   function keepOnlyOurAdds(
     list: Array<GroupV2ChangeDetailType>

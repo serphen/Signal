@@ -2,8 +2,20 @@
   "icu:AxoAlertDialog.Cancel": {
     "messageformat": "I-cancel"
   },
+  "icu:AxoAlertDialog.Ok": {
+    "messageformat": "OK"
+  },
   "icu:AxoButton.Pending": {
     "messageformat": "Pending"
+  },
+  "icu:AxoColorSlider.Hue": {
+    "messageformat": "Hue"
+  },
+  "icu:AxoColorSlider.Saturation": {
+    "messageformat": "Saturation"
+  },
+  "icu:AxoColorSlider.Lightness": {
+    "messageformat": "Lightness"
   },
   "icu:AxoDialog.Back": {
     "messageformat": "Bumalik"
@@ -11,8 +23,44 @@
   "icu:AxoDialog.Close": {
     "messageformat": "Isara"
   },
+  "icu:AxoLoadingIndicator.Loading": {
+    "messageformat": "Naglo-load"
+  },
+  "icu:AxoMediaButton.Play": {
+    "messageformat": "Play"
+  },
+  "icu:AxoMediaButton.Pause": {
+    "messageformat": "Pause"
+  },
+  "icu:AxoMediaButton.Download": {
+    "messageformat": "I-download"
+  },
+  "icu:AxoMediaButton.CancelDownload": {
+    "messageformat": "Kanselahin ang pag-download"
+  },
+  "icu:AxoOutgoingStatus.Sending": {
+    "messageformat": "Sine-send"
+  },
+  "icu:AxoOutgoingStatus.Sent": {
+    "messageformat": "Sent"
+  },
+  "icu:AxoOutgoingStatus.Delivered": {
+    "messageformat": "Delivered"
+  },
+  "icu:AxoOutgoingStatus.Read": {
+    "messageformat": "Nabasa"
+  },
+  "icu:AxoOutgoingStatus.Paused": {
+    "messageformat": "Naka-pause ang pag-send"
+  },
+  "icu:AxoOutgoingStatus.Error": {
+    "messageformat": "Failed ang pag-send"
+  },
   "icu:AxoPasswordField.Reveal": {
     "messageformat": "Ipakita ang Password"
+  },
+  "icu:AxoProgressIndicator.Loading": {
+    "messageformat": "Naglo-load"
   },
   "icu:AxoTextField.Clear": {
     "messageformat": "Burahin"
@@ -64,6 +112,18 @@
   },
   "icu:Preferences__DonateTitle": {
     "messageformat": "Mag-donate sa Signal"
+  },
+  "icu:LinkedDevicesOnboardingDialog__description": {
+    "messageformat": "Tinutulungan ka ng <bold>Linked Devices</bold> na i-access ang Signal account at messages mo nang ligtas sa anumang additional devices mo."
+  },
+  "icu:LinkedDevicesOnboardingDialog__bullet--1": {
+    "messageformat": "Maaari kang mag-link ng desktop, tablet o additional phone."
+  },
+  "icu:LinkedDevicesOnboardingDialog__bullet--2": {
+    "messageformat": "Mina-manage ng primary device mo kung anong naka-link, at maaari kang mag-link ng hanggang 5 devices."
+  },
+  "icu:LinkedDevicesOnboardingDialog__bullet--3--2": {
+    "messageformat": "Maaari mo lang i-manage ang account settings at Signal Secure Backups sa iyong primary device."
   },
   "icu:sentMediaQualityStandard": {
     "messageformat": "Standard"
@@ -242,6 +302,12 @@
   "icu:messageContextMenuButton": {
     "messageformat": "Iba pang actions"
   },
+  "icu:messageContextMenu__sticker--addFavorite": {
+    "messageformat": "I-add sa Favorites"
+  },
+  "icu:messageContextMenu__sticker--removeFavorite": {
+    "messageformat": "Alisin sa Favorites"
+  },
   "icu:contextMenuCopyLink": {
     "messageformat": "Kopyahin ang Link"
   },
@@ -262,6 +328,9 @@
   },
   "icu:archivedConversations": {
     "messageformat": "Archived Chats"
+  },
+  "icu:LeftPane__MoreActionsLabel": {
+    "messageformat": "Iba pang actions"
   },
   "icu:LeftPane__MoreActionsMenu__AddChatFolder": {
     "messageformat": "Mag-add ng chat folder"
@@ -320,9 +389,6 @@
   "icu:LeftPaneChatFolders__ItemLabel--All": {
     "messageformat": "Lahat ng chats"
   },
-  "icu:LeftPaneChatFolders__ItemUnreadBadge__MaxCount": {
-    "messageformat": "{maxCount,number}+"
-  },
   "icu:LeftPaneChatFolders__ItemUnreadBadge__AccessibleLabel": {
     "messageformat": "{count, plural, one {{count,number} hindi pa nabasang mensahe} other {{count,number} hindi pa nabasang mensahe}}"
   },
@@ -367,9 +433,6 @@
   },
   "icu:NavTabs__ItemIconLabel--UnreadCount": {
     "messageformat": "{count,number} unread"
-  },
-  "icu:NavTabs__ItemIconLabel--MarkedUnread": {
-    "messageformat": "I-mark as unread"
   },
   "icu:NavTabs__ItemLabel--Chats": {
     "messageformat": "Chats"
@@ -638,14 +701,14 @@
   "icu:SafetyNumberNotReady__learn-more": {
     "messageformat": "Matuto pa"
   },
-  "icu:KeyTransparencyErrorDialog__Title": {
-    "messageformat": "Ang Automatic Key Verification ay kasalukuyang hindi available para sa device mo. Gusto mo bang mag-submit ng debug log?"
+  "icu:KeyTransparencyErrorDialog__Title-v2": {
+    "messageformat": "Ang Automatic Key Verification ay hindi available sa ngayon para sa device mo. Gusto mo bang mag-submit ng report para tulungan kaming mag-improve?"
   },
-  "icu:KeyTransparencyErrorDialog__Description": {
-    "messageformat": "Ang debug logs ay makatutulong sa amin para ma-diagnose at maayos ang issue, at wala itong nilalaman na identifying information."
+  "icu:KeyTransparencyErrorDialog__Description-v2": {
+    "messageformat": "Kapag isinama mo ang debug logs mo, matutulungan kami nitong alamin at ayusin ang issue, at hindi ito naglalaman ng impormasyon tungkol sa pagkakakilanlan mo. Optional ang pag-share."
   },
-  "icu:KeyTransparencyErrorDialog__ShareDebugLog__Label": {
-    "messageformat": "I-share ang debug log"
+  "icu:KeyTransparencyErrorDialog__ShareDebugLog__Label-v2": {
+    "messageformat": "Isama ang debug log"
   },
   "icu:KeyTransparencyErrorDialog__ShareDebugLog__ViewButton": {
     "messageformat": "Tingnan"
@@ -653,11 +716,17 @@
   "icu:KeyTransparencyErrorDialog__Submit": {
     "messageformat": "Isumite"
   },
+  "icu:KeyTransparencyErrorDialog__Cancel": {
+    "messageformat": "Ayaw ko, salamat na lang"
+  },
   "icu:KeyTransparencyOnboardingDialog__Title": {
     "messageformat": "Kaya nang i-auto verify ng Signal ang key encryption"
   },
   "icu:KeyTransparencyOnboardingDialog__Description": {
     "messageformat": "Para sa contacts na naka-connect sa 'yo via phone number, automatic na makukumpirma ng Signal kung ang connection ay secure sa pamamagitan ng prosesong tinatawag na key transparency. Para sa karagdagang security, maaari mo pa ring i-verify ang connections manually gamit ang QR code o sa pagkumpara ng safety number."
+  },
+  "icu:KeyTransparencyOnboardingDialog__Description-v2": {
+    "messageformat": "<paragraph>Para sa contacts na konektado sa 'yo via phone number, maaaring awtomatikong kumpirmahin ng Signal kung ang connection ay secure sa pamamagitan ng prosesong tinatawag na key transparency.</paragraph><paragraph>Para sa karagdagang seguridad, maaari mo pa ring i-verify ang connections manually gamit ang QR code o sa pamamagitan ng pagkumpara ng safety numbers.</paragraph>"
   },
   "icu:KeyTransparencyOnboardingDialog__Continue": {
     "messageformat": "Magpatuloy"
@@ -749,17 +818,14 @@
   "icu:maximumAttachments": {
     "messageformat": "Hindi ka na pwedeng mag-add ng attachements sa message na ito."
   },
-  "icu:fileSizeWarning": {
-    "messageformat": "Paumanhin, masyadong malaki ang pinili mong file. {limit,number} {units}"
-  },
-  "icu:videoFileSizeWarning": {
-    "messageformat": "Paumanhin, masyadong malaki ang pinili mong file. {limit,number}{units}"
-  },
   "icu:fileTooLargeWarning": {
     "messageformat": "Hindi ma-send ang file na ito dahil masyado itong malaki. Maaari kang mag-send ng files hanggang {limit,number}{units}."
   },
   "icu:videoFileTooLargeWarning": {
     "messageformat": "Hindi ma-send video file na ito dahil masyado itong malaki. Maaari kang mag-send ng video files hanggang {limit,number}{units}."
+  },
+  "icu:videoFileTooLongWarning": {
+    "messageformat": "Hindi ma-send ang video dahil mas mahaba ito sa {maxDuration}"
   },
   "icu:unableToLoadAttachment": {
     "messageformat": "Unable to load selected attachment."
@@ -783,7 +849,7 @@
     "messageformat": "I-check ang iyong network connection."
   },
   "icu:clockSkewDetected": {
-    "messageformat": "Your device date is inaccurate. Adjust your clock and try again. Your device date and time is:"
+    "messageformat": "Mali ang petsa ng device mo. I-adjust ang clock mo at subukan ulit. Ang petsa at oras ng device mo ay:"
   },
   "icu:submitDebugLog": {
     "messageformat": "Debug log"
@@ -1006,6 +1072,9 @@
   },
   "icu:mute": {
     "messageformat": "I-mute"
+  },
+  "icu:muted": {
+    "messageformat": "Naka-mute"
   },
   "icu:cannotUpdateDetail-v2": {
     "messageformat": "Hindi ma-update ang Signal. <retryUpdateButton>Subukan ulit ang pag-update</retryUpdateButton> o pumunta ang {url} para i-install ito manually. Pagkatapos, <contactSupportLink>kontakin ang support</contactSupportLink> tungkol sa problemang ito"
@@ -1469,6 +1538,9 @@
   "icu:ConversationMerge--learn-more": {
     "messageformat": "Matuto pa"
   },
+  "icu:ConversationMerge--explainer-dialog--label": {
+    "messageformat": "Naka-merge ang message history"
+  },
   "icu:ConversationMerge--explainer-dialog--line-1": {
     "messageformat": "Matapos mong i-message si {obsoleteConversationTitle} nalaman mong kay {conversationTitle} ang number na ito. Private ang kanyang phone number."
   },
@@ -1625,9 +1697,6 @@
   "icu:Preferences__EmojiSkinToneDefaultSetting__Label": {
     "messageformat": "Skin tone ng emoji"
   },
-  "icu:Preferences__ChatsPage__ChatFoldersSection__Title": {
-    "messageformat": "Chat folders"
-  },
   "icu:Preferences__ChatsPage__ChatFoldersSection__AddChatFolderItem__Title": {
     "messageformat": "Magdagdag ng chat folder"
   },
@@ -1639,12 +1708,6 @@
   },
   "icu:Preferences__ChatsPage__ChatFoldersSection__AddChatFolderItem__Description--WithChatFolders": {
     "messageformat": "{chatFoldersCount, plural, one {{chatFoldersCount,number} folder} other {{chatFoldersCount,number} folders}}"
-  },
-  "icu:Preferences__ChatsPage__ChatFoldersSection__AddChatFolderItem__Button": {
-    "messageformat": "I-set up"
-  },
-  "icu:Preferences__ChatsPage__ChatFoldersSection__AddChatFolderItem__Button--WithChatFolders": {
-    "messageformat": "I-manage"
   },
   "icu:Preferences__ChatsPage__ChatFoldersSection__ChatFolderItem__ContextMenu__EditFolder": {
     "messageformat": "I-edit ang folder"
@@ -1739,6 +1802,9 @@
   "icu:Preferences__EditChatFolderPage__SelectChatsDialog__Search__Placeholder": {
     "messageformat": "Maghanap"
   },
+  "icu:Preferences__EditChatFolderPage__SelectChatsDialog__NoChats": {
+    "messageformat": "Walang chats"
+  },
   "icu:Preferences__EditChatFolderPage__SelectChatsDialog__ChatTypesSection__Title": {
     "messageformat": "Chat types"
   },
@@ -1801,6 +1867,15 @@
   },
   "icu:Preferences__EditChatFolderPage__CancelButton": {
     "messageformat": "I-cancel"
+  },
+  "icu:Preferences__PrivacyPage__SealedSender": {
+    "messageformat": "Sealed Sender"
+  },
+  "icu:Preferences__PrivacyPage__AllowFromAnyone__Label": {
+    "messageformat": "Payagan ang mula sa Sinuman"
+  },
+  "icu:Preferences__PrivacyPage__AllowFromAnyone__Description": {
+    "messageformat": "I-enable ang sealed sender para sa mga paparating na mensahe mula sa hindi contacts at mga taong hindi mo pa nabahagian ng iyong profile <learnMoreLink>Matuto pa tungkol dito</learnMoreLink>."
   },
   "icu:Preferences__PrivacyPage__ShowStatusIcon__Label": {
     "messageformat": "Ipakita ang status icon"
@@ -2231,6 +2306,24 @@
   "icu:deleteAccountDialogBody": {
     "messageformat": "Buburahin nito ang iyong account info, profile, at lahat ng messages mo. Tatanggalin ka rin mula sa lahat ng Signal groups. Magsasara ang app kapag natapos na ang prosesong ito."
   },
+  "icu:DeleteAccountConfirmDialog--Title": {
+    "messageformat": "Burahin ang account"
+  },
+  "icu:DeleteAccountConfirmDialog--Description": {
+    "messageformat": "Buburahin nito ang iyong account info, profile, at lahat ng messages mo. Tatanggalin ka rin mula sa lahat ng Signal groups."
+  },
+  "icu:DeleteAccountConfirmDialog--ConfirmNumber": {
+    "messageformat": "Kumpirmahin ang phone number mo"
+  },
+  "icu:DeleteAccountConfirmDialog--CountryCodePlaceholder": {
+    "messageformat": "Country code"
+  },
+  "icu:DeleteAccountConfirmDialog--NumberPlaceholder": {
+    "messageformat": "Phone number"
+  },
+  "icu:DeleteAccountConfirmDialog--DeleteButton": {
+    "messageformat": "Burahin"
+  },
   "icu:deleteOldIndexedDBData": {
     "messageformat": "Mayroon kang lumang data mula sa lumang installation ng Signal Desktop. Mabubura ito kapag nagpatuloy ka at magsisimula ka ulit sa simula."
   },
@@ -2384,9 +2477,6 @@
   "icu:callRingtoneNotificationDescription": {
     "messageformat": "Play calling sounds"
   },
-  "icu:callSystemNotificationDescription": {
-    "messageformat": "Show notifications for calls"
-  },
   "icu:incomingCallNotificationDescription": {
     "messageformat": "Enable incoming calls"
   },
@@ -2398,9 +2488,6 @@
   },
   "icu:SafetyNumberModal__title": {
     "messageformat": "Beripikahin ang numerong pangkaligtasan"
-  },
-  "icu:safetyNumberChanged": {
-    "messageformat": "Safety Number has changed"
   },
   "icu:safetyNumberChanges": {
     "messageformat": "Safety Number Changes"
@@ -2876,8 +2963,29 @@
   "icu:stickers--StickerPreview--StickerNoEmojiAriaLabel": {
     "messageformat": "Sticker na walang emoji"
   },
+  "icu:stickers--StickerPreview--SeeStickerDetails": {
+    "messageformat": "See sticker details"
+  },
+  "icu:stickers--StickerPreview--StickerDetailsTitle": {
+    "messageformat": "Sticker details"
+  },
+  "icu:stickers--StickerPreview--AddFavorite": {
+    "messageformat": "Add to Favorites"
+  },
+  "icu:stickers--StickerPreview--RemoveFavorite": {
+    "messageformat": "Remove from Favorites"
+  },
   "icu:stickers--StickerPackLinkPreviewDescription": {
     "messageformat": "Sticker Pack ni {author}"
+  },
+  "icu:stickers--Toast--StickerFavoriteAdded": {
+    "messageformat": "Sticker added to Favorites"
+  },
+  "icu:stickers--Toast--StickerFavoriteRemoved": {
+    "messageformat": "Sticker removed from Favorites"
+  },
+  "icu:stickers--Toast--StickerFavoritesTooMany": {
+    "messageformat": "{count, plural, one {You can only add {count,number} sticker to Favorites} other {You can only add {count,number} stickers to Favorites}}"
   },
   "icu:stickers--ViewPack": {
     "messageformat": "Tignan ang Pack"
@@ -2987,6 +3095,9 @@
   "icu:FunPanelSticker__SubNavLabel": {
     "messageformat": "Sticker Packs"
   },
+  "icu:FunPanelStickers__SubNavCategoryLabel--Favorites": {
+    "messageformat": "Favorites"
+  },
   "icu:FunPanelStickers__SubNavCategoryLabel--Recents": {
     "messageformat": "Recently Used"
   },
@@ -2999,11 +3110,20 @@
   "icu:FunPanelStickers__SectionTitle--Recents": {
     "messageformat": "Recently Used"
   },
+  "icu:FunPanelStickers__SectionTitle--Favorites": {
+    "messageformat": "Favorites"
+  },
   "icu:FunPanelStickers__SectionTitle--Featured": {
     "messageformat": "Featured"
   },
   "icu:FunPanelStickers__SearchResults__EmptyHeading": {
     "messageformat": "No stickers found"
+  },
+  "icu:FunPanelStickers__StickerContextMenu--AddFavorite": {
+    "messageformat": "I-add sa Favorites"
+  },
+  "icu:FunPanelStickers__StickerContextMenu--RemoveFavorite": {
+    "messageformat": "Alisin sa Favorites"
   },
   "icu:FunPanelStickers__LightboxDialog__Label": {
     "messageformat": "Preview ng Sticker"
@@ -3061,9 +3181,6 @@
   },
   "icu:FunPanelGifs__GiphyAttribution__AccessibilityLabel": {
     "messageformat": "Powered by GIPHY"
-  },
-  "icu:FunSearch__ClearButtonLabel": {
-    "messageformat": "Clear Search"
   },
   "icu:FunSkinTones__List": {
     "messageformat": "Skin tone"
@@ -3512,6 +3629,9 @@
   "icu:MessageRequests--unblock-group-confirm-body": {
     "messageformat": "Ang mga kasapi ng grupong ito ay maaaring isali kang muli sa grupong ito."
   },
+  "icu:MessageRequests--unblock-signal-confirm-body": {
+    "messageformat": "Makakatanggap ka ng Signal updates at news."
+  },
   "icu:MessageRequests--block-and-report-spam-success-toast": {
     "messageformat": "Ni-report bilang spam at na-block na."
   },
@@ -3526,6 +3646,9 @@
   },
   "icu:MessageRequests--block-group-confirm-body": {
     "messageformat": "Hindi ka na makaka-receive ng messages o updates mula sa group at hindi ka na rin pwedeng i-add ulit ng members dito."
+  },
+  "icu:MessageRequests--block-signal-confirm-body": {
+    "messageformat": "Hindi ka na makakatanggap ng Signal updates at news."
   },
   "icu:MessageRequests--reportAndMaybeBlock": {
     "messageformat": "I-report..."
@@ -3854,6 +3977,9 @@
   "icu:callingDeviceSelection__settings": {
     "messageformat": "Settings"
   },
+  "icu:callingDeviceSelection__settings-v2": {
+    "messageformat": "Settings ng tawag"
+  },
   "icu:calling__participants--pluralized": {
     "messageformat": "{people, plural, one {{people,number} ang nasa call} other {{people,number} ang nasa call}}"
   },
@@ -3886,18 +4012,6 @@
   },
   "icu:calling__preview--minimize": {
     "messageformat": "I-minimize ang preview"
-  },
-  "icu:calling__change-view": {
-    "messageformat": "Palitan ang view"
-  },
-  "icu:calling__view_mode--paginated": {
-    "messageformat": "Grid view"
-  },
-  "icu:calling__view_mode--overflow": {
-    "messageformat": "Sidebar view"
-  },
-  "icu:calling__view_mode--speaker": {
-    "messageformat": "Speaker view"
   },
   "icu:calling__view_mode--updated": {
     "messageformat": "Updated na ang view"
@@ -3971,29 +4085,62 @@
   "icu:callingDeviceSelection__select--default": {
     "messageformat": "Default"
   },
+  "icu:callingDeviceSelection__select--default-nonwin": {
+    "messageformat": "Default: {deviceName}"
+  },
+  "icu:callingDeviceSelection__select--default_console": {
+    "messageformat": "Default: {deviceName}"
+  },
+  "icu:callingDeviceSelection__select--default_communications": {
+    "messageformat": "Default Communications: {deviceName}"
+  },
   "icu:muteNotificationsTitle": {
     "messageformat": "I-mute ang notifications"
   },
   "icu:notMuted": {
     "messageformat": "Hindi naka-mute"
   },
-  "icu:muteHour": {
-    "messageformat": "I-mute sa loob ng isang oras"
-  },
-  "icu:muteEightHours": {
-    "messageformat": "I-mute sa loob ng walong oras"
-  },
-  "icu:muteDay": {
-    "messageformat": "I-mute sa loob ng isang araw"
-  },
-  "icu:muteWeek": {
-    "messageformat": "I-mute sa loob ng isang linggo"
-  },
-  "icu:muteAlways": {
-    "messageformat": "I-mute palagi"
-  },
   "icu:unmute": {
     "messageformat": "I-unmute"
+  },
+  "icu:MuteMenu__label": {
+    "messageformat": "I-mute ang chat na ito nang…"
+  },
+  "icu:MuteMenu__hour": {
+    "messageformat": "1 oras"
+  },
+  "icu:MuteMenu__eightHours": {
+    "messageformat": "8 oras"
+  },
+  "icu:MuteMenu__day": {
+    "messageformat": "1 araw"
+  },
+  "icu:MuteMenu__week": {
+    "messageformat": "1 linggo"
+  },
+  "icu:MuteMenu__until": {
+    "messageformat": "Hanggang…"
+  },
+  "icu:MuteMenu__always": {
+    "messageformat": "Palagi"
+  },
+  "icu:DatePicker__popupTitle": {
+    "messageformat": "Pumili ng petsa"
+  },
+  "icu:TimePicker__popupTitle": {
+    "messageformat": "Pumili ng oras"
+  },
+  "icu:MuteUntilDialog__title": {
+    "messageformat": "I-mute ang chat na ito hanggang…"
+  },
+  "icu:MuteUntilDialog__dateLabel": {
+    "messageformat": "Petsa"
+  },
+  "icu:MuteUntilDialog__timeLabel": {
+    "messageformat": "Oras"
+  },
+  "icu:MuteUntilDialog__timeZoneNote": {
+    "messageformat": "Lahat ng mga oras ay {timeZone}"
   },
   "icu:muteExpirationLabelAlways": {
     "messageformat": "Naka-mute palagi"
@@ -4799,6 +4946,69 @@
   "icu:CompositionArea__AttachMenu__Poll": {
     "messageformat": "Poll"
   },
+  "icu:CompositionArea__AttachMenu__Contact": {
+    "messageformat": "Contact"
+  },
+  "icu:ShareContactDialog__SelectContact__Title": {
+    "messageformat": "Pumili ng contact"
+  },
+  "icu:ShareContactDialog__SelectContact__SearchPlaceholder": {
+    "messageformat": "Search"
+  },
+  "icu:ShareContactDialog__SelectContact__EmptyState": {
+    "messageformat": "Walang contacts"
+  },
+  "icu:ShareContactDialog__SelectContact__NoResults": {
+    "messageformat": "Walang resulta para sa \"{searchQuery}\""
+  },
+  "icu:ShareContactDialog__ShareContact__Title": {
+    "messageformat": "I-share ang contact"
+  },
+  "icu:ShareContactDialog__ShareContact__Description": {
+    "messageformat": "Ang lahat ng tao na binigyan mo ng profile na ito ay maaaring i-message si {name}."
+  },
+  "icu:ShareContactDialog__ShareContact__Send": {
+    "messageformat": "Ipadala ang contact"
+  },
+  "icu:ShareContactDialog__ShareContact__EditName": {
+    "messageformat": "I-edit ang pangalan"
+  },
+  "icu:ShareContactDialog__EditName__Title": {
+    "messageformat": "I-edit ang pangalan"
+  },
+  "icu:ShareContactDialog__EditName__Prefix": {
+    "messageformat": "Prefix"
+  },
+  "icu:ShareContactDialog__EditName__GivenName": {
+    "messageformat": "Pangalan"
+  },
+  "icu:ShareContactDialog__EditName__MiddleName": {
+    "messageformat": "Middle name"
+  },
+  "icu:ShareContactDialog__EditName__FamilyName": {
+    "messageformat": "Apelyido"
+  },
+  "icu:ShareContactDialog__EditName__Suffix": {
+    "messageformat": "Suffix"
+  },
+  "icu:ShareContactDialog__EditName__Organization": {
+    "messageformat": "Organisasyon"
+  },
+  "icu:ShareContactDialog__ShareContact__EditPhoto": {
+    "messageformat": "I-edit ang photo"
+  },
+  "icu:ShareContactDialog__SelectPhoto__Title": {
+    "messageformat": "Pumili ng photo"
+  },
+  "icu:ShareContactDialog__SelectPhoto__ContactPhoto": {
+    "messageformat": "Larawan ng kontak"
+  },
+  "icu:ShareContactDialog__SelectPhoto__ProfilePhoto": {
+    "messageformat": "Profile photo"
+  },
+  "icu:ShareContactDialog__SelectPhoto__DefaultAvatar": {
+    "messageformat": "Default avatar"
+  },
   "icu:CompositionArea--attach-plus": {
     "messageformat": "Magdagdag ng attachment o poll"
   },
@@ -4837,9 +5047,6 @@
   },
   "icu:CompositionInput__editing-message": {
     "messageformat": "I-edit ang message"
-  },
-  "icu:countMutedConversationsDescription": {
-    "messageformat": "Isama ang muted chats sa badge count"
   },
   "icu:ContactModal--nickname": {
     "messageformat": "Nickname"
@@ -4900,9 +5107,6 @@
   },
   "icu:showConversationDetails--direct": {
     "messageformat": "Chat settings"
-  },
-  "icu:ConversationDetails__unmute--title": {
-    "messageformat": "Gusto mo bang i-unmute ang chat na ito?"
   },
   "icu:ConversationDetails--group-link": {
     "messageformat": "Link ng group"
@@ -5138,17 +5342,110 @@
   "icu:EditNicknameAndNoteModal__Note__Placeholder": {
     "messageformat": "Note"
   },
-  "icu:ConversationNotificationsSettings__mentions__label": {
+  "icu:WhileMuted__title": {
+    "messageformat": "Habang naka-mute"
+  },
+  "icu:WhileMuted__description": {
+    "messageformat": "Piliin kung anong notifications ang ipapakita habang naka-mute ang chat na ito."
+  },
+  "icu:WhileMuted__calls__title": {
+    "messageformat": "Mga Tawag"
+  },
+  "icu:WhileMuted__calls__description": {
+    "messageformat": "Mag-ring o mag-notify kapag may sinimulang call habang naka-mute ang chat na ito."
+  },
+  "icu:WhileMuted__mentions__title": {
     "messageformat": "Mentions"
   },
-  "icu:ConversationNotificationsSettings__mentions__info": {
-    "messageformat": "Makakatanggap ka ng notifications kapag na-mention ka sa muted chats"
+  "icu:WhileMuted__mentions__description": {
+    "messageformat": "Mag-notify kapag ikaw ay na-mention habang naka-mute ang chat na ito."
   },
-  "icu:ConversationNotificationsSettings__mentions__select__always-notify": {
-    "messageformat": "Always notify"
+  "icu:WhileMuted__replies__title": {
+    "messageformat": "Replies"
   },
-  "icu:ConversationNotificationsSettings__mentions__select__dont-notify-for-mentions-if-muted": {
-    "messageformat": "'Wag i-notify kapag muted"
+  "icu:WhileMuted__replies__description": {
+    "messageformat": "Mag-notify kapag may nag-reply sa message mo habang naka-mute ang chat na ito."
+  },
+  "icu:WhileMuted__value--none": {
+    "messageformat": "Wala"
+  },
+  "icu:WhileMuted__value--calls": {
+    "messageformat": "Mga Tawag"
+  },
+  "icu:WhileMuted__value--mentions": {
+    "messageformat": "Mentions"
+  },
+  "icu:WhileMuted__value--replies": {
+    "messageformat": "Replies"
+  },
+  "icu:WhileMuted__value--calls-mentions": {
+    "messageformat": "Calls, mentions"
+  },
+  "icu:WhileMuted__value--calls-replies": {
+    "messageformat": "Calls, replies"
+  },
+  "icu:WhileMuted__value--mentions-replies": {
+    "messageformat": "Mentions, replies"
+  },
+  "icu:WhileMuted__value--calls-mentions-replies": {
+    "messageformat": "Calls, mentions, replies"
+  },
+  "icu:Preferences__WhileMuted__description": {
+    "messageformat": "Piliin kung anong notifications lang ang ipapakita sa naka-mute na chats."
+  },
+  "icu:Preferences__WhileMuted__calls__description": {
+    "messageformat": "Mag-ring o mag-notify kapag may sinimulang call sa naka-mute na chats."
+  },
+  "icu:Preferences__WhileMuted__mentions__description": {
+    "messageformat": "Mag-notify kapag na-mention ka sa naka-mute na chats."
+  },
+  "icu:Preferences__WhileMuted__replies__description": {
+    "messageformat": "Mag-notify kapag may nag-reply sa message mo sa naka-mute na chats."
+  },
+  "icu:UnreadReminders__title": {
+    "messageformat": "Unread reminders"
+  },
+  "icu:UnreadReminders__description": {
+    "messageformat": "Mag-notify paminsan-minsan kapag may unread messages habang naka-mute ang chat na ito."
+  },
+  "icu:Preferences__UnreadReminders__description": {
+    "messageformat": "Mag-notify occasionally kapag may unread messages sa naka-mute na chats."
+  },
+  "icu:UnreadReminders__notification--messages--1": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka mula kay {person1}.} other {May {messageCount,number} unread messages ka mula kay {person1}.}}"
+  },
+  "icu:UnreadReminders__notification--messages--2": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka mula kanila {person1} at {person2}.} other {May {messageCount,number} unread messages ka mula kay {person1} at {person2}.}}"
+  },
+  "icu:UnreadReminders__notification--messages--many": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka mula kanila {person1}, {person2}, at iba pa.} other {May {messageCount,number} unread messages ka mula kanila {person1}, {person2}, at iba pa.}}"
+  },
+  "icu:UnreadReminders__notification--messages-including-mentions": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka, kasama ang {mentionSummary}.} other {May {messageCount,number} unread messages ka, kasama ang {mentionSummary}.}}"
+  },
+  "icu:UnreadReminders__notification--messages-including-replies": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka, kasama ang {replySummary}.} other {May {messageCount,number} unread messages ka, kasama ang {replySummary}.}}"
+  },
+  "icu:UnreadReminders__notification--counts--messages": {
+    "messageformat": "{messageCount, plural, one {May {messageCount,number} unread message ka.} other {May {messageCount,number} unread messages ka.}}"
+  },
+  "icu:UnreadReminders__notification__mentionSummary--1": {
+    "messageformat": "{mentionCount, plural, one {isang mention sa 'yo ni {person1}} other {{mentionCount,number} mentions sa 'yo ni {person1}}}"
+  },
+  "icu:UnreadReminders__notification__mentionSummary--2": {
+    "messageformat": "{mentionCount, plural, one {{mentionCount,number} mentions sa 'yo nila {person1} at {person2}} other {{mentionCount,number} mentions sa 'yo nila {person1} at {person2}}}"
+  },
+  "icu:UnreadReminders__notification__mentionSummary--many": {
+    "messageformat": "{mentionCount, plural, one {{mentionCount,number} mentions sa 'yo nila {person1} at iba pa} other {{mentionCount,number} mentions sa 'yo nila {person1} at iba pa}}"
+  },
+  "icu:UnreadReminders__notification__replySummary--1": {
+    "messageformat": "{replyCount, plural, one {isang reply mula kay {person1}} other {{replyCount,number} replies mula kay {person1}}}"
+  },
+  "icu:UnreadReminders__notification__replySummary--2": {
+    "messageformat": "{replyCount, plural, one {{replyCount,number} replies mula kanila {person1} at {person2}} other {{replyCount,number} replies mula kanila {person1} at {person2}}}"
+  },
+  "icu:UnreadReminders__notification__replySummary--many": {
+    "messageformat": "{replyCount, plural, one {{replyCount,number} replies mula kanila {person1} at iba pa} other {{replyCount,number} replies mula kanila {person1} at iba pa}}"
   },
   "icu:GroupLinkManagement--clipboard": {
     "messageformat": "Group link copied."
@@ -5172,22 +5469,22 @@
     "messageformat": "Kopyahin ang signal.group link sa clipboard"
   },
   "icu:GroupMembersSearchDialog__DialogTitle": {
-    "messageformat": "Search members"
+    "messageformat": "Mag-search ng members"
   },
   "icu:GroupMembersSearchDialog__SearchField__Placeholder": {
     "messageformat": "Search"
   },
   "icu:GroupMembersSearchDialog__SearchField__Placeholder--FilteringByAdmins": {
-    "messageformat": "Search admins"
+    "messageformat": "Mag-search ng admins"
   },
   "icu:GroupMembersSearchDialog__SearchField__Placeholder--FilteringBySystemContacts": {
-    "messageformat": "Search contacts"
+    "messageformat": "Mag-search ng contacts"
   },
   "icu:GroupMembersSearchDialog__FilterMenu__Label": {
     "messageformat": "Filter"
   },
   "icu:GroupMembersSearchDialog__FilterMenu__AllMembers": {
-    "messageformat": "All members"
+    "messageformat": "Lahat ng members"
   },
   "icu:GroupMembersSearchDialog__FilterMenu__Admins": {
     "messageformat": "Admins"
@@ -5196,10 +5493,10 @@
     "messageformat": "Contacts"
   },
   "icu:GroupMembersSearchDialog__EmptyState__NoResults--WithoutSearchQuery": {
-    "messageformat": "No results"
+    "messageformat": "Walang resulta"
   },
   "icu:GroupMembersSearchDialog__EmptyState__NoResults--WithSearchQuery": {
-    "messageformat": "No results for “{searchQuery}”"
+    "messageformat": "Walang resulta para sa \"{searchQuery}\""
   },
   "icu:GroupMembersSearchDialog__MemberItem__Admin": {
     "messageformat": "Admin"
@@ -5207,11 +5504,11 @@
   "icu:GroupMembersSearchDialog__SearchResults__Title": {
     "messageformat": "Search Results"
   },
-  "icu:GroupMembersSearchDialog__BottomActions__AddMember": {
-    "messageformat": "Add member"
+  "icu:GroupMembersSearchDialog__BottomActions__AddMembers": {
+    "messageformat": "Magdagdag ng members"
   },
   "icu:GroupMembersSearchDialog__BottomActions__InviteViaGroupLink": {
-    "messageformat": "Invite via group link"
+    "messageformat": "Mag-invite gamit ang group link"
   },
   "icu:PendingInvites--tab-requests": {
     "messageformat": "Requests ({count,number})"
@@ -5498,6 +5795,9 @@
   },
   "icu:CaptchaDialog__second-paragraph": {
     "messageformat": "Pagkatapos mag-verify, pwede ka nang magpatuloy sa messaging. Ang paused messages ay automatic na mase-send."
+  },
+  "icu:CaptchaDialog__continue": {
+    "messageformat": "Magpatuloy"
   },
   "icu:CaptchaDialog--can-close__title": {
     "messageformat": "Gusto mo bang magpatuloy without verifying?"
@@ -5965,6 +6265,15 @@
   "icu:Preferences__message-audio-description": {
     "messageformat": "Makarinig ng notification sound para sa sent at received messages habang nasa chat."
   },
+  "icu:Preferences__reaction-notifications-title": {
+    "messageformat": "Reaction notifications"
+  },
+  "icu:Preferences__reaction-notifications-description": {
+    "messageformat": "Mag-notify kapag may nag-react sa message mo"
+  },
+  "icu:Preferences__button--account": {
+    "messageformat": "Account"
+  },
   "icu:Preferences__button--general": {
     "messageformat": "General"
   },
@@ -6034,6 +6343,42 @@
   "icu:Preferences--system": {
     "messageformat": "Sistema"
   },
+  "icu:Preferences--signal-login": {
+    "messageformat": "Signal Login"
+  },
+  "icu:Preferences--signal-login-description": {
+    "messageformat": "Ginagamit ang Signal Login mo para i-recover at i-restore ang iyong account. Ingatan ang keys na ito sa password manager na pinagkakatiwalaan mo. <learnMoreLink>Matuto pa tungkol dito</learnMoreLink>."
+  },
+  "icu:Preferences--signal-login-description--learn-more": {
+    "messageformat": "Matuto pa"
+  },
+  "icu:Preferences__SignalAccount__label": {
+    "messageformat": "Account at recovery"
+  },
+  "icu:Preferences__SignalAccount__description": {
+    "messageformat": "2 keys"
+  },
+  "icu:Preferences__SignalAccountKeys__Title": {
+    "messageformat": "Ang Signal Login Mo"
+  },
+  "icu:Preferences__SignalAccountKeys__Description": {
+    "messageformat": "Itago ito sa ligtas na lugar, dahil kailangan ang login info mo para ma-recover ang iyong account at data. Huwag itong i-share kahit kanino."
+  },
+  "icu:Preferences__SignalAccountKeys__AccountID": {
+    "messageformat": "Account ID"
+  },
+  "icu:Preferences__SignalAccountKeys__RecoveryKey": {
+    "messageformat": "Recovery key"
+  },
+  "icu:Preferences__SignalAccountKeys__Save": {
+    "messageformat": "I-save"
+  },
+  "icu:Preferences__Account__LinkedDevice__label": {
+    "messageformat": "Ito ay isang linked device"
+  },
+  "icu:Preferences__Account__LinkedDevice__description": {
+    "messageformat": "Para i-manage ang account settings mo, buksan ang Signal sa iyong primary device."
+  },
   "icu:Preferences--zoom": {
     "messageformat": "Zoom level"
   },
@@ -6064,8 +6409,110 @@
   "icu:Preferences--advanced": {
     "messageformat": "Advanced"
   },
-  "icu:Preferences--notification-content": {
-    "messageformat": "Notification content"
+  "icu:Preferences--change-signal-pin": {
+    "messageformat": "Palitan ang iyong PIN"
+  },
+  "icu:Preferences--change-signal-pin-button": {
+    "messageformat": "Palitan"
+  },
+  "icu:Preferences--create-signal-pin": {
+    "messageformat": "Gumawa ng PIN"
+  },
+  "icu:Preferences--create-signal-pin-button": {
+    "messageformat": "Gumawa"
+  },
+  "icu:Preferences--signal-pin": {
+    "messageformat": "Signal PIN"
+  },
+  "icu:Preferences--signal-pin__footer": {
+    "messageformat": "Pinapanatili ng PINs na naka-encrypt ang impormasyon na nakalagay sa Signal para ikaw lang ang may access dito. Hindi mare-recover ang PIN mo. Ibabalik ang profile, settings, at contacts mo kapag nag-install ka ulit ng Signal. <learnMoreLink>Matuto pa</learnMoreLink>"
+  },
+  "icu:Preferences--signal-pin-advanced-settings": {
+    "messageformat": "Advanced PIN settings"
+  },
+  "icu:Preferences--disable-signal-pin": {
+    "messageformat": "I-disable ang PIN"
+  },
+  "icu:Preferences--disable-signal-pin--button": {
+    "messageformat": "I-disable"
+  },
+  "icu:Preferences--disable-signal-pin--footer": {
+    "messageformat": "Kapag dinisable mo ang PIN, mawawala ang lahat ng data kapag nag-register ka ulit sa Signal maliban nalang kung manually kang nag-back up at nag-restore. Hindi mo pwedeng i-on ang Registration Lock habang naka-disable ang PIN."
+  },
+  "icu:DisableSignalPinErrorDialog--reg-lock--title": {
+    "messageformat": "Hindi na-disable ang PIN dahil sa registration lock"
+  },
+  "icu:DisableSignalPinErrorDialog--reg-lock--body": {
+    "messageformat": "Kailangan mo munang i-disable ang Registration Lock bago mo i-disable ang iyong PIN."
+  },
+  "icu:DisableSignalPinErrorDialog--reg-lock--ok": {
+    "messageformat": "OK"
+  },
+  "icu:DisableSignalPinErrorDialog--backups--title": {
+    "messageformat": "Hindi na-disable ang PIN dahil sa PIN dahil sa backups"
+  },
+  "icu:DisableSignalPinErrorDialog--backups--body": {
+    "messageformat": "Kailangan mo munang i-disable ang backups bago mo i-disable ang iyong PIN."
+  },
+  "icu:Preferences--enable-signal-pin": {
+    "messageformat": "I-enable ang PIN"
+  },
+  "icu:Preferences--enable-signal-pin--button": {
+    "messageformat": "I-enable"
+  },
+  "icu:Preferences--pin-reminders--header": {
+    "messageformat": "PIN reminders"
+  },
+  "icu:Preferences--registration-lock__label": {
+    "messageformat": "Registration Lock"
+  },
+  "icu:Preferences--registration-lock__footer": {
+    "messageformat": "I-require ang Signal PIN mo para i-register ulit ang iyong phone number gamit ang Signal."
+  },
+  "icu:Preferences__Chats__TextInputSection__Title": {
+    "messageformat": "Text input"
+  },
+  "icu:Preferences__Chats__ChatFoldersSection__Title": {
+    "messageformat": "Chat folders"
+  },
+  "icu:Preferences__Notifications__Show__Label": {
+    "messageformat": "Ipakita"
+  },
+  "icu:Preferences__Notifications__SoundsSection__Title": {
+    "messageformat": "Sounds"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__Title-v2": {
+    "messageformat": "Unread badges"
+  },
+  "icu:Preferences__Notifications__Reset__title": {
+    "messageformat": "I-reset sa default ang notification settings, kasama ang custom settings para sa chats mo."
+  },
+  "icu:Preferences__Notifications__Reset__button": {
+    "messageformat": "I-reset"
+  },
+  "icu:Preferences__Notifications__Reset__modal--body": {
+    "messageformat": "Ibalik sa default ang lahat ng notification settings para sa lahat ng chats?"
+  },
+  "icu:Preferences__Notifications__Reset__modal--confirm": {
+    "messageformat": "I-reset"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__Label": {
+    "messageformat": "Badge count"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__Description": {
+    "messageformat": "Piliin kung ipinapakita ng badge count ang bilang ng unread messages o ang bilang ng unread chats"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__UnreadMessages": {
+    "messageformat": "Unread messages"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__UnreadChats": {
+    "messageformat": "Unread chats"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__MutedChats": {
+    "messageformat": "Isama ang naka-mute na chats sa app badge"
+  },
+  "icu:Preferences__Notifications__AppBadgeSection__BadgeCount__MutedChats__description": {
+    "messageformat": "Palaging kasama ang naka-mute na chats sa chat folder badges"
   },
   "icu:PlaintextExport--PreferencesRow--Header": {
     "messageformat": "I-export ang chat history"
@@ -6217,9 +6664,6 @@
   "icu:NotificationProfiles--setting": {
     "messageformat": "Notification profiles"
   },
-  "icu:NotificationProfiles--setup": {
-    "messageformat": "I-set up"
-  },
   "icu:NotificationProfiles--title": {
     "messageformat": "Notification profiles"
   },
@@ -6231,9 +6675,6 @@
   },
   "icu:NotificationProfiles--manage-description": {
     "messageformat": "Magdagdag o mag-edit ng notification profiles"
-  },
-  "icu:NotificationProfiles--manage-profiles": {
-    "messageformat": "{profileCount, plural, one {Isang profile} other {{profileCount,number} profiles}}"
   },
   "icu:NotificationProfiles--create": {
     "messageformat": "Mag-create ng profile"
@@ -6418,6 +6859,9 @@
   "icu:Preferences--blocked-users--description": {
     "messageformat": "Hindi makakatawag o makakapag-send sa 'yo ng messages ang blocked users."
   },
+  "icu:Preferences--add-blocked": {
+    "messageformat": "I-add ang Naka-block na User o Group"
+  },
   "icu:Preferences--blocked-users": {
     "messageformat": "Blocked Users"
   },
@@ -6425,7 +6869,13 @@
     "messageformat": "Blocked Groups"
   },
   "icu:Preferences--blocked--blocked-on": {
-    "messageformat": "Blocked on {blockedAt}"
+    "messageformat": "Binlock noong {blockedAt}"
+  },
+  "icu:Preferences--BlockChooser--Done": {
+    "messageformat": "Tapos na"
+  },
+  "icu:Preferences--BlockChooser--Search--Placeholder": {
+    "messageformat": "Search"
   },
   "icu:Preferences--signal-backups": {
     "messageformat": "Signal Secure Backups"
@@ -6634,9 +7084,6 @@
   "icu:Preferences__pnp__row--body": {
     "messageformat": "Piliin kung sinong pwedeng makakita ng phone number mo at kung sinong pwedeng kumontak sa 'yo sa Signal gamit ito."
   },
-  "icu:Preferences__pnp__row--button": {
-    "messageformat": "Baguhin…"
-  },
   "icu:Preferences__pnp__sharing--title": {
     "messageformat": "Sinong makakakita ng number ko"
   },
@@ -6685,14 +7132,11 @@
   "icu:Preferences--read-receipts": {
     "messageformat": "Read receipts"
   },
-  "icu:Preferences--read-receipts--description": {
-    "messageformat": "Kapag naka-disable ito, hindi mo makikita ang read receipts mula sa iba."
-  },
   "icu:Preferences--typing-indicators": {
     "messageformat": "Typing indicators"
   },
-  "icu:Preferences--typing-indicators--description": {
-    "messageformat": "Kapag naka-disable ito, hindi mo makikita ang typing indicators mula sa iba."
+  "icu:Preferences--messaging-help": {
+    "messageformat": "Makita at i-share kapag nabasa na at tina-type ang isang message. Kapag naka-disable ito, hindi mo makikita ang read receipts o typing indicators mula sa iba."
   },
   "icu:Preferences--updates": {
     "messageformat": "Updates"
@@ -6796,11 +7240,23 @@
   "icu:InstallScreenUpdateDialog--update-required__title": {
     "messageformat": "May Required na Update"
   },
+  "icu:InstallScreenUpdateDialog--checking-for-updates": {
+    "messageformat": "Naghahanap ng updates"
+  },
+  "icu:InstallScreenUpdateDialog--updating-signal": {
+    "messageformat": "Ina-update ang Signal"
+  },
+  "icu:InstallScreenUpdateDialog--download-progress": {
+    "messageformat": "Dina-download ang {currentBytes} ng {totalBytes} ({percentage,number,percent})..."
+  },
   "icu:InstallScreenUpdateDialog--update-required__body": {
-    "messageformat": "Para makumpleto ang pag-sync sa messages mo, i-update na ang Signal desktop."
+    "messageformat": "Para magpatuloy, i-update ang Signal Desktop."
   },
   "icu:InstallScreenUpdateDialog--update-required__action-update": {
     "messageformat": "I-update"
+  },
+  "icu:InstallScreenUpdateDialog--update-required__action-update__mas": {
+    "messageformat": "Pumunta sa App Store"
   },
   "icu:InstallScreenUpdateDialog--unsupported-os__title": {
     "messageformat": "May Required na Update"
@@ -6816,6 +7272,36 @@
   },
   "icu:InstallScreenUpdateDialog--cannot-update__body": {
     "messageformat": "Hindi na-update ng Signal Desktop, pero may bagong version na available. Pumunta sa {downloadUrl} at i-install ang bagong version manually, pagkatapos ay kontakin ang support o mag-file ng bug tungkol dito."
+  },
+  "icu:EntryPoint--signal-logo": {
+    "messageformat": "Signal Logo"
+  },
+  "icu:EntryPoint--Title--Line1": {
+    "messageformat": "Dalhin ang privacy kahit saan."
+  },
+  "icu:EntryPoint--Title--Line2": {
+    "messageformat": "Magpakatotoo sa bawat message."
+  },
+  "icu:EntryPoint--link-button": {
+    "messageformat": "I-link ang account mo"
+  },
+  "icu:EntryPoint--more-options-button": {
+    "messageformat": "Karagdagang options"
+  },
+  "icu:EntryPoint--nonprofit": {
+    "messageformat": "Ang Signal ay isang nonprofit"
+  },
+  "icu:EntryPoint--terms": {
+    "messageformat": "Mga Tutunin at Patakaran sa Privacy"
+  },
+  "icu:EntryPoint--MoreOptions--Title": {
+    "messageformat": "Karagdagang options"
+  },
+  "icu:EntryPoint--MoreOptions--RegistrationButton--Title": {
+    "messageformat": "Gumawa ng bagong account"
+  },
+  "icu:EntryPoint--MoreOptions--RegistrationButton--Description": {
+    "messageformat": "Gumawa ng bagong Signal account gamit ang phone number mo."
   },
   "icu:StandaloneRegistration--signal-logo": {
     "messageformat": "Signal Logo"
@@ -6834,6 +7320,9 @@
   },
   "icu:StandaloneRegistration--PhoneNumber--waiting": {
     "messageformat": "Subukan ulit sa loob ng {duration}"
+  },
+  "icu:StandaloneRegistration--PhoneNumber--RegionCodeSelector--Label": {
+    "messageformat": "Pumili ng country code"
   },
   "icu:StandaloneRegistration--PhoneNumber--placeholder": {
     "messageformat": "Phone number"
@@ -7009,6 +7498,21 @@
   "icu:StandaloneRegistration--VerificationCode--CannotSendCodeTemporary--ok-button": {
     "messageformat": "OK"
   },
+  "icu:StandaloneRegistration--VerificationCode--HavingTrouble--Title": {
+    "messageformat": "May problema sa pag-register?"
+  },
+  "icu:StandaloneRegistration--VerificationCode--HavingTrouble--Bullet1": {
+    "messageformat": "Siguraduhing may cellular signal ang iyong telepono para matanggap ang iyong mga tawag at SMS"
+  },
+  "icu:StandaloneRegistration--VerificationCode--HavingTrouble--Bullet2": {
+    "messageformat": "Kumpirmahing nakakatanggap ka ng tawag sa number mo"
+  },
+  "icu:StandaloneRegistration--VerificationCode--HavingTrouble--Bullet3": {
+    "messageformat": "I-check kung nailagay mo nang tama ang iyong phone number"
+  },
+  "icu:StandaloneRegistration--VerificationCode--HavingTrouble--Footer": {
+    "messageformat": "Kung hindi ka pa rin makapag-register, sundin ang <troubleshootingLink>troubleshooting steps</troubleshootingLink> na ito o <contactSupportLink>kontakin ang Support.</contactSupportLink>"
+  },
   "icu:StandaloneRegistration--ProfileEntry--header": {
     "messageformat": "I-set up ang iyong profile"
   },
@@ -7148,7 +7652,7 @@
     "messageformat": "Babala"
   },
   "icu:StandaloneRegistration--CreatePIN--DisableWarning--description": {
-    "messageformat": "If you disable the PIN, you will lose all data when you re-register Signal. You can not turn on Registration Lock while the PIN is disabled."
+    "messageformat": "Kapag dinis-able mo ang PIN, mawawala ang lahat ng iyong data kapag ni-register mo ulit ang Signal. Hindi mo maaaring i-on ang Registration Lock habang naka-disable ang PIN."
   },
   "icu:StandaloneRegistration--CreatePIN--DisableWarning--disable-button": {
     "messageformat": "I-disable ang PIN"
@@ -7356,6 +7860,12 @@
   },
   "icu:MediaPermissionsModal__step-2": {
     "messageformat": "I-on ang \"Signal\""
+  },
+  "icu:MediaPermissionsModal__step-2--windows--microphone": {
+    "messageformat": "Bigyan ang Signal ng access sa microphone"
+  },
+  "icu:MediaPermissionsModal__step-2--windows--camera": {
+    "messageformat": "Bigyan ang Signal ng access sa camera"
   },
   "icu:MediaPermissionsModal__open": {
     "messageformat": "Pumunta sa settings"
@@ -7897,11 +8407,17 @@
   "icu:ContextMenu--button": {
     "messageformat": "Context menu"
   },
+  "icu:EditUsernameModalBody__username-label": {
+    "messageformat": "Username"
+  },
   "icu:EditUsernameModalBody__username-placeholder": {
     "messageformat": "Username"
   },
   "icu:EditUsernameModalBody__username-helper": {
     "messageformat": "Ang usernames ay palaging may kasamang numero."
+  },
+  "icu:EditUsernameModalBody__discriminator-label": {
+    "messageformat": "Username digits"
   },
   "icu:EditUsernameModalBody__learn-more": {
     "messageformat": "Matuto pa"
@@ -8000,8 +8516,77 @@
   "icu:UsernameMegaphone__dismiss": {
     "messageformat": "I-dismiss"
   },
+  "icu:PinReminderMegaphone__title": {
+    "messageformat": "I-verify ang PIN ng iyong Signal"
+  },
+  "icu:PinReminderMegaphone__body": {
+    "messageformat": "Ipapa-verify namin sa 'yo ang PIN mo paminsan-minsan para matandaan mo ito."
+  },
+  "icu:PinReminderMegaphone__verify": {
+    "messageformat": "I-verify"
+  },
+  "icu:PinReminderMegaphone__not-now": {
+    "messageformat": "Hindi na muna"
+  },
+  "icu:PinReminderModal__title": {
+    "messageformat": "Ilagay ang iyong Signal PIN"
+  },
+  "icu:PinReminderModal__body": {
+    "messageformat": "Para tulungan kang ma-memorize ang PIN mo, hihingin namin ito sa 'yo paminsan-minsan. Babawasan namin ang paghingi nito habang tumatagal."
+  },
+  "icu:PinReminderModal__pin-input-placeholder": {
+    "messageformat": "Ilagay ang iyong PIN"
+  },
+  "icu:PinReminderModal__pin-input-error": {
+    "messageformat": "Mali ang PIN. Subukan ulit"
+  },
+  "icu:PinReminderModal__forgot": {
+    "messageformat": "Nakalimutan ang PIN"
+  },
+  "icu:PinReminderModal__confirm": {
+    "messageformat": "Kumpirmahin"
+  },
+  "icu:PinReminderCompletedToast": {
+    "messageformat": "Tama ang PIN. Ipapaalala namin ulit ito sa 'yo mamaya."
+  },
+  "icu:PinChangeModal__title--create": {
+    "messageformat": "Palitan ang Signal PIN mo"
+  },
+  "icu:PinChangeModal__title--create--without-pin": {
+    "messageformat": "Gumawa ng Signal PIN mo"
+  },
+  "icu:PinChangeModal__body--create": {
+    "messageformat": "Mapapalitan mo ang iyong PIN hanggang rehistrado ang device na ito. <learnMoreLink>Matuto pa</learnMoreLink>"
+  },
+  "icu:PinChangeModal__body--create--without-pin": {
+    "messageformat": "Pinapanatili ng PINs na naka-encrypt ang impormasyon na nakalagay sa Signal para ikaw lang ang may access dito. Ibabalik ang profile, settings, at contacts mo kapag nag-install ka ulit. Hindi mo na kailangan ang iyong PIN para buksan ang app. <learnMoreLink>Matuto pa</learnMoreLink>"
+  },
+  "icu:PinChangeModal__title--confirm": {
+    "messageformat": "Kumpirmahin ang iyong Signal PIN"
+  },
+  "icu:PinChangeModal__body--confirm": {
+    "messageformat": "Ilagay ang PIN na ginawa mo."
+  },
+  "icu:PinChangeModal__pin-input-placeholder--create": {
+    "messageformat": "Ilagay ang bagong PIN"
+  },
+  "icu:PinChangeModal__pin-input-placeholder--confirm": {
+    "messageformat": "Kumpirmahin ang PIN"
+  },
+  "icu:PinChangeModal__cancel": {
+    "messageformat": "I-cancel"
+  },
+  "icu:PinChangeModal__continue": {
+    "messageformat": "Magpatuloy"
+  },
+  "icu:PinChangeModal__confirm": {
+    "messageformat": "Kumpirmahin"
+  },
+  "icu:PinChangeCompletedToast": {
+    "messageformat": "Nakagawa ng bagong PIN."
+  },
   "icu:UnsupportedOSWarningDialog__body": {
-    "messageformat": "Malapit nang hindi masuportahan ng Signal ang {OS} version ng iyong computer. Para patuloy na magamit ang Signal, i-update ang operating system ng computer mo bago sumapit ang {expirationDate}. <learnMoreLink>Matuto pa</learnMoreLink>"
+    "messageformat": "Malapit nang hindi masuportahan ng Signal ang version ng {OS} ng iyong computer. Para patuloy na magamit ang Signal, i-update ang operating system ng computer mo bago sumapit ang {expirationDate}. <learnMoreLink>Matuto pa</learnMoreLink>"
   },
   "icu:UnsupportedOSErrorDialog__body": {
     "messageformat": "Hindi na gumagana ang Signal desktop sa computer na ito. Para magamit muli ang Signal desktop, i-update ang {OS} version ng iyong computer. <learnMoreLink>Matuto pa</learnMoreLink>"
@@ -8216,12 +8801,6 @@
   "icu:CallLinkPendingParticipantModal__DenyButtonLabel": {
     "messageformat": "Tanggihan ang pagsali"
   },
-  "icu:CallLinkRestrictionsSelect__Option--Off": {
-    "messageformat": "Off"
-  },
-  "icu:CallLinkRestrictionsSelect__Option--On": {
-    "messageformat": "On"
-  },
   "icu:CallLinkAddNameModal__Title": {
     "messageformat": "Maglagay ng pangalan ng call"
   },
@@ -8269,6 +8848,39 @@
   },
   "icu:SaveMultiDialog__title": {
     "messageformat": "I-save ang attachments"
+  },
+  "icu:EmbeddedContact__message": {
+    "messageformat": "I-message"
+  },
+  "icu:ContactDetail__message": {
+    "messageformat": "I-message"
+  },
+  "icu:ContactDetail__add-to-group": {
+    "messageformat": "I-add sa isang group"
+  },
+  "icu:ContactDetail__nickname": {
+    "messageformat": "Nickname"
+  },
+  "icu:ContactDetail__note": {
+    "messageformat": "Notes"
+  },
+  "icu:email-v2": {
+    "messageformat": "Email"
+  },
+  "icu:home-v2": {
+    "messageformat": "Home"
+  },
+  "icu:mobile-v2": {
+    "messageformat": "Mobile"
+  },
+  "icu:work-v2": {
+    "messageformat": "Work"
+  },
+  "icu:phone-v2": {
+    "messageformat": "Phone"
+  },
+  "icu:address-v2": {
+    "messageformat": "Address"
   },
   "icu:WhatsNew__modal-title": {
     "messageformat": "what's new"
@@ -8432,11 +9044,11 @@
   "icu:DonationReceipt__type-value--one-time": {
     "messageformat": "Isang beses"
   },
-  "icu:DonationReceipt__footer-text": {
-    "messageformat": "Maraming salamat sa pagsuporta sa Signal. Ang iyong contribution ay nakatutulong para maipagpatuloy ang aming mission na protektahan ang malayang pamamahayag at pag-enable sa secure global communication para sa milyun-milyong katao sa buong mundo, sa pamamagitan ng open source privacy technology. Kung ika'y isang residente ng United States, ingatan ang receipt na ito para sa tax records mo. Ang Signal Technology Foundation ay isang tax-exempt nonprofit organization sa United States sa ilalim ng section 501c3 ng Internal Revenue Code. Ang aming Federal Tax ID ay 82-4506840."
-  },
   "icu:DonationReceipt__footer-text-v2": {
     "messageformat": "Maraming salamat sa pagsuporta sa Signal. Nakatutulong ang contribution mo para maipagpatuloy ang aming mission na protektahan ang free expression at magbigay ng secure global communication sa milyun-milyong tao sa buong mundo, sa pamamagitan ng open source privacy technology. Kung isa kang residente ng Estados Unidos, ingatan ang receipt na ito para sa tax records mo. Ang Signal Technology Foundation ay isang tax-exempt nonprofit organization sa Estados Unidos sa ilalim ng section 501c3 ng Internal Revenue Code. Ang aming Federal Tax ID ay 82-4506840. Hindi nagbigay ng anumang produkto o serbisyo ang Signal kapalit ng contribution na ito."
+  },
+  "icu:MessageCta__Donate": {
+    "messageformat": "Mag-donate Na"
   },
   "icu:Donations__OfflineTooltip": {
     "messageformat": "Offline ka. Mag-connect sa internet para kumpletuhin ang pag-donate."
@@ -8636,6 +9248,9 @@
   "icu:CallQualitySurvey__WhatIssuesDidYouHave__SomethingElse__TextArea__AccessibilityLabel": {
     "messageformat": "Ilarawan ang issue mo"
   },
+  "icu:CallQualitySurvey__WhatIssuesDidYouHave__SomethingElse__TextArea__Placeholder": {
+    "messageformat": "Ilarawan ang isyung naranasan mo"
+  },
   "icu:CallQualitySurvey__WhatIssuesDidYouHave__SomethingElse__TextArea__HelpText": {
     "messageformat": "Pakisama ang anumang detalye na may kaugnayan sa isyu. Anumang ibinahagi mo rito ay mapapanatiling pribado at gagamitin lamang para sa pagpapabuti ng mga tawag dito sa Signal."
   },
@@ -8745,16 +9360,22 @@
     "messageformat": "Dagdag na maliliit na pag-aayos, pag-alis ng bugs, at pagpapaganda ng takbo ng app. Maraming salamat sa paggamit ng Signal!",
     "ignoreUnused": true
   },
-  "icu:WhatsNew__8.19--0": {
-    "messageformat": "Maaari nang tapusin ng group admins ang chats gamit ang bagong \"End Group\" option sa group settings. Mapipigilan nito ang group members sa pag-send ng messages o pagsisimula ng calls, at dini-disable rin nito ang invites."
+  "icu:WhatsNew__8.32--0": {
+    "messageformat": "Suportado na rin ngayon ang unread filter sa message folders at sa search interface."
   },
-  "icu:WhatsNew__8.20--0": {
-    "messageformat": "Ipinakikilala ang disappearing call events: Pagkatapos mong i-install ang update na ito ay automatic na mawawala ang missed, outgoing, at received calls sa anumang chat kung saan naka-enable ang disappearing messages.\n"
+  "icu:WhatsNew__8.32--1": {
+    "messageformat": "Mas pinabuting upload reliability para sa hindi magandang network conditions. Maraming salamat, <GH3mmmbulus></GH3mmmbulus>!"
   },
-  "icu:WhatsNew__8.20--1": {
-    "messageformat": "Pwede mo nang ayusin ang naka-install na sticker packs para hindi mapunta sa dulo ang bago mong favorites."
+  "icu:WhatsNew__8.32--2": {
+    "messageformat": "Tama nang nakaturo ang &quot;(N)&quot; shortcut sa thumbs down emoji. Thumbs up kay <lnicola></lnicola> para sa bugfix."
   },
-  "icu:WhatsNew__8.24--1": {
-    "messageformat": "We made it easier to search for group members on the group settings page, so you can quickly figure out if your Mom already added your second cousin to the third-annual extended family reunion BBQ group."
+  "icu:WhatsNew__8.34--0": {
+    "messageformat": "Sinusuportahan na rin ngayon ng Signal Desktop ang pag-share ng contacts, kaya pwede ka nang manatiling nakabantay sa computer screen mo nang hindi hawak ang cellphone mo."
+  },
+  "icu:WhatsNew__8.34--1": {
+    "messageformat": "Mas pinabuti ang pag-handle at performance para sa konektadong audio devices."
+  },
+  "icu:WhatsNew__8.36--0": {
+    "messageformat": "Your top stickers now have a place to remain stuck. Add any sticker pack to your list of favorites so it's easy to stick with the ones you love."
   }
 }

@@ -5,10 +5,9 @@ import type { JSX } from 'react';
 
 import { action } from '@storybook/addon-actions';
 import type { Meta } from '@storybook/react';
-import { AvatarColors } from '../types/Colors.std.ts';
+import { AvatarColors, getDefaultAvatars } from '../types/Avatar.std.ts';
 import type { PropsType } from './AvatarEditor.dom.tsx';
 import { AvatarEditor } from './AvatarEditor.dom.tsx';
-import { getDefaultAvatars } from '../types/Avatar.std.ts';
 
 const { i18n } = window.SignalContext;
 
@@ -19,7 +18,7 @@ const createProps = (overrideProps: Partial<PropsType> = {}): PropsType => ({
   conversationTitle: overrideProps.conversationTitle || 'Default Title',
   deleteAvatarFromDisk: action('deleteAvatarFromDisk'),
   i18n,
-  isDisplayedAsPanel: false,
+  isInsideDialog: false,
   isGroup: Boolean(overrideProps.isGroup),
   onCancel: action('onCancel'),
   onSave: action('onSave'),

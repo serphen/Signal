@@ -2,12 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import classNames from 'classnames';
-import lodash from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode, ComponentProps, JSX, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Manager, Popper, Reference } from 'react-popper';
 import type { PreventOverflowModifier } from '@popperjs/core/lib/modifiers/preventOverflow.js';
+import { tinykeys } from 'tinykeys';
 import { isDownloaded } from '../../util/Attachment.std.ts';
 import type { LocalizerType } from '../../types/I18N.std.ts';
 import { handleOutsideClick } from '../../util/handleOutsideClick.dom.ts';
@@ -23,7 +29,7 @@ import type {
 } from './Message.dom.tsx';
 import type { PushPanelForConversationActionType } from '../../state/ducks/conversations.preload.ts';
 import { doesMessageBodyOverflow } from './MessageBodyReadMore.dom.tsx';
-import { useToggleReactionPicker } from '../../hooks/useKeyboardShortcuts.dom.tsx';
+import { useHasAnyOverlay } from '../../hooks/useKeyboardShortcuts.dom.tsx';
 import { PanelType } from '../../types/Panels.std.ts';
 import type {
   DeleteMessagesPropsType,
@@ -34,14 +40,12 @@ import { MessageContextMenu } from './MessageContextMenu.dom.tsx';
 import { ForwardMessagesModalType } from '../ForwardMessagesModal.dom.tsx';
 import { useGroupedAndOrderedReactions } from '../../util/groupAndOrderReactions.std.ts';
 import { isNotNil } from '../../util/isNotNil.std.ts';
-import type { AxoMenuBuilder } from '../../axo/AxoMenuBuilder.dom.tsx';
-import { AxoContextMenu } from '../../axo/AxoContextMenu.dom.tsx';
-import { useDocumentKeyDown } from '../../hooks/useDocumentKeyDown.dom.ts';
+import type { AxoMenuBuilder } from '../../axo/menus/AxoMenuBuilder.dom.tsx';
+import { AxoContextMenu } from '../../axo/menus/AxoContextMenu.dom.tsx';
 import type { Emoji } from '../../axo/emoji.std.ts';
+import type { StickerReferenceType } from '../../types/Stickers.preload.ts';
 
 const { useAxoContextMenuOutsideKeyboardTrigger } = AxoContextMenu;
-
-const { noop } = lodash;
 
 export type PropsData = {
   canDownload: boolean;
@@ -55,7 +59,9 @@ export type PropsData = {
   canReply: boolean;
   canPinMessage: boolean;
   selectedReaction?: Emoji.Variant;
-  isTargeted?: boolean;
+  stickerRef: StickerReferenceType | undefined;
+  isFavoriteSticker: boolean;
+  isTargeted: boolean;
   isSignalConversation: boolean;
 } & Omit<MessagePropsData, 'renderingContext' | 'menu'>;
 
@@ -88,7 +94,12 @@ export type PropsActions = {
     messageId: string,
     isPinningDisappearingMessage: boolean
   ) => void;
+  handleClickCtaButton: (callToActionId: string) => void;
   handleDebugMessage: () => void;
+  markStickerAsFavorite: (
+    stickerRef: StickerReferenceType,
+    markAsFavorite: boolean
+  ) => void;
 } & Omit<MessagePropsActions, 'onToggleSelect' | 'onReplyToMessage'>;
 
 export type Props = PropsData &
@@ -122,6 +133,7 @@ export function TimelineMessage(props: Props): JSX.Element {
     i18n,
     id,
     interactivity,
+    isFavoriteSticker,
     isPinned,
     isSignalConversation,
     isTargeted,
@@ -130,6 +142,7 @@ export function TimelineMessage(props: Props): JSX.Element {
     endPoll,
     expirationLength,
     handleDebugMessage,
+    markStickerAsFavorite,
     onPinnedMessageRemove,
     pushPanelForConversation,
     reactToMessage,
@@ -143,6 +156,7 @@ export function TimelineMessage(props: Props): JSX.Element {
     selectedReaction,
     setQuoteByMessageId,
     setMessageToEdit,
+    stickerRef,
     text,
     timestamp,
     toggleDeleteMessagesModal,
@@ -294,6 +308,14 @@ export function TimelineMessage(props: Props): JSX.Element {
 
   const handleDownload = canDownload ? openGenericAttachment : null;
 
+  const handleFavoriteSticker = useCallback(() => {
+    if (!stickerRef) {
+      return;
+    }
+
+    markStickerAsFavorite(stickerRef, !isFavoriteSticker);
+  }, [isFavoriteSticker, stickerRef, markStickerAsFavorite]);
+
   const handleReplyToMessage = useCallback(() => {
     if (!canReply) {
       return;
@@ -317,15 +339,25 @@ export function TimelineMessage(props: Props): JSX.Element {
     onPinnedMessageRemove(id);
   }, [onPinnedMessageRemove, id]);
 
-  const toggleReactionPickerKeyboard = useToggleReactionPicker(
-    handleReact || noop
-  );
+  const hasOverlay = useHasAnyOverlay();
 
-  useDocumentKeyDown(event => {
-    if (isTargeted) {
-      toggleReactionPickerKeyboard(event);
+  const onReactShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (hasOverlay) {
+      return;
     }
+    if (!isTargeted) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    handleReact();
   });
+
+  useEffect(() => {
+    return tinykeys(window, {
+      '$mod+Shift+E': onReactShortcut,
+    });
+  }, []);
 
   const groupedReactions = useGroupedAndOrderedReactions(
     props.reactions,
@@ -379,6 +411,12 @@ export function TimelineMessage(props: Props): JSX.Element {
               messageIds: [id],
             });
           }}
+          onFavoriteSticker={
+            stickerRef && !isFavoriteSticker ? handleFavoriteSticker : null
+          }
+          onUnfavoriteSticker={
+            stickerRef && isFavoriteSticker ? handleFavoriteSticker : null
+          }
           onPinMessage={
             canPinMessage && !isPinned ? handleOpenPinMessageDialog : null
           }
@@ -408,6 +446,7 @@ export function TimelineMessage(props: Props): JSX.Element {
       copyMessageText,
       handleDebugMessage,
       handleDownload,
+      handleFavoriteSticker,
       handleReact,
       handleOpenPinMessageDialog,
       handleUnpinMessage,
@@ -415,12 +454,14 @@ export function TimelineMessage(props: Props): JSX.Element {
       handleReplyToMessage,
       i18n,
       id,
+      isFavoriteSticker,
       isPinned,
       pushPanelForConversation,
       retryDeleteForEveryone,
       retryMessageSend,
       setMessageToEdit,
       shouldShowAdditional,
+      stickerRef,
       toggleDeleteMessagesModal,
       toggleForwardMessagesModal,
       toggleSelectMessage,
@@ -432,10 +473,12 @@ export function TimelineMessage(props: Props): JSX.Element {
       <Manager>
         <MessageMenu
           i18n={i18n}
+          isFavoriteSticker={isFavoriteSticker}
           isWindowWidthNotNarrow={isWindowWidthNotNarrow}
           isShiftHeld={isShiftHeld}
           direction={direction}
           onDownload={handleDownload}
+          onFavoriteSticker={stickerRef ? handleFavoriteSticker : null}
           onReplyToMessage={canReply ? handleReplyToMessage : null}
           onReact={canReact ? handleReact : null}
           onForward={
@@ -491,6 +534,7 @@ export function TimelineMessage(props: Props): JSX.Element {
     );
   }, [
     i18n,
+    isFavoriteSticker,
     isWindowWidthNotNarrow,
     isShiftHeld,
     direction,
@@ -505,12 +549,14 @@ export function TimelineMessage(props: Props): JSX.Element {
     toggleDeleteMessagesModal,
     toggleForwardMessagesModal,
     handleDownload,
+    handleFavoriteSticker,
     handleReplyToMessage,
     handleReact,
     reactionPickerRoot,
     popperPreventOverflowModifier,
     renderReactionPicker,
     selectedReaction,
+    stickerRef,
     reactToMessage,
     toggleReactionPicker,
     id,
@@ -537,9 +583,11 @@ export function TimelineMessage(props: Props): JSX.Element {
 
 type MessageMenuProps = {
   i18n: LocalizerType;
+  isFavoriteSticker: boolean;
   isWindowWidthNotNarrow: boolean;
   isShiftHeld: boolean;
   onDownload: (() => void) | null;
+  onFavoriteSticker: (() => void) | null;
   onReplyToMessage: (() => void) | null;
   onReact: (() => void) | null;
   onForward: (() => void) | null;
@@ -555,9 +603,11 @@ type MessageMenuProps = {
 function MessageMenu({
   i18n,
   direction,
+  isFavoriteSticker,
   isWindowWidthNotNarrow,
   isShiftHeld,
   onDownload,
+  onFavoriteSticker,
   onReplyToMessage,
   onReact,
   onForward,
@@ -570,7 +620,8 @@ function MessageMenu({
     <div
       className={classNames(
         'module-message__buttons',
-        `module-message__buttons--${direction}`
+        direction === 'incoming' && 'module-message__buttons--incoming',
+        direction === 'outgoing' && 'module-message__buttons--outgoing'
       )}
     >
       {isWindowWidthNotNarrow && (
@@ -585,17 +636,15 @@ function MessageMenu({
                   : undefined;
 
                 return (
-                  // FIXME: Menus should be keyboard accessible
-                  // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
-                  <div
+                  <button
                     ref={maybePopperRef}
+                    type="button"
                     onClick={(event: MouseEvent) => {
                       event.stopPropagation();
                       event.preventDefault();
 
                       onReact();
                     }}
-                    role="button"
                     className="module-message__buttons__react"
                     aria-label={i18n('icu:reactToMessage')}
                     title="React"
@@ -609,18 +658,34 @@ function MessageMenu({
             </Reference>
           )}
 
+          {onFavoriteSticker && (
+            <button
+              type="button"
+              onClick={onFavoriteSticker}
+              aria-label={
+                isFavoriteSticker
+                  ? i18n('icu:messageContextMenu__sticker--removeFavorite')
+                  : i18n('icu:messageContextMenu__sticker--addFavorite')
+              }
+              className={
+                isFavoriteSticker
+                  ? 'module-message__buttons__unfavorite'
+                  : 'module-message__buttons__favorite'
+              }
+              onDoubleClick={ev => {
+                // Prevent double click from triggering the replyToMessage action
+                ev.stopPropagation();
+              }}
+            />
+          )}
+
           {onDownload && (
-            // FIXME: Menus should be keyboard accessible
-            // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
-            <div
+            <button
+              type="button"
               onClick={onDownload}
-              role="button"
               aria-label={i18n('icu:downloadAttachment')}
               title="Download"
-              className={classNames(
-                'module-message__buttons__download',
-                `module-message__buttons__download--${direction}`
-              )}
+              className="module-message__buttons__download"
               onDoubleClick={ev => {
                 // Prevent double click from triggering the replyToMessage action
                 ev.stopPropagation();
@@ -629,22 +694,17 @@ function MessageMenu({
           )}
 
           {onReplyToMessage && (
-            // FIXME: Menus should be keyboard accessible
-            // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
-            <div
+            <button
+              type="button"
               onClick={(event: MouseEvent) => {
                 event.stopPropagation();
                 event.preventDefault();
 
                 onReplyToMessage();
               }}
-              role="button"
               aria-label={i18n('icu:replyToMessage')}
               title="Reply"
-              className={classNames(
-                'module-message__buttons__reply',
-                `module-message__buttons__download--${direction}`
-              )}
+              className="module-message__buttons__reply"
               onDoubleClick={ev => {
                 // Prevent double click from triggering the replyToMessage action
                 ev.stopPropagation();
@@ -713,10 +773,7 @@ function MessageMenu({
               type="button"
               aria-label={i18n('icu:messageContextMenuButton')}
               title="More"
-              className={classNames(
-                'module-message__buttons__menu',
-                `module-message__buttons__download--${direction}`
-              )}
+              className="module-message__buttons__menu"
               onDoubleClick={ev => {
                 // Prevent double click from triggering the replyToMessage action
                 ev.stopPropagation();

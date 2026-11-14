@@ -46,6 +46,7 @@ import { MessageInteractivity } from './Message.dom.tsx';
 import type { RenderItemProps } from '../../state/smart/TimelineItem.preload.tsx';
 import type { CollapseSet } from '../../util/CollapseSet.std.ts';
 import { tw } from '../../axo/tw.dom.tsx';
+import { TargetedMessageSource } from '../../state/ducks/conversationsEnums.std.ts';
 
 const { first, get, isNumber, last, throttle } = lodash;
 
@@ -53,10 +54,15 @@ const AT_BOTTOM_THRESHOLD = 15;
 const AT_BOTTOM_DETECTOR_STYLE = { height: AT_BOTTOM_THRESHOLD };
 
 const MIN_ROW_HEIGHT = 18;
-const SCROLL_DOWN_BUTTON_THRESHOLD = 8;
 const LOAD_NEWER_THRESHOLD = 5;
 
 const DELAY_BEFORE_MARKING_READ_AFTER_FOCUS = SECOND;
+
+const WIDTH_BREAKPOINTS: Record<WidthBreakpoint, string | null> = {
+  [WidthBreakpoint.Narrow]: null,
+  [WidthBreakpoint.Medium]: 'module-timeline--width-medium',
+  [WidthBreakpoint.Wide]: 'module-timeline--width-wide',
+};
 
 export type PropsDataType = {
   haveNewest: boolean;
@@ -127,7 +133,11 @@ export type PropsActionsType = {
   ) => unknown;
   markMessageRead: (conversationId: string, messageId: string) => unknown;
   maybePeekGroupCall: (conversationId: string) => unknown;
-  targetMessage: (messageId: string, conversationId: string) => unknown;
+  targetMessage: (
+    messageId: string,
+    conversationId: string,
+    targetedMessageSource: TargetedMessageSource
+  ) => unknown;
   setCenterMessage: (
     conversationId: string,
     messageId: string | undefined
@@ -260,7 +270,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
       const lastIndex = items.length - 1;
       const lastItem = items[lastIndex];
       strictAssert(lastItem, 'Missing lastItem');
-      targetMessage(lastItem.id, id);
+      targetMessage(lastItem.id, id, TargetedMessageSource.Focus);
     } else {
       const containerEl = this.#containerRef.current;
       if (containerEl) {
@@ -305,14 +315,32 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
       items.findIndex(item => item.id === newestBottomVisibleMessageId) <
         oldestUnseenIndex
     ) {
-      if (setFocus) {
-        const item = items[oldestUnseenIndex];
-        strictAssert(item, 'Missing item at oldestUnseenIndex');
-        targetMessage(item.id, id);
-      } else {
-        this.#lastSeenIndicatorRef.current?.scrollIntoView();
+      const lastSeenElement = this.#lastSeenIndicatorRef.current;
+      const containerElement = this.#containerRef.current;
+
+      if (lastSeenElement && containerElement) {
+        const lastSeenBounds = lastSeenElement.getBoundingClientRect();
+        const containerBounds = containerElement.getBoundingClientRect();
+        const containerMidpoint =
+          (containerBounds.bottom + containerBounds.top) / 2;
+
+        // We attempt to scroll the last seen indicator if it's below the screen midpoint,
+        // as well as if it's below the current screen. We want it near the top so the
+        // user sees it. The next click will fall through, to a full 'scroll to bottom.'
+        if (lastSeenBounds.top > containerMidpoint) {
+          if (setFocus) {
+            const item = items[oldestUnseenIndex];
+            strictAssert(item, 'Missing item at oldestUnseenIndex');
+            targetMessage(item.id, id, TargetedMessageSource.Focus);
+          } else {
+            lastSeenElement.scrollIntoView();
+          }
+          return;
+        }
       }
-    } else if (haveNewest) {
+    }
+
+    if (haveNewest) {
       this.#scrollToBottom(setFocus);
     } else {
       const lastItem = last(items);
@@ -930,7 +958,11 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
             targetInnerMessage,
             'No message at targetIndex in items.messages'
           );
-          targetMessage(targetInnerMessage.id, id);
+          targetMessage(
+            targetInnerMessage.id,
+            id,
+            TargetedMessageSource.NavigateToMessage
+          );
 
           event.preventDefault();
           event.stopPropagation();
@@ -947,7 +979,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
       const targetItem = items[targetIndex];
       strictAssert(targetItem, 'Missing item at targetIndex');
       if (targetItem.type === 'none') {
-        targetMessage(targetItem.id, id);
+        targetMessage(targetItem.id, id, TargetedMessageSource.Focus);
 
         event.preventDefault();
         event.stopPropagation();
@@ -960,7 +992,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
           : first(targetItem.messages);
 
       strictAssert(targetInnerMessage, 'Expect to get first/last of target');
-      targetMessage(targetInnerMessage.id, id);
+      targetMessage(targetInnerMessage.id, id, TargetedMessageSource.Focus);
 
       event.preventDefault();
       event.stopPropagation();
@@ -1036,7 +1068,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
 
         if (direction === -1) {
           if (currentTop <= targetTop || index === 0) {
-            targetMessage(currentMessageId, id);
+            targetMessage(currentMessageId, id, TargetedMessageSource.Focus);
 
             event.preventDefault();
             event.stopPropagation();
@@ -1046,7 +1078,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
           const currentBottom = currentTop + currentRect.height;
 
           if (currentBottom > targetBottom || index === max - 1) {
-            targetMessage(currentMessageId, id);
+            targetMessage(currentMessageId, id, TargetedMessageSource.Focus);
 
             event.preventDefault();
             event.stopPropagation();
@@ -1060,7 +1092,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
     if (event.key === 'Home' || (commandOrCtrl && event.key === 'ArrowUp')) {
       const firstMessageId = first(items);
       if (firstMessageId) {
-        targetMessage(firstMessageId.id, id);
+        targetMessage(firstMessageId.id, id, TargetedMessageSource.Focus);
         event.preventDefault();
         event.stopPropagation();
       }
@@ -1090,6 +1122,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
       isBlocked,
       isConversationSelected,
       isGroupV1AndDisabled,
+      isNearBottom,
       items,
       messageLoadingState,
       oldestUnseenIndex,
@@ -1122,27 +1155,21 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
     const areThereAnyMessages = items.length > 0;
     const areAnyMessagesUnread = Boolean(unreadCount);
     const lastItem = last(items);
+
+    const visibleMessageId =
+      newestBottomVisibleMessageId ?? oldestPartiallyVisibleMessageId;
+
     const areAnyMessagesBelowCurrentPosition =
-      !haveNewest ||
-      Boolean(
-        newestBottomVisibleMessageId &&
-        newestBottomVisibleMessageId !== lastItem?.id
-      );
-    const areAboveScrollDownButtonThreshold =
-      !haveNewest ||
-      (newestBottomVisibleMessageId &&
-        !items
-          .slice(-SCROLL_DOWN_BUTTON_THRESHOLD)
-          .find(item => item.id === newestBottomVisibleMessageId));
+      areThereAnyMessages &&
+      (!haveNewest ||
+        (visibleMessageId != null && visibleMessageId !== lastItem?.id));
 
     const areUnreadBelowCurrentPosition =
       areThereAnyMessages &&
       areAnyMessagesUnread &&
       areAnyMessagesBelowCurrentPosition;
-    const shouldShowScrollDownButtons = Boolean(
-      areThereAnyMessages &&
-      (areUnreadBelowCurrentPosition || areAboveScrollDownButtonThreshold)
-    );
+    const shouldShowScrollDownButtons =
+      areThereAnyMessages && isNearBottom === false;
 
     let floatingHeader: ReactNode;
     // It's possible that a message was removed from `items` but we still have its ID in
@@ -1204,17 +1231,15 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
       messageNodes.push(
         <div
           key={item.id}
-          className={
-            itemIndex === items.length - 1
-              ? 'module-timeline__last-message'
-              : undefined
-          }
           data-supertab={
             oldestUnseenIndex === itemIndex ||
             (!oldestUnseenIndex && itemIndex === items.length - 1)
           }
           data-item-index={itemIndex}
           data-message-id={item.id}
+          data-message-is-last={
+            itemIndex === items.length - 1 ? true : undefined
+          }
           role="listitem"
         >
           <ErrorBoundary i18n={i18n} showDebugLog={showDebugLog}>
@@ -1253,7 +1278,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
               return;
             }
 
-            const { isNearBottom } = this.props;
+            const { isNearBottom: latestIsNearBottom } = this.props;
 
             this.setState({
               widthBreakpoint: getWidthBreakpoint(size.width),
@@ -1262,7 +1287,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
             this.#maxVisibleRows = Math.ceil(size.height / MIN_ROW_HEIGHT);
 
             const containerEl = this.#containerRef.current;
-            if (containerEl && isNearBottom) {
+            if (containerEl && latestIsNearBottom) {
               scrollToBottom(containerEl);
             }
           }}
@@ -1272,7 +1297,7 @@ export class Timeline extends Component<PropsType, StateType, SnapshotType> {
               className={classNames(
                 'module-timeline',
                 isGroupV1AndDisabled ? 'module-timeline--disabled' : null,
-                `module-timeline--width-${widthBreakpoint}`
+                WIDTH_BREAKPOINTS[widthBreakpoint]
               )}
               role="presentation"
               tabIndex={-1}

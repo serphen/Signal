@@ -1,5 +1,6 @@
 // Copyright 2019 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+// oxlint-disable signal-desktop/enforce-class-name-has-styles
 
 import '../ts/window.d.ts';
 
@@ -19,6 +20,7 @@ import { SystemThemeType, ThemeType } from '../ts/types/Util.std.ts';
 import { setupI18n } from '../ts/util/setupI18n.dom.tsx';
 import { HourCyclePreference } from '../ts/types/I18N.std.ts';
 import { AppProvider } from '../ts/windows/AppProvider.dom.tsx';
+import type { AxoEnv } from '../ts/axo/_internal/AxoEnv.dom.tsx';
 import type { StateType } from '../ts/state/reducer.preload.ts';
 import {
   ScrollerLockContext,
@@ -28,6 +30,7 @@ import { Environment, setEnvironment } from '../ts/environment.std.ts';
 import { parseUnknown } from '../ts/util/schemas.std.ts';
 import { LocaleEmojiListSchema } from '../ts/types/emoji.std.ts';
 import { FunProvider } from '../ts/components/fun/FunProvider.dom.tsx';
+import { MuteUntilDialogProvider } from '../ts/components/MuteNotificationsMenu.dom.tsx';
 import { MOCK_GIFS_PAGINATED_ONE_PAGE } from '../ts/test-helpers/funPickerMocks.dom.tsx';
 import { NavTab } from '../ts/types/Nav.std.ts';
 
@@ -41,17 +44,6 @@ setEnvironment(Environment.Development, true);
 const i18n = setupI18n('en', messages);
 
 export const globalTypes = {
-  mode: {
-    name: 'Mode',
-    description: 'Application mode',
-    defaultValue: 'mouse',
-    toolbar: {
-      dynamicTitle: true,
-      icon: 'circlehollow',
-      items: ['mouse', 'keyboard'],
-      showName: true,
-    },
-  },
   theme: {
     name: 'Theme',
     description: 'Global theme for components',
@@ -107,6 +99,7 @@ const mockStore: Store<StateType> = createStore(
     ) => state,
     globalModals: (state = {}) => state,
     user: (state = {}) => state,
+    lightbox: (state = {}) => state,
   })
 );
 
@@ -154,7 +147,6 @@ window.SignalContext = {
   getHourCyclePreference: () => HourCyclePreference.UnknownPreference,
   getPreferredSystemLocales: () => ['en'],
   getLocaleOverride: () => null,
-  getLocaleDisplayNames: () => ({ en: { en: 'English' } }),
   getResolvedMessagesLocale: () => 'en',
 
   getLocalizedEmojiList: async locale => {
@@ -197,7 +189,6 @@ window.Signal = {
 const withGlobalTypesProvider = (Story, context) => {
   const theme =
     context.globals.theme === 'light' ? ThemeType.light : ThemeType.dark;
-  const mode = context.globals.mode;
   const direction = context.globals.direction ?? 'auto';
   const background = context.globals.background;
 
@@ -212,14 +203,6 @@ const withGlobalTypesProvider = (Story, context) => {
   } else {
     document.body.classList.remove('light-theme');
     document.body.classList.add('dark-theme');
-  }
-
-  if (mode === 'mouse') {
-    document.body.classList.remove('keyboard-mode');
-    document.body.classList.add('mouse-mode');
-  } else {
-    document.body.classList.remove('mouse-mode');
-    document.body.classList.add('keyboard-mode');
   }
 
   document.body.classList.toggle(
@@ -240,6 +223,7 @@ const withGlobalTypesProvider = (Story, context) => {
   document.documentElement.setAttribute('dir', direction);
 
   return (
+    // oxlint-disable-next-line signal-desktop/enforce-static-class-names
     <div className={styles.container}>
       <StorybookThemeContext.Provider value={theme}>
         <Story {...context} />
@@ -275,6 +259,8 @@ function withFunProvider(Story, context) {
       recentGifs={[]}
       emojiSkinToneDefault={Emoji.SkinTone.None}
       onEmojiSkinToneDefaultChange={noop}
+      favoriteStickers={[]}
+      isFavoriteStickersEnabled
       isStickerReplySendEnabled
       installedStickerPacks={[]}
       showStickerPickerHint={false}
@@ -295,21 +281,46 @@ function withFunProvider(Story, context) {
         // oxlint-disable-next-line no-console
         console.log('onSelectGif', gifSelection);
       }}
+      onMarkStickerAsFavorite={function (
+        stickerSelection: FunStickerSelection,
+        markAsFavorite: boolean
+      ): void {
+        // oxlint-disable-next-line no-console
+        console.log(
+          'onMarkStickerAsFavorite',
+          stickerSelection,
+          markAsFavorite
+        );
+      }}
     >
       <Story {...context} />
     </FunProvider>
   );
 }
 
+// See: https://github.com/storybookjs/test-runner#storybooktestrunner-user-agent
+const AXO_ENV: AxoEnv.Env = navigator.userAgent.includes('StorybookTestRunner')
+  ? 'test'
+  : 'dev';
+
 function withAppProvider(Story, context) {
   return (
-    <AppProvider>
+    <AppProvider env={AXO_ENV}>
       <Story {...context} />
     </AppProvider>
   );
 }
 
+function withMutedUntilDialogProvider(Story, context) {
+  return (
+    <MuteUntilDialogProvider i18n={window.SignalContext.i18n}>
+      <Story {...context} />
+    </MuteUntilDialogProvider>
+  );
+}
+
 export const decorators = [
+  withMutedUntilDialogProvider,
   withAppProvider,
   withGlobalTypesProvider,
   withMockStoreProvider,

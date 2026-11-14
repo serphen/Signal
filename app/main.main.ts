@@ -30,7 +30,12 @@ import {
   safeStorage,
   protocol as electronProtocol,
 } from 'electron';
-import type { MenuItemConstructorOptions, Settings } from 'electron';
+import type {
+  IpcMainEvent,
+  MenuItemConstructorOptions,
+  Settings,
+  BrowserWindowConstructorOptions,
+} from 'electron';
 import { z } from 'zod';
 
 import { packageJson } from '../ts/util/packageJson.main.ts';
@@ -75,6 +80,7 @@ import * as attachmentChannel from './attachment_channel.main.ts';
 import * as bounce from '../ts/services/bounce.main.ts';
 import * as updater from '../ts/updater/index.main.ts';
 import { updateDefaultSession } from './updateDefaultSession.main.ts';
+import { sanitize as sanitizeWebp } from '@signalapp/libsignal-client/dist/WebpSanitizer.js';
 import { PreventDisplaySleepService } from './PreventDisplaySleepService.std.ts';
 import {
   SystemTrayService,
@@ -94,6 +100,7 @@ import {
   getDefaultSystemTraySetting,
   isSystemTraySupported,
   isContentProtectionEnabledByDefault,
+  isContentProtectionSupported,
 } from '../ts/types/Settings.std.ts';
 import * as ephemeralConfig from './ephemeral_config.main.ts';
 import * as mainProcessLogging from '../ts/logging/main_process_logging.main.ts';
@@ -114,6 +121,8 @@ import { ChallengeMainHandler } from '../ts/main/challengeMain.main.ts';
 import { NativeThemeNotifier } from '../ts/main/NativeThemeNotifier.main.ts';
 import { PowerChannel } from '../ts/main/powerChannel.main.ts';
 import { SettingsChannel } from '../ts/main/settingsChannel.main.ts';
+import { PDFWindowPropsSchema } from '../ts/windows/pdf/types.std.ts';
+import '../ts/main/clipboardMain.main.ts';
 import { maybeParseUrl, setUrlSearchParams } from '../ts/util/url.std.ts';
 import { getHeicConverter } from '../ts/workers/heicConverterMain.main.ts';
 
@@ -499,7 +508,7 @@ function prepareFileUrl(
   options: PrepareUrlOptions = {}
 ): string {
   const filePath = join(...pathSegments);
-  const fileUrl = pathToFileURL(filePath) as URL;
+  const fileUrl = pathToFileURL(filePath);
   return prepareUrl(fileUrl, options);
 }
 
@@ -653,6 +662,7 @@ async function handleCommonWindowEvents(window: BrowserWindow) {
   // by user in settings.
   if (
     !DISABLE_SCREEN_SECURITY &&
+    isContentProtectionSupported(OS) &&
     (contentProtection ?? isContentProtectionEnabledByDefault(OS, os.release()))
   ) {
     window.once('ready-to-show', async () => {
@@ -784,8 +794,7 @@ async function createWindow() {
     isTestEnvironment(getEnvironment()) ||
     systemTraySetting === SystemTraySetting.MinimizeToAndStartInSystemTray;
 
-  const shouldShowWindow =
-    !app.getLoginItemSettings().wasOpenedAsHidden && !startInTray;
+  const shouldShowWindow = !startInTray;
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     show: false,
@@ -853,6 +862,14 @@ async function createWindow() {
 
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
+
+  mainWindow.webContents.on('preload-error', (_event, _preloadPath, error) => {
+    log.error(Errors.toLogFormat(error));
+    if (isTestEnvironment(getEnvironment())) {
+      app.quit();
+    }
+  });
+
   if (settingsChannel) {
     settingsChannel.setMainWindow(mainWindow);
   }
@@ -1169,6 +1186,14 @@ ipc.handle(
   }
 );
 
+ipc.handle(
+  'art-creator:sanitizeWebp',
+  (_event: Electron.Event, data: Uint8Array<ArrayBuffer>) => {
+    // Throws if the image is invalid
+    sanitizeWebp(data);
+  }
+);
+
 ipc.on('art-creator:onUploadProgress', () => {
   stickerCreatorWindow?.webContents.send('art-creator:onUploadProgress');
 });
@@ -1210,6 +1235,67 @@ ipc.on('title-bar-double-click', () => {
     //   we add support for other operating systems.
     toggleMaximizedBrowserWindow(mainWindow);
   }
+});
+
+ipc.handle('pdf:generate', async (_event, data) => {
+  const props = PDFWindowPropsSchema.parse(data);
+
+  const options: BrowserWindowConstructorOptions = {
+    backgroundColor: '#ffffff',
+    show: false,
+    width: 612,
+    height: 792,
+    maximizable: false,
+    minimizable: false,
+    resizable: false,
+    webPreferences: {
+      ...defaultWebPrefs,
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      sandbox: true,
+      contextIsolation: true,
+      preload: join(rootDir, 'bundles', 'preload', 'pdf.js'),
+    },
+  };
+
+  const pdfWindow = new BrowserWindow(options);
+
+  pdfWindow.webContents.ipc.on('pdf:getProps', async event => {
+    // oxlint-disable-next-line no-param-reassign
+    event.returnValue = props;
+  });
+
+  await handleCommonWindowEvents(pdfWindow);
+
+  const { promise, resolve, reject } =
+    Promise.withResolvers<Uint8Array<ArrayBuffer>>();
+
+  try {
+    pdfWindow.webContents.on('did-finish-load', async () => {
+      try {
+        const pdf = await pdfWindow.webContents.printToPDF({
+          margins: {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          },
+          preferCSSPageSize: true,
+          printBackground: true,
+        });
+        pdfWindow.close();
+        resolve(pdf as Uint8Array<ArrayBuffer>);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    await safeLoadURL(pdfWindow, prepareFileUrl([rootDir, 'pdf.html']));
+  } catch (error) {
+    reject(error);
+  }
+
+  return promise;
 });
 
 ipc.on('set-is-call-active', (_event, isCallActive) => {
@@ -1254,8 +1340,14 @@ async function readyForUpdates() {
       'SettingsChannel must be initialized'
     );
     await updater.start({
-      canRunSilently: () => {
+      canRunSilently: async () => {
+        const canRestartInTray = OS.isLinux()
+          ? (await systemTraySettingCache.get()) ===
+            SystemTraySetting.MinimizeToAndStartInSystemTray
+          : true;
+
         return (
+          canRestartInTray &&
           systemTrayService?.isVisible() === true &&
           mainWindow?.isVisible() !== true &&
           !preventDisplaySleepService.isEnabled()
@@ -1449,9 +1541,9 @@ async function showAbout() {
 
 async function getIsLinked() {
   try {
-    const number = await sql.sqlRead('getItemById', 'number_id');
+    const aci = await sql.sqlRead('getItemById', 'uuid_id');
     const password = await sql.sqlRead('getItemById', 'password');
-    return Boolean(number && password);
+    return Boolean(aci && password);
   } catch (e) {
     return false;
   }
@@ -1625,6 +1717,8 @@ async function showCallDiagnosticWindow() {
 
 let permissionsPopupWindow: BrowserWindow | undefined;
 function showPermissionsPopupWindow(forCalling: boolean, forCamera: boolean) {
+  const PERMISSIONS_WINDOW_WIDTH = 400;
+
   // oxlint-disable-next-line no-async-promise-executor
   return new Promise<void>(async (resolveFn, reject) => {
     if (permissionsPopupWindow) {
@@ -1640,9 +1734,10 @@ function showPermissionsPopupWindow(forCalling: boolean, forCamera: boolean) {
     const size = mainWindow.getSize();
     const options = {
       // oxlint-disable-next-line typescript/no-non-null-assertion
-      width: Math.min(400, size[0]!),
+      width: Math.min(PERMISSIONS_WINDOW_WIDTH, size[0]!),
       // oxlint-disable-next-line typescript/no-non-null-assertion
-      height: Math.min(150, size[1]!),
+      height: Math.min(140, size[1]!),
+      useContentSize: true,
       resizable: false,
       title: getResolvedMessagesLocale().i18n('icu:allowAccess'),
       titleBarStyle: nonMainTitleBarStyle,
@@ -1666,18 +1761,33 @@ function showPermissionsPopupWindow(forCalling: boolean, forCamera: boolean) {
 
     await handleCommonWindowEvents(permissionsPopupWindow);
 
+    const onSetHeight = (event: IpcMainEvent, height: number) => {
+      if (
+        !permissionsPopupWindow ||
+        event.sender !== permissionsPopupWindow.webContents
+      ) {
+        return;
+      }
+
+      permissionsPopupWindow.setContentSize(
+        PERMISSIONS_WINDOW_WIDTH,
+        Math.min(height, 400)
+      );
+
+      // Wait for the computed height before showing the popup to avoid resize flash
+      if (!permissionsPopupWindow.isVisible()) {
+        addDarkOverlay();
+        permissionsPopupWindow.show();
+      }
+    };
+    ipc.on('permissions-popup:set-height', onSetHeight);
+
     permissionsPopupWindow.on('closed', () => {
+      ipc.removeListener('permissions-popup:set-height', onSetHeight);
       removeDarkOverlay();
       permissionsPopupWindow = undefined;
 
       resolveFn();
-    });
-
-    permissionsPopupWindow.once('ready-to-show', () => {
-      if (permissionsPopupWindow) {
-        addDarkOverlay();
-        permissionsPopupWindow.show();
-      }
     });
 
     await safeLoadURL(
@@ -2039,7 +2149,7 @@ const onDatabaseInitializationError = async (error: Error) => {
   });
 
   if (buttonIndex === copyErrorAndQuitButtonIndex) {
-    clipboard.writeText(
+    await clipboard.writeText(
       `Database startup error:\n\n${redactAll(Errors.toLogFormat(error))}\n\n` +
         `App Version: ${app.getVersion()}\n` +
         `OS: ${os.platform()}`
@@ -2212,9 +2322,7 @@ app.on('ready', async () => {
   }
 
   installWebHandler({
-    enableHttp:
-      Boolean(process.env.SIGNAL_ENABLE_HTTP) ||
-      Boolean(process.env.REACT_DEVTOOLS),
+    enableHttp: Boolean(process.env.SIGNAL_ENABLE_HTTP),
     session: session.defaultSession,
   });
 
@@ -2771,22 +2879,9 @@ if (!app.isDefaultProtocolClient('signalcaptcha')) {
   );
 }
 
-ipc.on(
-  'set-badge',
-  (_event: Electron.Event, badge: number | 'marked-unread') => {
-    if (badge === 'marked-unread') {
-      if (process.platform === 'darwin') {
-        // Will show a ● on macOS when undefined
-        app.setBadgeCount(undefined);
-      } else {
-        // All other OS's need a number
-        app.setBadgeCount(1);
-      }
-    } else {
-      app.setBadgeCount(badge);
-    }
-  }
-);
+ipc.on('set-badge-count', (_event: Electron.Event, badgeCount: number) => {
+  app.setBadgeCount(badgeCount);
+});
 
 ipc.on('remove-setup-menu-items', () => {
   setupMenu();
@@ -2958,7 +3053,6 @@ ipc.on('get-config', async event => {
 
   const parsed = safeParseLoose(rendererConfigSchema, {
     name: packageJson.productName,
-    availableLocales: getResolvedMessagesLocale().availableLocales,
     resolvedTranslationsLocale: getResolvedMessagesLocale().name,
     resolvedTranslationsLocaleDirection: getResolvedMessagesLocale().direction,
     hourCyclePreference: getResolvedMessagesLocale().hourCyclePreference,
@@ -3036,12 +3130,6 @@ ipc.on('get-config', async event => {
 ipc.on('locale-data', event => {
   // oxlint-disable-next-line no-param-reassign
   event.returnValue = getResolvedMessagesLocale().messages;
-});
-
-// Ingested in preload.js via a sendSync call
-ipc.on('locale-display-names', event => {
-  // oxlint-disable-next-line no-param-reassign
-  event.returnValue = getResolvedMessagesLocale().localeDisplayNames;
 });
 
 // Ingested in preload.js via a sendSync call
@@ -3247,6 +3335,15 @@ ipc.handle('get-media-access-status', async (_event, value) => {
 ipc.handle(
   'open-system-media-permissions',
   async (_event, mediaType: 'camera' | 'microphone' | 'screenCapture') => {
+    if (OS.isWindows()) {
+      // Windows has no privacy page for screenCapture
+      if (mediaType === 'camera') {
+        await shell.openExternal('ms-settings:privacy-webcam');
+      } else if (mediaType === 'microphone') {
+        await shell.openExternal('ms-settings:privacy-microphone');
+      }
+      return;
+    }
     if (!OS.isMacOS()) {
       return;
     }

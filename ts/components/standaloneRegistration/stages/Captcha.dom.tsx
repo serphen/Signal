@@ -94,7 +94,9 @@ export function CaptchaScreen({
   }, [status, setShowOpenBrowserButton]);
 
   const previousWorkflow = useRef<CaptchaStage | undefined>(undefined);
+  // oxlint-disable-next-line react/refs
   if (workflow !== previousWorkflow.current) {
+    // oxlint-disable-next-line react/refs
     previousWorkflow.current = workflow;
 
     if (status.type === 'failed') {
@@ -205,7 +207,7 @@ function NeedAnotherDialog({
       )}
     >
       <AxoConfirmDialog.Action
-        variant="strong-secondary"
+        variant="subtle-secondary"
         onClick={() => setOpen(false)}
       >
         {i18n('icu:StandaloneRegistration--Captcha--NeedAnother--cancel')}
@@ -308,7 +310,7 @@ function ErrorDialog({
       )}
     >
       <AxoConfirmDialog.Action
-        variant="strong-secondary"
+        variant="subtle-secondary"
         onClick={() => setOpen(false)}
       >
         {i18n('icu:StandaloneRegistration--Captcha--Error--cancel')}

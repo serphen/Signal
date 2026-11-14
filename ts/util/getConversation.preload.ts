@@ -5,7 +5,7 @@ import memoizee from 'memoizee';
 import lodash from 'lodash';
 import type { ConversationModel } from '../models/conversations.preload.ts';
 import type { ConversationType } from '../state/ducks/conversations.preload.ts';
-import type { ConversationAttributesType } from '../model-types.d.ts';
+import type { ConversationAttributesType } from '../model-types.std.ts';
 import type { GroupNameCollisionsWithIdsByTitle } from './groupMemberNameCollisions.std.ts';
 import { StorySendMode } from '../types/Stories.std.ts';
 import { areWeAdmin } from './areWeAdmin.preload.ts';
@@ -25,7 +25,7 @@ import {
 } from './avatarUtils.preload.ts';
 import { getAvatarData } from './getAvatarData.dom.ts';
 import { getConversationMembers } from './getConversationMembers.dom.ts';
-import { getCustomColorData, migrateColor } from './migrateColor.node.ts';
+import { migrateColor } from './migrateColor.node.ts';
 import { getDraftPreview } from './getDraftPreview.preload.ts';
 import { getLastMessage } from './getLastMessage.preload.ts';
 import {
@@ -59,6 +59,7 @@ import { isNotNil } from './isNotNil.std.ts';
 import { getIdentifierHash } from '../Crypto.node.ts';
 import { getAvatarPlaceholderGradient } from '../utils/getAvatarPlaceholderGradient.std.ts';
 import { itemStorage } from '../textsecure/Storage.preload.ts';
+import { getConversationBubbleColor } from './conversationBubbleColor.std.ts';
 
 const { sortBy } = lodash;
 
@@ -137,8 +138,6 @@ export function getConversation(model: ConversationModel): ConversationType {
         .filter(isNotNil)
     : undefined;
 
-  const { customColor, customColorId } = getCustomColorData(attributes);
-
   const isItMe = isMe(attributes);
 
   // TODO: DESKTOP-720
@@ -179,9 +178,7 @@ export function getConversation(model: ConversationModel): ConversationType {
     profileAvatarUrl: getLocalProfileAvatarUrl(attributes),
     hasAvatar: hasAvatar(attributes),
     color,
-    conversationColor: attributes.conversationColor,
-    customColor,
-    customColorId,
+    bubbleColor: getConversationBubbleColor(attributes) ?? undefined,
     discoveredUnregisteredAt: attributes.discoveredUnregisteredAt,
     draftBodyRanges: attributes.draftBodyRanges,
     draftPreview,
@@ -230,7 +227,10 @@ export function getConversation(model: ConversationModel): ConversationType {
     announcementsOnlyReady: canBeAnnouncementGroup(attributes),
     expireTimer: attributes.expireTimer,
     muteExpiresAt: attributes.muteExpiresAt,
-    dontNotifyForMentionsIfMuted: attributes.dontNotifyForMentionsIfMuted,
+    notifyForCallsIfMuted: attributes.notifyForCallsIfMuted,
+    notifyForMentionsIfMuted: attributes.notifyForMentionsIfMuted,
+    notifyForRepliesIfMuted: attributes.notifyForRepliesIfMuted,
+    showUnreadReminders: attributes.showUnreadReminders,
     nicknameFamilyName: dropNull(attributes.nicknameFamilyName),
     nicknameGivenName: dropNull(attributes.nicknameGivenName),
     note: dropNull(attributes.note),
