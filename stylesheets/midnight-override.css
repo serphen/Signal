@@ -54,6 +54,27 @@
 }
 
 /* ==========================================================================
+   Axo design tokens — upstream's newer components (buttons, toggles,
+   checkboxes, icon buttons, links, poll options) read their accent from these
+   variables, so remap Signal's blue accent to Midnight's blurple/link colors.
+   ========================================================================== */
+body.dark-theme {
+  --axo-color-fill-accent: #5865f2;
+  --axo-color-fill-accent-pressed: #4752c4;
+  --axo-color-fill-accent-tint: rgba(88, 101, 242, 0.16);
+  --axo-color-fill-accent-tint-pressed: rgba(88, 101, 242, 0.24);
+  --axo-color-label-accent: var(--midnight-text-link);
+  --axo-color-label-accent-disabled: rgba(55, 137, 234, 0.4);
+  --axo-color-border-selected: #5865f2;
+}
+
+/* Discord toggles are green when on (AxoSwitch's track uses fill-accent) */
+.dark-theme [role="switch"] {
+  --axo-color-fill-accent: #23a55a;
+  --axo-color-fill-accent-pressed: #1a6334;
+}
+
+/* ==========================================================================
    Global font — override Signal's --font-sans + body font.
    Excludes SignalSymbols icon font (.font-symbols) so icons render correctly.
    ========================================================================== */
@@ -1538,8 +1559,8 @@ body.dark-theme *:not(.font-symbols):not(.axo-symbol-glyph):not(code):not(pre):n
   color: #ffffff !important;
 }
 
-.dark-theme [role="menuitem"]:hover [class*="Symbol"],
-.dark-theme [role="menuitem"][data-highlighted] [class*="Symbol"] {
+.dark-theme [role="menuitem"]:hover :is([class*="Symbol"], [class*="axo-symbol"]),
+.dark-theme [role="menuitem"][data-highlighted] :is([class*="Symbol"], [class*="axo-symbol"]) {
   color: #ffffff !important;
 }
 
