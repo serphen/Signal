@@ -11,7 +11,7 @@ import type {
   MouseEvent,
   CSSProperties,
 } from 'react';
-import { forwardRef, useRef, PureComponent, createRef } from 'react';
+import { forwardRef, useRef, useState, PureComponent, createRef } from 'react';
 import { createPortal } from 'react-dom';
 import classNames from 'classnames';
 import { direction as getDirection } from 'direction';
@@ -31,10 +31,12 @@ import type { ViewStoryActionCreatorType } from '../../state/ducks/stories.prelo
 import { ReadStatus } from '../../messages/MessageReadStatus.std.ts';
 import { Avatar, AvatarSize } from '../Avatar.dom.tsx';
 import { AvatarSpacer } from '../AvatarSpacer.dom.tsx';
+import { MessageBody } from './MessageBody.dom.tsx';
 import { MessageBodyReadMore } from './MessageBodyReadMore.dom.tsx';
 import { MessageMetadata } from './MessageMetadata.dom.tsx';
 import { MessageTextMetadataSpacer } from './MessageTextMetadataSpacer.dom.tsx';
 import { formatTimestamp } from '../../util/formatTimestamp.dom.ts';
+import { isToday } from '../../util/timestamp.std.ts';
 import { ImageGrid } from './ImageGrid.dom.tsx';
 import { GIF } from './GIF.dom.tsx';
 import { CurveType, Image } from './Image.dom.tsx';
@@ -201,6 +203,67 @@ function ReactionEmoji(props: { emoji: Emoji.Variant }) {
   );
 }
 
+type EditRevisionType = Readonly<{
+  text: string;
+  bodyRanges: HydratedBodyRangesType;
+  timestamp: number;
+}>;
+
+function formatEditRevisionTime(timestamp: number): string {
+  // Same format as the header timestamp, with the date if it's not from today
+  const dateOptions: Intl.DateTimeFormatOptions = isToday(timestamp)
+    ? {}
+    : { day: 'numeric', month: 'short' };
+  return formatTimestamp(timestamp, {
+    ...dateOptions,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+function MessageEditRevision({
+  direction,
+  disableLinks,
+  i18n,
+  revision,
+  showConversation,
+}: Readonly<{
+  direction: DirectionType;
+  disableLinks: boolean;
+  i18n: LocalizerType;
+  revision: EditRevisionType;
+  showConversation: ShowConversationType;
+}>): JSX.Element {
+  const [isSpoilerExpanded, setIsSpoilerExpanded] = useState<
+    Record<number, boolean>
+  >({});
+
+  return (
+    <div className="module-message__edit-revision" dir="auto">
+      <MessageBody
+        bodyRanges={revision.bodyRanges}
+        direction={direction}
+        disableJumbomoji
+        disableLinks={disableLinks}
+        i18n={i18n}
+        isSpoilerExpanded={isSpoilerExpanded}
+        onExpandSpoiler={setIsSpoilerExpanded}
+        originalText={revision.text}
+        renderLocation={RenderLocation.Timeline}
+        showConversation={showConversation}
+        text={revision.text}
+      />
+      <time
+        className="module-message__edit-revision__time"
+        dateTime={new Date(revision.timestamp).toISOString()}
+      >
+        {formatEditRevisionTime(revision.timestamp)}
+      </time>
+    </div>
+  );
+}
+
 export type PropsData = {
   id: string;
   renderingContext: RenderingContextType;
@@ -304,7 +367,13 @@ export type PropsData = {
     contactNameColor: ContactNameColorType;
     isMe: boolean;
   };
+  // Deleted for everyone by someone else, but we kept the original content; it is
+  //   rendered grayed out with a "Deleted" label instead of the deleted placeholder
+  deletedForEveryoneContentKept?: boolean;
   attachmentDroppedDueToSize?: boolean;
+  // Previous versions of an edited message, oldest first, excluding the one
+  //   currently displayed
+  previousEditRevisions?: ReadonlyArray<EditRevisionType>;
 
   canDeleteForEveryone: boolean;
   canRetryDeleteForEveryone: boolean;
@@ -780,6 +849,7 @@ export class Message extends PureComponent<Props, State> {
       attachmentDroppedDueToSize,
       attachments,
       deletedForEveryone,
+      deletedForEveryoneContentKept,
       direction,
       giftBadge,
       i18n,
@@ -823,7 +893,9 @@ export class Message extends PureComponent<Props, State> {
       return MetadataPlacement.RenderedElsewhere;
     }
 
-    if (!text && !deletedForEveryone && !attachmentDroppedDueToSize) {
+    const showDeletedPlaceholder =
+      deletedForEveryone && !deletedForEveryoneContentKept;
+    if (!text && !showDeletedPlaceholder && !attachmentDroppedDueToSize) {
       const firstAttachment = attachments && attachments[0];
       const isAttachmentNotAvailable =
         firstAttachment?.isPermanentlyUndownloadable;
@@ -1007,6 +1079,7 @@ export class Message extends PureComponent<Props, State> {
       attachmentDroppedDueToSize,
       canRetryDeleteForEveryone,
       deletedForEveryone,
+      deletedForEveryoneContentKept,
       direction,
       expirationLength,
       expirationTimestamp,
@@ -1033,6 +1106,7 @@ export class Message extends PureComponent<Props, State> {
       <MessageMetadata
         canRetryDeleteForEveryone={canRetryDeleteForEveryone}
         deletedForEveryone={deletedForEveryone}
+        deletedForEveryoneContentKept={deletedForEveryoneContentKept}
         direction={direction}
         expirationLength={expirationLength}
         expirationTimestamp={expirationTimestamp}
@@ -1044,7 +1118,8 @@ export class Message extends PureComponent<Props, State> {
         isSMS={isSMS}
         isInline={isInline}
         isOutlineOnlyBubble={
-          deletedForEveryone || (attachmentDroppedDueToSize && !text)
+          (deletedForEveryone && !deletedForEveryoneContentKept) ||
+          (attachmentDroppedDueToSize && !text)
         }
         isShowingImage={this.#isShowingImage()}
         isSticker={isStickerLike}
@@ -1112,6 +1187,7 @@ export class Message extends PureComponent<Props, State> {
       attachments,
       canRetryDeleteForEveryone,
       cancelAttachmentDownload,
+      deletedForEveryoneContentKept,
       direction,
       expirationLength,
       expirationTimestamp,
@@ -1261,6 +1337,7 @@ export class Message extends PureComponent<Props, State> {
         withContentAbove,
         withContentBelow,
 
+        deletedForEveryoneContentKept,
         direction,
         expirationLength,
         expirationTimestamp,
@@ -1378,6 +1455,7 @@ export class Message extends PureComponent<Props, State> {
                 <MessageMetadata
                   canRetryDeleteForEveryone={canRetryDeleteForEveryone}
                   deletedForEveryone={false}
+                  deletedForEveryoneContentKept={deletedForEveryoneContentKept}
                   direction={direction}
                   expirationLength={expirationLength}
                   expirationTimestamp={expirationTimestamp}
@@ -2280,13 +2358,14 @@ export class Message extends PureComponent<Props, State> {
       conversationId,
       deletedForEveryone,
       deletedForEveryoneByAdmin,
+      deletedForEveryoneContentKept,
       direction,
       i18n,
       showContactModal,
       status,
     } = this.props;
 
-    if (deletedForEveryone) {
+    if (deletedForEveryone && !deletedForEveryoneContentKept) {
       let text: JSX.Element | string;
       if (deletedForEveryoneByAdmin != null) {
         if (deletedForEveryoneByAdmin.isMe) {
@@ -2352,6 +2431,7 @@ export class Message extends PureComponent<Props, State> {
       text,
       bodyRanges,
       deletedForEveryone,
+      deletedForEveryoneContentKept,
       direction,
       displayLimit,
       i18n,
@@ -2367,6 +2447,8 @@ export class Message extends PureComponent<Props, State> {
       textAttachment,
     } = this.props;
     const { metadataWidth } = this.state;
+    const showDeletedPlaceholder =
+      deletedForEveryone && !deletedForEveryoneContentKept;
 
     const messageStatusContents = this.#getMessageStatusContents();
     if (messageStatusContents == null && text == null) {
@@ -2385,10 +2467,12 @@ export class Message extends PureComponent<Props, State> {
           'module-message__text',
           direction === 'incoming' && 'module-message__text--incoming',
           direction === 'outgoing' && 'module-message__text--outgoing',
-          status === 'error' && direction === 'incoming' && !deletedForEveryone
+          status === 'error' &&
+            direction === 'incoming' &&
+            !showDeletedPlaceholder
             ? 'module-message__text--error'
             : null,
-          deletedForEveryone
+          showDeletedPlaceholder
             ? 'module-message__text--delete-for-everyone'
             : null
         )}
@@ -3022,10 +3106,39 @@ export class Message extends PureComponent<Props, State> {
     );
   }
 
-  #renderContents(): ReactNode {
-    const { deletedForEveryone, giftBadge, isTapToView } = this.props;
+  #renderEditRevisions(): ReactNode {
+    const { direction, i18n, previousEditRevisions, showConversation } =
+      this.props;
 
-    if (deletedForEveryone) {
+    if (!previousEditRevisions?.length) {
+      return null;
+    }
+
+    return (
+      <div className="module-message__edit-revisions">
+        {previousEditRevisions.map(revision => (
+          <MessageEditRevision
+            key={revision.timestamp}
+            direction={direction}
+            disableLinks={!this.#areLinksEnabled()}
+            i18n={i18n}
+            revision={revision}
+            showConversation={showConversation}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  #renderContents(): ReactNode {
+    const {
+      deletedForEveryone,
+      deletedForEveryoneContentKept,
+      giftBadge,
+      isTapToView,
+    } = this.props;
+
+    if (deletedForEveryone && !deletedForEveryoneContentKept) {
       return (
         <>
           {this.#renderText()}
@@ -3056,6 +3169,7 @@ export class Message extends PureComponent<Props, State> {
         {this.#renderPayment()}
         {this.#renderPoll()}
         {this.#renderEmbeddedContact()}
+        {this.#renderEditRevisions()}
         {this.#renderText()}
         {this.#renderPreview()}
         {this.#renderUndownloadableTextAttachment()}
@@ -3269,6 +3383,7 @@ export class Message extends PureComponent<Props, State> {
       contact,
       bubbleColor,
       deletedForEveryone,
+      deletedForEveryoneContentKept,
       direction,
       id,
       isSelectMode,
@@ -3281,6 +3396,8 @@ export class Message extends PureComponent<Props, State> {
       textDirection,
     } = this.props;
 
+    const showDeletedPlaceholder =
+      deletedForEveryone && !deletedForEveryoneContentKept;
     const width = this.#getWidth();
     const isEmojiOnly = this.#canRenderStickerLikeEmoji();
     const isStickerLike =
@@ -3318,8 +3435,11 @@ export class Message extends PureComponent<Props, State> {
       isEmojiOnly ? 'module-message__container--emoji' : null,
       isClickable ? 'module-message__container--is-clickable' : null,
       this.#hasReactions() ? 'module-message__container--with-reactions' : null,
-      deletedForEveryone
+      showDeletedPlaceholder
         ? 'module-message__container--deleted-for-everyone'
+        : null,
+      deletedForEveryoneContentKept
+        ? 'module-message__container--deleted-kept'
         : null,
       this.props.isSignalConversation
         ? tw(
@@ -3334,7 +3454,7 @@ export class Message extends PureComponent<Props, State> {
 
     if (
       !isStickerLike &&
-      !deletedForEveryone &&
+      !showDeletedPlaceholder &&
       !(attachmentDroppedDueToSize && !text) &&
       direction === 'outgoing'
     ) {

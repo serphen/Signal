@@ -3718,6 +3718,10 @@
     "messageformat": "You deleted this message",
     "description": "Shown in a message bubble when you deleted your own message for everyone."
   },
+  "icu:message--deletedForEveryoneKept": {
+    "messageformat": "Deleted",
+    "description": "Shown next to the timestamp of a message that its sender (or a group admin) deleted for everyone, but whose content is still displayed, grayed out."
+  },
   "icu:message--attachmentTooBig--one": {
     "messageformat": "Attachment too large to display.",
     "description": "Shown in a message bubble if no attachments are left on message when too-large attachments are dropped"

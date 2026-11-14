@@ -25,6 +25,7 @@ import { AxoConfirmDialog } from '../../axo/AxoConfirmDialog.dom.tsx';
 type PropsType = {
   canRetryDeleteForEveryone: boolean;
   deletedForEveryone?: boolean;
+  deletedForEveryoneContentKept?: boolean;
   direction: DirectionType;
   expirationLength?: number;
   expirationTimestamp?: number;
@@ -79,6 +80,7 @@ export const MessageMetadata = forwardRef<HTMLDivElement, Readonly<PropsType>>(
     {
       canRetryDeleteForEveryone,
       deletedForEveryone,
+      deletedForEveryoneContentKept,
       direction,
       expirationLength,
       expirationTimestamp,
@@ -279,6 +281,11 @@ export const MessageMetadata = forwardRef<HTMLDivElement, Readonly<PropsType>>(
           >
             {i18n('icu:MessageMetadata__edited')}
           </button>
+        )}
+        {deletedForEveryoneContentKept && (
+          <span className="module-message__metadata__deleted-kept">
+            {i18n('icu:message--deletedForEveryoneKept')}
+          </span>
         )}
         {timestampNode}
         {isSMS ? (

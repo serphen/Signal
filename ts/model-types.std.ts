@@ -196,6 +196,9 @@ export type MessageAttributesType = {
   decrypted_at?: number;
   deletedForEveryone?: boolean;
   deletedForEveryoneByAdminAci?: AciString;
+  // Set (with deletedForEveryone) when an incoming message was deleted for everyone
+  // but we kept its contents locally
+  deletedForEveryoneContentKept?: boolean;
   deletedForEveryoneTimestamp?: number;
   errors?: ReadonlyArray<CustomError> | null;
   expirationStartTimestamp?: number | null;

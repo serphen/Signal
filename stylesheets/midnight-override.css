@@ -1079,6 +1079,31 @@ body.dark-theme *:not(.font-symbols):not(code):not(pre):not([class*="codeblock"]
   font-style: italic !important;
 }
 
+/* Deleted by someone else, content kept: muted text, always-visible "Deleted" label */
+.dark-theme .module-message__container--deleted-kept .module-message__text,
+.dark-theme .module-message__container--deleted-kept .module-message__text a {
+  color: var(--midnight-text-muted) !important;
+}
+.dark-theme .module-message__metadata:has(.module-message__metadata__deleted-kept) {
+  opacity: 1 !important;
+}
+.dark-theme .module-message__metadata__deleted-kept {
+  color: var(--midnight-text-muted) !important;
+}
+
+/* Previous edit revisions: muted on both incoming and outgoing (bubbles are transparent) */
+.dark-theme .module-message__edit-revisions {
+  --module-message__edit-revisions-color: var(--midnight-text-muted) !important;
+  color: var(--midnight-text-muted) !important;
+}
+.dark-theme .module-message__edit-revision {
+  font-size: 0.875rem !important;     /* 14px */
+  line-height: 1.125rem !important;   /* 18px */
+}
+.dark-theme .module-message__edit-revision__time {
+  font-size: 0.6875rem !important;    /* 11px — like gutter timestamp */
+}
+
 /* ==========================================================================
    Selection / focus / targeted states — disable click-to-highlight
    ========================================================================== */

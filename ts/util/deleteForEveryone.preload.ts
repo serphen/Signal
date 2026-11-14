@@ -13,6 +13,7 @@ import { isAciString } from './isAciString.std.ts';
 import { eraseMessageContents } from './cleanup.preload.ts';
 import { notificationService } from '../services/notifications.preload.ts';
 import { DataWriter } from '../sql/Client.preload.ts';
+import { itemStorage } from '../textsecure/Storage.preload.ts';
 
 const log = createLogger('deleteForEveryone');
 
@@ -81,6 +82,11 @@ export async function receiveDeleteForEveryone(
 /**
  * Apply a delete-for-everyone to a message. No validation — caller is
  * responsible for checking canDeleteForEveryone first.
+ *
+ * Incoming messages (other than stories and view-once messages) deleted by
+ * someone else keep their contents: they are only flagged as deleted so the UI
+ * can show them grayed out. Everything else (including deletes we sent ourselves,
+ * e.g. as a group admin or from a linked device) is erased.
  */
 export async function applyDeleteForEveryone(
   message: MessageModel,
@@ -107,6 +113,12 @@ export async function applyDeleteForEveryone(
     deleteServerTimestamp: del.deleteServerTimestamp,
   });
 
+  const shouldKeepContent =
+    message.get('type') === 'incoming' &&
+    !isStory(message.attributes) &&
+    !message.get('isViewOnce') &&
+    del.deleteSentByAci !== itemStorage.user.getAci();
+
   try {
     // oxlint-disable-next-line no-param-reassign
     message.deletingForEveryone = true;
@@ -114,30 +126,65 @@ export async function applyDeleteForEveryone(
     // Remove any notifications for this message
     notificationService.removeBy({ messageId: message.get('id') });
 
-    // Erase the contents of this message
-    const additionalProps: Partial<MessageAttributesType> = {
+    const deleteProps: Partial<MessageAttributesType> = {
       deletedForEveryone: true,
-      reactions: [],
     };
     if (del.isAdminDelete) {
-      additionalProps.deletedForEveryoneByAdminAci = del.deleteSentByAci;
+      deleteProps.deletedForEveryoneByAdminAci = del.deleteSentByAci;
     }
-    await eraseMessageContents(message, 'delete-for-everyone', additionalProps);
 
-    if (shouldPersist) {
-      // We delete the message first, before re-saving it -- this causes any foreign key
-      // ON DELETE CASCADE and messages_on_delete triggers to run, which is important
-      await DataWriter.removeMessageById(message.attributes.id, {
-        cleanupMessages: async () => {
-          // We don't actually want to remove this message up from in-memory caches
-        },
-      });
-      await window.MessageCache.saveMessage(message.attributes, {
-        forceSave: true,
-      });
+    if (shouldKeepContent) {
+      await markDeletedKeepingContent(message, deleteProps, { shouldPersist });
+    } else {
+      await eraseDeletedMessage(message, deleteProps, { shouldPersist });
     }
   } finally {
     // oxlint-disable-next-line no-param-reassign
     message.deletingForEveryone = undefined;
+  }
+}
+
+async function markDeletedKeepingContent(
+  message: MessageModel,
+  deleteProps: Partial<MessageAttributesType>,
+  { shouldPersist }: { shouldPersist: boolean }
+): Promise<void> {
+  // No erase and no remove + re-save: the ON DELETE cascades would drop the
+  // attachment references and edit history we want to keep.
+  message.set({ ...deleteProps, deletedForEveryoneContentKept: true });
+
+  window.ConversationController.get(
+    message.get('conversationId')
+  )?.debouncedUpdateLastMessage();
+
+  if (shouldPersist) {
+    await window.MessageCache.saveMessage(message.attributes);
+  }
+
+  log.info('DOE applied; kept message content.', { messageId: message.id });
+}
+
+async function eraseDeletedMessage(
+  message: MessageModel,
+  deleteProps: Partial<MessageAttributesType>,
+  { shouldPersist }: { shouldPersist: boolean }
+): Promise<void> {
+  // Erase the contents of this message
+  await eraseMessageContents(message, 'delete-for-everyone', {
+    ...deleteProps,
+    reactions: [],
+  });
+
+  if (shouldPersist) {
+    // We delete the message first, before re-saving it -- this causes any foreign key
+    // ON DELETE CASCADE and messages_on_delete triggers to run, which is important
+    await DataWriter.removeMessageById(message.attributes.id, {
+      cleanupMessages: async () => {
+        // We don't actually want to remove this message up from in-memory caches
+      },
+    });
+    await window.MessageCache.saveMessage(message.attributes, {
+      forceSave: true,
+    });
   }
 }

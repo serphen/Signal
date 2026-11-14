@@ -584,7 +584,8 @@ export function reducer(
 
     if (
       action.type === MESSAGE_CHANGED &&
-      !action.payload.data.deletedForEveryone
+      (!action.payload.data.deletedForEveryone ||
+        action.payload.data.deletedForEveryoneContentKept)
     ) {
       const message = action.payload.data;
       const attachmentsByDigest = new Map<string, AttachmentType>();

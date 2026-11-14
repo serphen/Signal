@@ -1086,6 +1086,77 @@ $message-padding-horizontal: 12px;
   color: light-dark(variables.$color-gray-60, variables.$color-gray-25);
 }
 
+// Deleted for everyone by someone else, but the content was kept: gray it out
+.module-message__container--deleted-kept {
+  .module-message__text,
+  .module-message__text a {
+    color: variables.$color-gray-45;
+  }
+
+  // Quote, attachments, link preview, contact, etc. (metadata and edit revisions
+  //   stay readable; revisions are already muted)
+  > [dir]
+    > :not(
+      .module-message__text,
+      .module-message__metadata,
+      .module-message__edit-revisions
+    ) {
+    opacity: 0.6;
+  }
+
+  img,
+  video {
+    filter: grayscale(100%);
+  }
+}
+
+// Previous versions of an edited message, shown muted above the current text
+.module-message__edit-revisions {
+  --module-message__edit-revisions-color: var(--axo-color-label-secondary);
+
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid
+    color-mix(
+      in srgb,
+      var(--module-message__edit-revisions-color) 40%,
+      transparent
+    );
+  color: var(--module-message__edit-revisions-color);
+
+  .module-message__container--outgoing & {
+    --module-message__edit-revisions-color: var(
+      --axo-color-label-secondary-oncolor
+    );
+  }
+}
+
+.module-message__edit-revision {
+  @include mixins.font-body-2;
+
+  text-align: start;
+  overflow-wrap: break-word;
+  word-break: auto-phrase;
+  white-space: pre-wrap;
+  user-select: text;
+
+  & + & {
+    margin-top: 4px;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+.module-message__edit-revision__time {
+  @include mixins.font-caption;
+
+  margin-inline-start: 6px;
+  white-space: nowrap;
+}
+
 .module-message__metadata {
   @include mixins.font-caption;
 
@@ -1126,6 +1197,11 @@ $message-padding-horizontal: 12px;
     margin-inline-end: 6px;
     z-index: variables.$z-index-base;
   }
+}
+
+.module-message__metadata__deleted-kept {
+  font-style: italic;
+  margin-inline-end: 6px;
 }
 
 .module-message__metadata__sms {

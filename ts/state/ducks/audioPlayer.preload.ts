@@ -490,10 +490,12 @@ export function reducer(
   }
 
   // Reset active when played message is deleted on expiration or DOE.
+  // Messages whose content was kept after DOE stay playable.
   if (
     action.type === 'MESSAGE_DELETED' ||
     (action.type === 'MESSAGE_CHANGED' &&
-      action.payload.data.deletedForEveryone)
+      action.payload.data.deletedForEveryone &&
+      !action.payload.data.deletedForEveryoneContentKept)
   ) {
     const { id } = action.payload;
 

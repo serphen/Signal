@@ -45,6 +45,7 @@ export type OwnProps = Readonly<{
   withContentBelow: boolean;
 
   // Message properties. Many are needed for rendering metadata
+  deletedForEveryoneContentKept?: boolean;
   direction: DirectionType;
   expirationLength?: number;
   expirationTimestamp?: number;
@@ -152,6 +153,7 @@ export function MessageAudio(props: Props): JSX.Element {
     withContentAbove,
     withContentBelow,
 
+    deletedForEveryoneContentKept,
     direction,
     expirationLength,
     expirationTimestamp,
@@ -379,6 +381,7 @@ export function MessageAudio(props: Props): JSX.Element {
       {!withContentBelow && !collapseMetadata && (
         <MessageMetadata
           canRetryDeleteForEveryone={false}
+          deletedForEveryoneContentKept={deletedForEveryoneContentKept}
           direction={direction}
           expirationLength={expirationLength}
           expirationTimestamp={expirationTimestamp}

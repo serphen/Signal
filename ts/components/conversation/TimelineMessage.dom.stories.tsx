@@ -47,6 +47,7 @@ import { getFakeBadge } from '../../test-helpers/getFakeBadge.std.ts';
 import { ThemeType } from '../../types/Util.std.ts';
 import { BadgeCategory } from '../../badges/BadgeCategory.std.ts';
 import { PaymentEventKind } from '../../types/Payment.std.ts';
+import { BodyRange } from '../../types/BodyRange.std.ts';
 import type { RenderAudioAttachmentProps } from '../../state/smart/renderAudioAttachment.preload.tsx';
 import type { PollVoteWithUserType } from '../../state/selectors/message.preload.ts';
 import { generateAci } from '../../test-helpers/serviceIdUtils.std.ts';
@@ -276,6 +277,7 @@ const createProps = (overrideProps: Partial<Props> = {}): Props => ({
   // disableMenu: overrideProps.disableMenu,
   deletedForEveryone: overrideProps.deletedForEveryone,
   deletedForEveryoneByAdmin: overrideProps.deletedForEveryoneByAdmin,
+  deletedForEveryoneContentKept: overrideProps.deletedForEveryoneContentKept,
   disableScroll: overrideProps.disableScroll,
   direction: overrideProps.direction || 'incoming',
   showLightboxForViewOnceMedia: action('showLightboxForViewOnceMedia'),
@@ -1024,6 +1026,26 @@ export function DeletedByAdmin(): JSX.Element {
   return renderBothDirections(props);
 }
 
+export const DeletedContentKept = Template.bind({});
+DeletedContentKept.args = {
+  attachments: [
+    fakeAttachment({
+      url: '/fixtures/tina-rolf-269345-unsplash.jpg',
+      fileName: 'tina-rolf-269345-unsplash.jpg',
+      contentType: IMAGE_JPEG,
+      width: 128,
+      height: 128,
+    }),
+  ],
+  conversationType: 'group',
+  contactNameColor: '100',
+  deletedForEveryone: true,
+  deletedForEveryoneContentKept: true,
+  canForward: false,
+  direction: 'incoming',
+  text: 'This message was deleted by its sender, but its content was kept.',
+};
+
 export const DeletedWithExpireTimer = Template.bind({});
 DeletedWithExpireTimer.args = {
   timestamp: Date.now() - 60 * 1000,
@@ -1352,6 +1374,26 @@ EditError.args = {
   status: 'error',
   isEditedMessage: true,
   text: 'I hope you get this.',
+};
+
+export const EditedWithPreviousRevisions = Template.bind({});
+EditedWithPreviousRevisions.args = {
+  conversationType: 'group',
+  contactNameColor: '100',
+  isEditedMessage: true,
+  previousEditRevisions: [
+    {
+      text: 'Meet at the cafe at 5?',
+      bodyRanges: [],
+      timestamp: Date.now() - DAY - HOUR,
+    },
+    {
+      text: 'Meet at the cafe at 6?',
+      bodyRanges: [{ start: 20, length: 1, style: BodyRange.Style.BOLD }],
+      timestamp: Date.now() - 10 * MINUTE,
+    },
+  ],
+  text: 'Meet at the park at 6?',
 };
 
 export const Paused = Template.bind({});

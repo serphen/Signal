@@ -39,6 +39,8 @@ const messageAttributesEraseBehavior: Record<
   canReplyToStory: 'preserve',
   deletedForEveryone: 'preserve',
   deletedForEveryoneByAdminAci: 'preserve',
+  // Content is gone once erased, so the "kept" marker must go too
+  deletedForEveryoneContentKept: 'erase',
   deletedForEveryoneFailed: 'preserve',
   deletedForEveryoneSendStatus: 'preserve',
   deletedForEveryoneTimestamp: 'preserve',

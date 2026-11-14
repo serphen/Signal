@@ -153,7 +153,10 @@ function _updateMedia<ItemType extends GenericMediaItemType>({
   const mediaWithout = media.filter(item => item.message.id !== message.id);
   const difference = media.length - mediaWithout.length;
 
-  if (message.deletedForEveryone || message.isErased) {
+  if (
+    (message.deletedForEveryone && !message.deletedForEveryoneContentKept) ||
+    message.isErased
+  ) {
     // If message is erased and there was media from this message - update state
     if (difference > 0) {
       return [mediaWithout, haveOldest];

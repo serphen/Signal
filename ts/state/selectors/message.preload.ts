@@ -382,6 +382,27 @@ export const processBodyRanges = (
   );
 };
 
+// editHistory is newest-first and its first entry is the version currently shown
+// as the message body; return the earlier revisions, oldest first.
+const getPreviousEditRevisions = (
+  { editHistory }: Pick<MessageWithUIFieldsType, 'editHistory'>,
+  isGroup: boolean,
+  options: { conversationSelector: GetConversationByIdType }
+): PropsData['previousEditRevisions'] => {
+  if (editHistory == null || editHistory.length <= 1) {
+    return undefined;
+  }
+
+  return editHistory
+    .slice(1)
+    .reverse()
+    .map(revision => ({
+      text: revision.body ?? '',
+      bodyRanges: processBodyRanges(revision, isGroup, options) ?? [],
+      timestamp: revision.timestamp,
+    }));
+};
+
 const getAuthorForMessage = (
   message: MessageWithUIFieldsType,
   options: GetContactOptions
@@ -1043,6 +1064,8 @@ const getPropsForMessage = (
     conversationTitle: conversation.title,
     conversationType: isGroup ? 'group' : 'direct',
     deletedForEveryone: message.deletedForEveryone || false,
+    deletedForEveryoneContentKept:
+      message.deletedForEveryoneContentKept || false,
     deletedForEveryoneByAdmin: getDeletedForEveryoneByAdmin(message, {
       conversationSelector,
       contactNameColors,
@@ -1063,6 +1086,7 @@ const getPropsForMessage = (
     id: message.id,
     isBlocked: conversation.isBlocked || false,
     isEditedMessage: Boolean(message.editHistory),
+    previousEditRevisions: getPreviousEditRevisions(message, isGroup, options),
     isFavoriteSticker,
     isMessageRequestAccepted: conversation?.acceptedMessageRequest ?? true,
     isPinned,
@@ -2454,9 +2478,16 @@ export function canReact(
 }
 
 function canCopy(
-  message: Pick<MessageWithUIFieldsType, 'body' | 'deletedForEveryone'>
+  message: Pick<
+    MessageWithUIFieldsType,
+    'body' | 'deletedForEveryone' | 'deletedForEveryoneContentKept'
+  >
 ): boolean {
-  return !message.deletedForEveryone && Boolean(message.body);
+  return (
+    (!message.deletedForEveryone ||
+      Boolean(message.deletedForEveryoneContentKept)) &&
+    Boolean(message.body)
+  );
 }
 
 type CanDeleteForEveryoneConversation = Pick<
